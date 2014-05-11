@@ -1,0 +1,4 @@
+8
+res/sprites8.png
+player
+
