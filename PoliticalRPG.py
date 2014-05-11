@@ -27,7 +27,7 @@ class Slot(object):
 
 class Menu(object):
     def __init__(self, x, y):
-        self.items = ['Attack', 'Mug', 'Magic', 'Items']
+        self.items = [attack.name for attack in game_data.attacks]
         self.selected_index = 0
         self.x = x
         self.y = y
