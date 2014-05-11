@@ -5,6 +5,7 @@ logging.getLogger('bacon').addHandler(logging.NullHandler())
 import bacon
 import tiled
 import optparse
+import random
 import cPickle as pickle
 
 from common import Rect, clamp
@@ -160,8 +161,10 @@ class MapWorld(World):
         game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), [other.image]))
 
 class Character(object):
-    def __init__(self):
-        self.votes = 0
+    def __init__(self, name, level):
+        row = random.choice(game_data.characters[name])
+        self.votes = int(row.votes_base * pow(row.votes_lvl, level - 1))
+        self.spin = int(row.spin_base * pow(row.spin_lvl, level - 1))
 
 class Combat(object):
     def __init__(self, characters):
@@ -218,7 +221,7 @@ class Game(bacon.Game):
 class TableRow(object):
     pass
 
-def parse_table(table, columns, cls=TableRow):
+def parse_table(table, columns, cls=TableRow, index_unique=False, index_multi=False):
     headers = table[0]
     column_map = []
     column_count = 0
@@ -229,15 +232,30 @@ def parse_table(table, columns, cls=TableRow):
             column_count = max(column_count, index + 1)
         else:
             logging.warn('Unmapped column "%s"' % header)
-    obj_table = []
+
+    if index_unique or index_multi:
+        obj_table = {}
+    else:
+        obj_table = []
+
     for row in table[1:]:
         if len(row) < column_count:
             continue
 
         obj_row = cls()
-        obj_table.append(obj_row)
         for i, name in column_map:
             setattr(obj_row, name, row[i])
+
+        if index_multi:
+            key = row[0]
+            if key not in obj_table:
+                obj_table[key] = []
+            obj_table[key].append(obj_row)
+        elif index_unique:
+            obj_table[key] = obj_row
+        else:
+            obj_table.append(obj_row)
+
     return obj_table
 
 class GameData(object):
@@ -278,12 +296,13 @@ if __name__ == '__main__':
             charisma_lvl = 'Cha Lvl',
             flair_base = 'Flr',
             flair_lvl = 'Flr Lvl',
-        ))
+        ), index_multi=True)
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:
         game_data = pickle.load(open_res('res/game_data.bin', 'rb'))
 
     game = Game()
+    game.player = Character('Hero', 10)
     game.world = MapWorld(tiled.parse('res/map.tmx'))
 
     bacon.run(game)
