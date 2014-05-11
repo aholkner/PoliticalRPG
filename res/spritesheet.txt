@@ -1,4 +1,4 @@
 8
-res/sprites8.png
-player
+res/sprites.png
+player,npc1
 
