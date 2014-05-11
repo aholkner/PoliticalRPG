@@ -1,0 +1,4 @@
+PoliticalRPG
+============
+
+PyWeek #18
