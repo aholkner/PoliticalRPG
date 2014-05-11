@@ -6,4 +6,44 @@
    <property name="player" value="1"/>
   </properties>
  </tile>
+ <tile id="40">
+  <properties>
+   <property name="player_slot" value="1"/>
+  </properties>
+ </tile>
+ <tile id="41">
+  <properties>
+   <property name="player_slot" value="2"/>
+  </properties>
+ </tile>
+ <tile id="42">
+  <properties>
+   <property name="player_slot" value="3"/>
+  </properties>
+ </tile>
+ <tile id="43">
+  <properties>
+   <property name="player_slot" value="4"/>
+  </properties>
+ </tile>
+ <tile id="44">
+  <properties>
+   <property name="monster_slot" value="1"/>
+  </properties>
+ </tile>
+ <tile id="45">
+  <properties>
+   <property name="monster_slot" value="2"/>
+  </properties>
+ </tile>
+ <tile id="46">
+  <properties>
+   <property name="monster_slot" value="3"/>
+  </properties>
+ </tile>
+ <tile id="47">
+  <properties>
+   <property name="monster_slot" value="4"/>
+  </properties>
+ </tile>
 </tileset>

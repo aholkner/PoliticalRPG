@@ -42,13 +42,24 @@ def parse_tile(image, elem):
                         image.properties = {}
                     image.properties[name] = value
 
-def parse_tileset(elem, base_dir):
+def parse_tileset(tsx_file):
+    tsx_file = bacon.get_resource_path(tsx_file)
+    base_dir = os.path.dirname(tsx_file)
+
+    tree = ET.parse(tsx_file)
+    elem = tree.getroot()
+    return parse_tileset_elem(0, elem, base_dir)
+
+def parse_tileset_ref(elem, base_dir):
     firstgid = int(elem.get('firstgid'))
     source = elem.get('source')
     if source:
         tree = ET.parse(os.path.join(base_dir, source))
         elem = tree.getroot()
+
+    return parse_tileset_elem(firstgid, elem, base_dir)
     
+def parse_tileset_elem(firstgid, elem, base_dir):
     images = parse_tileset_images(elem, base_dir)
     for child in elem:
         if child.tag == 'tile':
@@ -174,7 +185,7 @@ def parse(tmx_file):
 
     for child in elem:
         if child.tag == 'tileset':
-            tm.tilesets.append(parse_tileset(child, base_dir))
+            tm.tilesets.append(parse_tileset_ref(child, base_dir))
         elif child.tag == 'layer':
             parse_layer(tm, child, tm.tilesets)
         elif child.tag == 'objectgroup':
