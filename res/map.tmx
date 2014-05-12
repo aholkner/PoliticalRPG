@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="16" height="16" tilewidth="8" tileheight="8">
+<map version="1.0" orientation="orthogonal" width="20" height="16" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="65" source="sprites.tsx"/>
- <layer name="Tiles" width="16" height="16">
+ <layer name="Tiles" width="20" height="16">
   <data encoding="base64" compression="zlib">
-   eJzjZWBg4B3BmBGImYCYGUpjw7jkQOKcQMxFAHPjERcEYiEgFiZTPy8RbqC1fpgfSMXCgyD+RzoGAESZDAE=
+   eJzjZWBg4KUAi6NhSswaiuYxAjETEDNDaWwYlxwzFvM4gZiLAObGI45uniAQCwGxMJXM4yXCjQNtHszPpGJhHOYN5vQ3ah5l5gEAI8URwQ==
   </data>
  </layer>
- <layer name="Sprites" width="16" height="16">
+ <layer name="Sprites" width="20" height="16">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJxjYBgFlIJMJLbTgLliFIwC0gEA1IsArA==
+   eJxjYBgFgw1kIrGdBswVo2AUDH8AAEsqAKw=
   </data>
  </layer>
 </map>

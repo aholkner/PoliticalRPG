@@ -10,7 +10,22 @@ import cPickle as pickle
 
 from common import Rect, clamp
 
-debug_font = bacon.Font(None, 12)
+font_tiny = bacon.Font(bacon.get_resource_path('res/tinyfont.ttf'), 12)
+font_tiny.height = font_tiny.descent - font_tiny.ascent
+
+bacon.window.width = 512
+bacon.window.height = 448
+
+map_scale = 4
+map_width = bacon.window.width / map_scale
+map_height = bacon.window.height / map_scale
+
+ui_scale = 2
+ui_width = bacon.window.width / ui_scale
+ui_height = bacon.window.height / ui_scale
+
+def map_to_ui(x, y):
+    return (x / ui_scale * map_scale, y / ui_scale * map_scale)
 
 def open_res(path, mode = 'rb'):
     return open(bacon.get_resource_path(path), mode)
@@ -25,6 +40,7 @@ class Slot(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.content = None
 
 class Menu(object):
     def __init__(self, x, y):
@@ -47,14 +63,13 @@ class Menu(object):
                 bacon.set_color(1, 1, 0, 1)
             else:
                 bacon.set_color(1, 1, 1, 1)
-            bacon.draw_string(debug_font, item, self.x, y)
-            y += 16
+            bacon.draw_string(font_tiny, item, self.x, y)
+            y += font_tiny.descent - font_tiny.ascent
         bacon.pop_color()
 
 class World(object):
     def __init__(self, map):
         self.map = map
-        self.scale = 4
         self.tile_size = map.tile_width
         self.sprites = []
         self.camera_x = self.camera_y = 0
@@ -67,8 +82,8 @@ class World(object):
                 self.map.layers.remove(layer)
                 for i, image in enumerate(layer.images):
                     if image:
-                        x = i % self.map.rows
-                        y = i / self.map.rows
+                        x = i % self.map.cols
+                        y = i / self.map.cols
                         self.add_sprite(image, x, y)
 
     def add_sprite(self, image, x, y):
@@ -93,17 +108,18 @@ class World(object):
         pass
 
     def draw(self):
+
         ts = self.tile_size
 
-        # Viewport in scaled space
         viewport = Rect(self.camera_x, 
                         self.camera_y, 
-                        self.camera_x + bacon.window.width / self.scale,
-                        self.camera_y + bacon.window.height / self.scale)
+                        self.camera_x + map_width,
+                        self.camera_y + map_height)
 
         bacon.push_transform()
-        bacon.scale(self.scale, self.scale)
+        bacon.scale(map_scale, map_scale)
         bacon.translate(-viewport.x1, -viewport.y1)
+        
 
         self.map.draw(viewport)
         for sprite in self.sprites:
@@ -136,13 +152,10 @@ class MapWorld(World):
     def update_camera(self):
         ts = self.tile_size
 
-        # Viewport in scaled space
-        window_width = bacon.window.width / self.scale
-        window_height = bacon.window.height / self.scale
-        self.camera_x = self.player_sprite.x * ts - window_width / 2
-        self.camera_y = self.player_sprite.y * ts - window_height / 2
-        self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - window_width)
-        self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - window_height)
+        self.camera_x = self.player_sprite.x * ts - map_width / 2
+        self.camera_y = self.player_sprite.y * ts - map_height / 2
+        self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - map_width)
+        self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
 
     def on_key_pressed(self, key):
         if key in self.input_movement:
@@ -162,21 +175,29 @@ class MapWorld(World):
         game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), encounter_id))
 
 class Character(object):
-    def __init__(self, name, level):
-        self.image = game_sprites[name]
-        row = random.choice(game_data.characters[name])
-        self.votes = int(row.votes_base * pow(row.votes_lvl, level - 1))
-        self.spin = int(row.spin_base * pow(row.spin_lvl, level - 1))
+    def __init__(self, id, level):
+        self.id = id
+        self.image = game_sprites[id]
+        self.level = level
+        row = random.choice(game_data.characters[id])
+        self.votes = self.calc_stat(row.votes_base, row.votes_lvl)
+        self.spin = self.calc_stat(row.spin_base, row.spin_lvl)
+        self.speed = self.calc_stat(row.speed_base, row.speed_lvl)
+        self.wit = self.calc_stat(row.wit_base, row.wit_lvl)
+        self.cunning = self.calc_stat(row.cunning_base, row.cunning_lvl)
+        self.charisma = self.calc_stat(row.charisma_base, row.charisma_lvl)
+        self.flair = self.calc_stat(row.flair_base, row.flair_lvl)
+        
+    def calc_stat(self, base, exp):
+        return int(base * pow(exp, self.level - 1))
 
 class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
-        self.menu = Menu(16, 256)
+        self.menu = Menu(2, 128)
 
-        player_slot = self.player_slots[0]
-        self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
-        self.sprites.append(self.player_sprite)
-
+        self.fill_slot(self.player_slots[0], game.player)
+        
         encounter = game_data.encounters[encounter_id]
         if encounter.monster1:
             self.fill_slot(self.monster_slots[0], Character(encounter.monster1, encounter.monster1_lvl))
@@ -187,7 +208,10 @@ class CombatWorld(World):
         if encounter.monster4:
             self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl))
 
+        self.slots = self.player_slots + self.monster_slots
+
     def fill_slot(self, slot, character):
+        slot.content = character
         self.sprites.append(Sprite(character.image, slot.x, slot.y))
 
     def on_key_pressed(self, key):
@@ -197,9 +221,57 @@ class CombatWorld(World):
         super(CombatWorld, self).draw()
         self.menu.draw()
 
+        i = -1
+        for slot in self.slots:
+            if slot.content:
+                i += 1
+                if i == debug.show_slot_stats:
+                    c = slot.content
+                    x = slot.x * self.tile_size * map_scale
+                    y = slot.y * self.tile_size * map_scale
+                    dy = debug.font.height
+                    debug.draw_string(c.id, x, y)
+                    debug.draw_string('level=%d' % c.level, x, y + dy)
+                    debug.draw_string('votes=%d' % c.votes, x, y + dy * 2)
+                    debug.draw_string('spin=%d' % c.spin, x, y + dy * 3)
+                    debug.draw_string('speed=%d' % c.speed, x, y + dy * 4)
+                    debug.draw_string('wit=%d' % c.wit, x, y + dy * 5)
+                    debug.draw_string('cunning=%d' % c.cunning, x, y + dy * 6)
+                    debug.draw_string('charisma=%d' % c.charisma, x, y + dy * 7)
+                    debug.draw_string('flair=%d' % c.flair, x, y + dy * 8)
 
-bacon.window.width = 512
-bacon.window.height = 512
+class Debug(object):
+    def __init__(self):
+        self.font = font_tiny
+        self.show_slot_stats = -1
+        self.message = None
+        self.message_timeout = 0
+
+    def on_key_pressed(self, key):
+        if key == bacon.Keys.k or key == bacon.Keys.j:
+            self.show_slot_stats += 1 if key == bacon.Keys.k else -1
+            self.println('show_slot_stats = %d' % self.show_slot_stats)
+
+    def println(self, msg):
+        self.message = msg
+        self.message_timeout = 1.0
+
+    def draw(self):
+        self.message_timeout -= bacon.timestep
+        if self.message and self.message_timeout > 0:
+            self.draw_string(self.message, 0, bacon.window.height - self.font.height)
+
+    def draw_string(self, text, x, y):
+        bacon.push_color()
+        w = self.font.measure_string(text)
+        bacon.set_color(0, 0, 0, 1)
+        bacon.fill_rect(x, y + self.font.ascent, x + w, y + self.font.descent)
+        bacon.set_color(1, 1, 1, 1)
+        bacon.draw_string(self.font, text, x, y)
+        bacon.pop_color()
+        
+debug = Debug()
+
 
 def load_sprites(path):
     sprites = tiled.parse_tileset(path)
@@ -229,9 +301,12 @@ class Game(bacon.Game):
         self.world.update()
         self.world.draw()
 
+        debug.draw()
+
     def on_key(self, key, pressed):
         if pressed:
             self.world.on_key_pressed(key)
+            debug.on_key_pressed(key)
 
 class TableRow(object):
     pass
