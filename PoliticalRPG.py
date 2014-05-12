@@ -43,17 +43,23 @@ class Slot(object):
         self.content = None
 
 class Menu(object):
-    def __init__(self, x, y):
-        self.items = [attack.name for attack in game_data.attacks]
+    def __init__(self, world):
+        self.world = world
+        self.items = []
         self.selected_index = 0
-        self.x = x
-        self.y = y
+        self.x = self.y = 0
+        self.can_dismiss = True
 
     def on_key_pressed(self, key):
         if key == bacon.Keys.up:
             self.selected_index = (self.selected_index - 1) % len(self.items)
         elif key == bacon.Keys.down:
             self.selected_index = (self.selected_index + 1) % len(self.items)
+        elif key == bacon.Keys.left or key == bacon.Keys.escape:
+            if self.can_dismiss:
+                self.world.pop_menu()
+        elif key == bacon.Keys.right or key == bacon.Keys.enter:
+            self.select(self.selected_index)
 
     def draw(self):
         y = self.y
@@ -69,6 +75,13 @@ class Menu(object):
 
 class World(object):
     def __init__(self, map):
+        self.menu_stack = []
+        self.menu_start_x = 0
+        self.menu_start_y = 0
+
+        self.timeout_func = None
+        self.timeout = 0
+
         self.map = map
         self.tile_size = map.tile_width
         self.sprites = []
@@ -104,8 +117,30 @@ class World(object):
                 return sprite
         return None
 
+    def push_menu(self, menu):
+        if self.menu_stack:
+            menu.x = self.menu_stack[-1].x + 20
+            menu.y = self.menu_stack[-1].y
+        else:
+            menu.x = self.menu_start_x
+            menu.y = self.menu_start_y
+        self.menu_stack.append(menu)
+
+    def pop_menu(self):
+        self.menu_stack.pop()
+
+    def after(self, timeout, func):
+        assert self.timeout_func is None
+        self.timeout = timeout
+        self.timeout_func = func
+
     def update(self):
-        pass
+        if self.timeout_func:
+            self.timeout -= bacon.timestep
+            if self.timeout <= 0:
+                f = self.timeout_func
+                self.timeout_func = None
+                f()
 
     def draw(self):
 
@@ -120,15 +155,18 @@ class World(object):
         bacon.scale(map_scale, map_scale)
         bacon.translate(-viewport.x1, -viewport.y1)
         
-
         self.map.draw(viewport)
         for sprite in self.sprites:
             bacon.draw_image(sprite.image, sprite.x * ts, sprite.y * ts)
 
         bacon.pop_transform()
 
+        for menu in self.menu_stack:
+            menu.draw()
+
     def on_key_pressed(self, key):
-        pass
+        if self.menu_stack:
+            self.menu_stack[-1].on_key_pressed(key)
 
 class MapWorld(World):
      
@@ -158,9 +196,11 @@ class MapWorld(World):
         self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
 
     def on_key_pressed(self, key):
-        if key in self.input_movement:
-            dx, dy = self.input_movement[key]
-            self.move(dx, dy)
+        super(MapWorld, self).on_key_pressed(key)
+        if not self.menu_stack:
+            if key in self.input_movement:
+                dx, dy = self.input_movement[key]
+                self.move(dx, dy)
 
     def move(self, dx, dy):
         other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
@@ -179,6 +219,7 @@ class Character(object):
         self.id = id
         self.image = game_sprites[id]
         self.level = level
+        self.ai = True
         row = random.choice(game_data.characters[id])
         self.votes = self.calc_stat(row.votes_base, row.votes_lvl)
         self.spin = self.calc_stat(row.spin_base, row.spin_lvl)
@@ -192,11 +233,24 @@ class Character(object):
     def calc_stat(self, base, exp):
         return int(base * pow(exp, self.level - 1))
 
+class CombatMenuMain(Menu):
+    def __init__(self, world, character):
+        super(CombatMenuMain, self).__init__(world)
+        self.items.append('Offense')
+        self.items.append('Defense')
+        self.items.append('Spin')
+        self.items.append('Campaign')
+        self.can_dismiss = False
+
+    def select(self, item):
+        self.world.pop_menu()
+        self.world.end_turn()
+
 class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
-        self.menu = Menu(4, 256)
 
+        self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
         
         encounter = game_data.encounters[encounter_id]
@@ -210,21 +264,50 @@ class CombatWorld(World):
             self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl))
 
         self.slots = self.player_slots + self.monster_slots
+        self.begin_round()
+
+    @property
+    def current_character(self):
+        return self.characters[self.current_character_index]
 
     def fill_slot(self, slot, character):
         slot.content = character
         self.sprites.append(Sprite(character.image, slot.x, slot.y))
+        self.characters.append(character)
 
-    def on_key_pressed(self, key):
-        self.menu.on_key_pressed(key)
+    def begin_round(self):
+        self.characters.sort(key=lambda c:c.speed, reverse=True)
+        self.current_character_index = 0
+        self.begin_turn()
+
+    def begin_turn(self):
+        if self.current_character_index >= len(self.characters):
+            self.begin_round()
+            return
+
+        if self.current_character.ai:
+            self.ai(self.current_character)
+        else:
+            self.push_menu(CombatMenuMain(self, self.current_character))
+
+    def end_turn(self):
+        self.current_character_index += 1
+        self.begin_turn()
+
+    def ai(self, character):
+        self.after(0.5, self.end_turn)
 
     def draw(self):
         super(CombatWorld, self).draw()
-        self.menu.draw()
 
         i = -1
         for slot in self.slots:
             if slot.content:
+                if slot.content is self.current_character:
+                    x = slot.x * self.tile_size * map_scale
+                    y = slot.y * self.tile_size * map_scale
+                    debug.draw_string('^', x, y)
+
                 i += 1
                 if i == debug.show_slot_stats:
                     c = slot.content
@@ -287,6 +370,7 @@ def load_sprites(path):
 class Game(bacon.Game):
     def __init__(self):
         self.player = Character('Player', 1)
+        self.player.ai = False
         self.world = None
         self.world_stack = []
 
