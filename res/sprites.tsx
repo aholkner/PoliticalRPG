@@ -3,7 +3,13 @@
  <image source="sprites.png" width="64" height="48"/>
  <tile id="0">
   <properties>
-   <property name="player" value="1"/>
+   <property name="character" value="Player"/>
+  </properties>
+ </tile>
+ <tile id="1">
+  <properties>
+   <property name="character" value="Politician001"/>
+   <property name="encounter" value="P-easy-01"/>
   </properties>
  </tile>
  <tile id="40">

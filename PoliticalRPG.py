@@ -127,7 +127,7 @@ class MapWorld(World):
         super(MapWorld, self).__init__(map)
 
         player_slot = self.player_slots[0]
-        self.player_sprite = Sprite(game.player_image, player_slot.x, player_slot.y)
+        self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
         self.sprites.append(self.player_sprite)
 
     def update(self):
@@ -158,30 +158,37 @@ class MapWorld(World):
             self.player_sprite.y += dy
         
     def on_collide(self, other):
-        game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), [other.image]))
+        encounter_id = other.image.properties['encounter']
+        game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), encounter_id))
 
 class Character(object):
     def __init__(self, name, level):
+        self.image = game_sprites[name]
         row = random.choice(game_data.characters[name])
         self.votes = int(row.votes_base * pow(row.votes_lvl, level - 1))
         self.spin = int(row.spin_base * pow(row.spin_lvl, level - 1))
 
-class Combat(object):
-    def __init__(self, characters):
-        self.characters = characters
-
 class CombatWorld(World):
-    def __init__(self, map, monsters):
+    def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
         self.menu = Menu(16, 256)
 
         player_slot = self.player_slots[0]
-        self.player_sprite = Sprite(game.player_image, player_slot.x, player_slot.y)
+        self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
         self.sprites.append(self.player_sprite)
 
-        for i, monster in enumerate(monsters):
-            monster_slot = self.monster_slots[i]
-            self.sprites.append(Sprite(monster, monster_slot.x, monster_slot.y))
+        encounter = game_data.encounters[encounter_id]
+        if encounter.monster1:
+            self.fill_slot(self.monster_slots[0], Character(encounter.monster1, encounter.monster1_lvl))
+        if encounter.monster2:
+            self.fill_slot(self.monster_slots[1], Character(encounter.monster2, encounter.monster2_lvl))
+        if encounter.monster3:
+            self.fill_slot(self.monster_slots[2], Character(encounter.monster3, encounter.monster3_lvl))
+        if encounter.monster4:
+            self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl))
+
+    def fill_slot(self, slot, character):
+        self.sprites.append(Sprite(character.image, slot.x, slot.y))
 
     def on_key_pressed(self, key):
         self.menu.on_key_pressed(key)
@@ -194,11 +201,19 @@ class CombatWorld(World):
 bacon.window.width = 512
 bacon.window.height = 512
 
-sprites = tiled.parse_tileset('res/sprites.tsx')
+def load_sprites(path):
+    sprites = tiled.parse_tileset(path)
+    sprite_images = {}
+    for image in sprites.images:
+        if not hasattr(image, 'properties'):
+            continue
+        if 'character' in image.properties:
+            sprite_images[image.properties['character']] = image
+    return sprite_images
 
 class Game(bacon.Game):
     def __init__(self):
-        self.player_image = sprites.images[0]
+        self.player = Character('Player', 1)
         self.world = None
         self.world_stack = []
 
@@ -252,6 +267,7 @@ def parse_table(table, columns, cls=TableRow, index_unique=False, index_multi=Fa
                 obj_table[key] = []
             obj_table[key].append(obj_row)
         elif index_unique:
+            key = row[0]
             obj_table[key] = obj_row
         else:
             obj_table.append(obj_row)
@@ -281,7 +297,7 @@ if __name__ == '__main__':
             crit_chance_max = 'Chance To Crit Max (%)',
         ))
         game_data.characters = parse_table(combat_db['Characters'], dict(
-            name = 'Name',
+            id = 'ID',
             votes_base = 'Votes',
             votes_lvl = 'Votes Lvl',
             spin_base = 'SP',
@@ -297,12 +313,24 @@ if __name__ == '__main__':
             flair_base = 'Flr',
             flair_lvl = 'Flr Lvl',
         ), index_multi=True)
+        game_data.encounters = parse_table(combat_db['Encounters'], dict(
+            id = 'ID',
+            monster1 = 'Monster 1',
+            monster1_lvl = 'Monster 1 Lvl',
+            monster2 = 'Monster 2',
+            monster2_lvl = 'Monster 2 Lvl',
+            monster3 = 'Monster 3',
+            monster3_lvl = 'Monster 3 Lvl',
+            monster4 = 'Monster 4',
+            monster4_lvl = 'Monster 4 Lvl',
+        ), index_unique=True)
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:
         game_data = pickle.load(open_res('res/game_data.bin', 'rb'))
 
+    game_sprites = load_sprites('res/sprites.tsx')
+
     game = Game()
-    game.player = Character('Hero', 10)
     game.world = MapWorld(tiled.parse('res/map.tmx'))
 
     bacon.run(game)
