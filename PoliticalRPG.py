@@ -13,8 +13,8 @@ from common import Rect, clamp
 font_tiny = bacon.Font(bacon.get_resource_path('res/tinyfont.ttf'), 12)
 font_tiny.height = font_tiny.descent - font_tiny.ascent
 
-bacon.window.width = 512
-bacon.window.height = 448
+bacon.window.width = 640
+bacon.window.height = 480
 
 map_scale = 4
 map_width = bacon.window.width / map_scale
@@ -187,6 +187,7 @@ class Character(object):
         self.cunning = self.calc_stat(row.cunning_base, row.cunning_lvl)
         self.charisma = self.calc_stat(row.charisma_base, row.charisma_lvl)
         self.flair = self.calc_stat(row.flair_base, row.flair_lvl)
+        self.money = 0
         
     def calc_stat(self, base, exp):
         return int(base * pow(exp, self.level - 1))
@@ -194,7 +195,7 @@ class Character(object):
 class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
-        self.menu = Menu(2, 128)
+        self.menu = Menu(4, 256)
 
         self.fill_slot(self.player_slots[0], game.player)
         
