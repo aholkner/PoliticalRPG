@@ -42,6 +42,12 @@ class Slot(object):
         self.y = y
         self.content = None
 
+class MenuItem(object):
+    def __init__(self, name, description, func=None):
+        self.name = name
+        self.description = description
+        self.func = func
+
 class Menu(object):
     def __init__(self, world):
         self.world = world
@@ -49,6 +55,10 @@ class Menu(object):
         self.selected_index = 0
         self.x = self.y = 0
         self.can_dismiss = True
+
+    @property
+    def selected_item(self):
+        return self.items[self.selected_index]
 
     def on_key_pressed(self, key):
         if key == bacon.Keys.up:
@@ -59,7 +69,7 @@ class Menu(object):
             if self.can_dismiss:
                 self.world.pop_menu()
         elif key == bacon.Keys.right or key == bacon.Keys.enter:
-            self.select(self.selected_index)
+            self.selected_item.func()
 
     def draw(self):
         y = self.y
@@ -69,9 +79,11 @@ class Menu(object):
                 bacon.set_color(1, 1, 0, 1)
             else:
                 bacon.set_color(1, 1, 1, 1)
-            bacon.draw_string(font_tiny, item, self.x, y)
+            bacon.draw_string(font_tiny, item.name, self.x, y)
             y += font_tiny.descent - font_tiny.ascent
         bacon.pop_color()
+
+        debug.draw_string(self.selected_item.description, 0, ui_height - debug.font.height)
 
 class World(object):
     def __init__(self, map):
@@ -236,13 +248,25 @@ class Character(object):
 class CombatMenuMain(Menu):
     def __init__(self, world, character):
         super(CombatMenuMain, self).__init__(world)
-        self.items.append('Offense')
-        self.items.append('Defense')
-        self.items.append('Spin')
-        self.items.append('Campaign')
+        self.items.append(MenuItem('Offense>', 'Launch a political attack', self.offense))
+        self.items.append(MenuItem('Defense', 'Gather strength; -20% to incoming attacks', self.defense))
+        self.items.append(MenuItem('Spin>', 'Run spin to get control of the situation', self.spin))
+        self.items.append(MenuItem('Campaign>', 'Run a campaign to get an edge on your opponents', self.campaign))
         self.can_dismiss = False
 
-    def select(self, item):
+    def offense(self):
+        self.world.pop_menu()
+        self.world.end_turn()
+
+    def defense(self):
+        self.world.pop_menu()
+        self.world.end_turn()
+
+    def spin(self):
+        self.world.pop_menu()
+        self.world.end_turn()
+
+    def campaign(self):
         self.world.pop_menu()
         self.world.end_turn()
 
