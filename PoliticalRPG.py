@@ -495,7 +495,7 @@ class CombatTargetMenu(Menu):
     def draw(self):
         for i in range(self.target_count):
             slot = self.slots[self.selected_index + i]
-            debug.draw_string('>', slot.x * self.world.tile_size * map_scale, slot.y * self.world.tile_size * map_scale)
+            debug.draw_string('>', slot.x * self.world.tile_size * map_scale, slot.y * self.world.tile_size * map_scale + 16)
         self.draw_status('Choose target')
         
 class Floater(object):
