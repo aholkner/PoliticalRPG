@@ -314,8 +314,8 @@ class Character(object):
         self.ai = ai
         self.dead = False
         self.data = row = random.choice(game_data.characters[id])
-        self.votes = self.calc_stat(row.votes_base, row.votes_lvl)
-        self.spin = self.calc_stat(row.spin_base, row.spin_lvl)
+        self.votes = self.max_votes = self.calc_stat(row.votes_base, row.votes_lvl)
+        self.spin = self.max_spin = self.calc_stat(row.spin_base, row.spin_lvl)
         self.speed = self.calc_stat(row.speed_base, row.speed_lvl)
         self.wit = self.calc_stat(row.wit_base, row.wit_lvl)
         self.cunning = self.calc_stat(row.cunning_base, row.cunning_lvl)
@@ -383,6 +383,9 @@ class Character(object):
                 return True
         return False
     
+    def get_effects_abbrv(self):
+        return ' '.join(ae.effect.abbrv for ae in self.active_effects)
+
 class CombatMenuMain(Menu):
     def __init__(self, world):
         super(CombatMenuMain, self).__init__(world)
@@ -482,6 +485,8 @@ class CombatTargetMenu(Menu):
 class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
+
+        self.menu_start_y = ui_height - 100
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
@@ -675,9 +680,27 @@ class CombatWorld(World):
 
     def award_spin(self, target, damage):
         target.spin += damage # TODO AMANDA
+        target.spin = min(target.spin, target.max_spin)
 
     def draw(self):
         super(CombatWorld, self).draw()
+
+        for i, slot in enumerate(self.player_slots):
+            character = slot.character
+            x = i * ui_width / 4
+            y = ui_height - 80
+            if character:
+                if character is self.current_character:
+                    bacon.push_color()
+                    bacon.set_color(0.7, 0.7, 0.7, 1)
+                    bacon.fill_rect(x, y + debug.font.ascent, x + ui_width / 4, y + debug.font.height * 3)
+                    bacon.pop_color()
+
+                dy = debug.font.height
+                debug.draw_string(character.data.name, x, y)
+                debug.draw_string('Votes: %d/%d' % (character.votes, character.max_votes), x, y + dy)
+                debug.draw_string('Spin:  %d/%d' % (character.spin, character.max_spin), x, y + dy * 2)
+                debug.draw_string(character.get_effects_abbrv(), x, y + dy * 3) 
 
         i = -1
         for slot in self.slots:
@@ -849,6 +872,7 @@ def main():
         
         game_data.effects = parse_table(combat_db['Effects'], dict(
             id = 'ID',
+            abbrv = 'Abbrev',
             apply_to_source = 'Apply To Source',
             function = 'Function',
             rounds_min = 'Number Rounds Base',
@@ -888,6 +912,7 @@ def main():
 
         game_data.characters = parse_table(combat_db['Characters'], dict(
             id = 'ID',
+            name = 'Name',
             votes_base = 'Votes',
             votes_lvl = 'Votes Lvl',
             spin_base = 'SP',
