@@ -641,7 +641,6 @@ class CombatWorld(World):
 
         # Random choice of attack
         attack = random.choice(attacks)
-        attack = game_data.attacks['DEFENSE']
 
         # Find applicable targets
         target_type = attack.target_type
