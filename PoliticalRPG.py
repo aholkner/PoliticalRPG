@@ -255,6 +255,35 @@ class MapWorld(World):
         encounter_id = other.image.properties['encounter']
         game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), encounter_id))
 
+class Effect(object):
+    id = None
+    function = None
+    rounds_min = None
+    rounds_max = None
+    attribute = None
+    value = None
+
+    def _add_value(self, character, value):
+        old_value = getattr(character, self.attribute)
+        setattr(character, self.attribute, old_value + value)
+
+    def apply(self, character):
+        if self.function == 'reduce':
+            self._add_value(character, -self.value)
+
+    def unapply(self, character):
+        if self.function == 'reduce':
+            self._add_value(character, self.value)
+
+    def update(self, character):
+        if self.function == 'drain':
+            self._add_value(character, -self.value)
+
+class ActiveEffect(object):
+    def __init__(self, effect, rounds):
+        self.effect = effect
+        self.rounds = rounds
+
 class Character(object):
     def __init__(self, id, level):
         self.id = id
@@ -271,9 +300,36 @@ class Character(object):
         self.charisma = self.calc_stat(row.charisma_base, row.charisma_lvl)
         self.flair = self.calc_stat(row.flair_base, row.flair_lvl)
         self.money = 0
+        self.active_effects = []
         
     def calc_stat(self, base, exp):
         return int(base * pow(exp, self.level - 1))
+    
+    def add_active_effect(self, active_effect):
+        for ae in self.active_effects:
+            if ae.effect.id == active_effect.effect.id:
+                return
+
+        self.active_effects.append(active_effect)
+        active_effect.effect.apply(self)
+        debug.println('Add effect %s to %s' % (active_effect.effect.id, self.id))
+
+    def remove_active_effect(self, active_effect):
+        active_effect.effect.unapply(self)
+        self.active_effects.remove(active_effect)
+        debug.println('Remove effect %s from %s' % (active_effect.effect.id, self.id))
+
+    def update_active_effects(self):
+        for ae in self.active_effects[:]:
+            ae.rounds -= 1
+            debug.println('Update effect %s on %s' % (ae.effect.id, self.id))
+            ae.effect.update(self)
+            if ae.rounds <= 0:
+                self.remove_active_effect(ae)
+
+    def remove_all_active_effects(self):
+        for ae in self.active_effects[:]:
+            self.remove_active_effect(ae)
 
 class CombatMenuMain(Menu):
     def __init__(self, world):
@@ -389,6 +445,8 @@ class CombatWorld(World):
             self.begin_round()
             return
 
+        self.current_character.update_active_effects()
+
         if self.current_character.ai:
             self.ai(self.current_character)
         else:
@@ -417,9 +475,13 @@ class CombatWorld(World):
             self.begin_turn()
 
     def win(self):
+        for character in self.characters:
+            character.remove_all_active_effects()
         game.pop_world()
 
     def lose(self):
+        for character in self.characters:
+            character.remove_all_active_effects()
         game.pop_world() # TODO
 
     def ai(self, character):
@@ -449,6 +511,11 @@ class CombatWorld(World):
             damage *= 100
 
         self.apply_damage(target, damage)
+
+        for effect in attack.effects:
+            rounds = random.randrange(effect.rounds_min, effect.rounds_max)
+            target.add_active_effect(ActiveEffect(effect, rounds))
+
         if not source.ai:
             self.award_spin(source, damage)
 
@@ -491,6 +558,10 @@ class CombatWorld(World):
                     debug.draw_string('cunning=%d' % c.cunning, x, y + dy * 6)
                     debug.draw_string('charisma=%d' % c.charisma, x, y + dy * 7)
                     debug.draw_string('flair=%d' % c.flair, x, y + dy * 8)
+                    y += dy * 8
+                    for e in c.active_effects:
+                        y += dy 
+                        debug.draw_string('+%s for %d rounds' % (e.effect.id, e.rounds), x, y)
 
 class Debug(object):
     def __init__(self):
@@ -630,6 +701,24 @@ def main():
             crit_chance_min = 'Chance To Crit Base (%)',
             crit_chance_max = 'Chance To Crit Max (%)',
         ))
+        game_data.effects = parse_table(combat_db['Effects'], dict(
+            id = 'ID',
+            function = 'Function',
+            rounds_min = 'Number Rounds Base',
+            rounds_max = 'Number Rounds Max',
+            attribute = 'Attribute Effected',
+            value = 'Base Damage',
+        ), index_unique=True, cls=Effect)
+
+        # Parse effect id list
+        for attack in game_data.attacks:
+            effects = []
+            for effect_id in attack.effects.split(','):
+                effect_id = effect_id.strip()
+                if effect_id:
+                    effects.append(game_data.effects[effect_id])
+            attack.effects = effects
+
         game_data.characters = parse_table(combat_db['Characters'], dict(
             id = 'ID',
             votes_base = 'Votes',
