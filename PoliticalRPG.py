@@ -582,7 +582,7 @@ class CombatWorld(World):
         # Miss turn, do AI or show UI
         if miss_turn:
             debug.println('%s misses turn' % self.current_character.id)
-            self.after(1, self.end_turn)
+            self.after(2, self.end_turn)
         elif self.current_character.ai:
             self.after(0.5, self.ai)
         else:
@@ -786,7 +786,7 @@ class CombatWorld(World):
                 source.add_active_effect(ActiveEffect(critical_fail_effect, rounds))
                 self.add_floater(source, 'Critical fail')
 
-        self.after(1, self.end_turn)
+        self.after(2, self.end_turn)
 
     def apply_damage(self, target, damage):
         target.votes -= damage
