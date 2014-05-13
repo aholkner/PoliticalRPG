@@ -47,10 +47,11 @@ class Slot(object):
         self.sprite = None
 
 class MenuItem(object):
-    def __init__(self, name, description, func=None):
+    def __init__(self, name, description, func=None, enabled=True):
         self.name = name
         self.description = description
         self.func = func
+        self.enabled = enabled
 
 class Menu(object):
     def __init__(self, world):
@@ -86,7 +87,9 @@ class Menu(object):
         bacon.push_color()
         for i, item in enumerate(self.items):
             y -= font_tiny.ascent
-            if i == self.selected_index:
+            if not item.enabled:
+                bacon.set_color(0.7, 0.7, 0.7, 1)
+            elif i == self.selected_index:
                 bacon.set_color(1, 1, 0, 1)
             else:
                 bacon.set_color(1, 1, 1, 1)
@@ -288,12 +291,17 @@ class ActiveEffect(object):
         self.effect = effect
         self.rounds = rounds
 
+class ItemAttack(object):
+    def __init__(self, attack, quantity=1):
+        self.attack = attack
+        self.quantity = quantity
+       
 class Character(object):
-    def __init__(self, id, level):
+    def __init__(self, id, level, ai=True):
         self.id = id
         self.image = game_sprites[id]
         self.level = level
-        self.ai = True
+        self.ai = ai
         self.dead = False
         self.data = row = random.choice(game_data.characters[id])
         self.votes = self.calc_stat(row.votes_base, row.votes_lvl)
@@ -306,7 +314,30 @@ class Character(object):
         self.money = 0
         self.resistance = 0
         self.active_effects = []
-        
+        self.item_attacks = []
+        for attack in row.item_attacks:
+            self.add_item_attack(attack)
+
+        if ai:
+            self.spin_attacks = row.spin_attacks
+        else:
+            self.spin_attacks = list(row.spin_attacks)
+
+    def add_item_attack(self, attack):
+        for ia in self.item_attacks:
+            if ia.attack is attack:
+                ia.quantity += 1
+                return
+        self.item_attacks.append(ItemAttack(attack, 1))
+
+    def remove_item_attack(self, attack):
+        for ia in self.item_attacks:
+            if ia.attack is attack:
+                ia.quantity -= 1
+                if ia.quantity == 0:
+                    self.item_attacks.remove(ia)
+                return
+
     def calc_stat(self, base, exp):
         return int(base * pow(exp, self.level - 1))
     
@@ -345,31 +376,43 @@ class Character(object):
 class CombatMenuMain(Menu):
     def __init__(self, world):
         super(CombatMenuMain, self).__init__(world)
-        self.items.append(MenuItem('Offense>', 'Launch a political attack', self.offense))
-        self.items.append(MenuItem('Defense', game_data.attacks['Defense'].description, self.defense))
-        self.items.append(MenuItem('Spin>', 'Run spin to get control of the situation', self.spin))
-        self.items.append(MenuItem('Campaign>', 'Run a campaign to get an edge on your opponents', self.campaign))
+        character = self.world.current_character
+
+        self.items.append(MenuItem('Offense>', 'Launch a political attack', self.on_offense))
+        self.items.append(MenuItem('Defense', game_data.attacks['Defense'].description, self.on_defense))
+        self.items.append(MenuItem('Spin>', 'Run spin to get control of the situation', self.on_spin, enabled=bool(character.spin_attacks)))
+        self.items.append(MenuItem('Items>', 'Use an item from your briefcase', self.on_items, enabled=bool(character.item_attacks)))
         self.can_dismiss = False
 
-    def offense(self):
-        self.world.push_menu(CombatOffenseMenu(self.world))
+    def on_offense(self):
+        self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.data.standard_attacks))
 
-    def defense(self):
+    def on_defense(self):
         self.world.action_attack(game_data.attacks['Defense'], [])
 
-    def spin(self):
-        self.world.pop_menu()
-        self.world.end_turn()
+    def on_spin(self):
+        self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.spin_attacks))
 
-    def campaign(self):
-        self.world.pop_menu()
-        self.world.end_turn()
+    def on_items(self):
+        self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.item_attacks))
 
 class CombatOffenseMenu(Menu):
-    def __init__(self, world):
+    def __init__(self, world, attacks):
         super(CombatOffenseMenu, self).__init__(world)
-        for attack in world.current_character.data.standard_attacks:
-            self.items.append(MenuItem(attack.name, attack.description, partial(self.select, attack)))
+        for attack in attacks:
+            if isinstance(attack, ItemAttack):
+                quantity = attack.quantity
+                attack = attack.attack
+            else:
+                quantity = 1
+
+            if quantity > 1:
+                name = '%s (x%d)' % (attack.name, quantity)
+            else:
+                name = attack.name
+
+            enabled = world.current_character.spin >= attack.spin_cost
+            self.items.append(MenuItem(name, attack.description, partial(self.select, attack), enabled=enabled))
 
     def select(self, attack):
         if attack.target_type == 'None':
@@ -379,7 +422,7 @@ class CombatOffenseMenu(Menu):
 
     def choose_target(self, attack, targets):
         self.world.action_attack(attack, targets)
-
+        
 class CombatTargetMenu(Menu):
     def __init__(self, world, target_type, target_count, func):
         super(CombatTargetMenu, self).__init__(world)
@@ -432,11 +475,9 @@ class CombatWorld(World):
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
-        self.fill_slot(self.player_slots[1], Character('Player', 1))
-        self.fill_slot(self.player_slots[2], Character('Player', 1))
-        self.fill_slot(self.player_slots[3], Character('Player', 1))
-        for slot in self.player_slots:
-            slot.character.ai = False
+        self.fill_slot(self.player_slots[1], Character('Player', 1, False))
+        self.fill_slot(self.player_slots[2], Character('Player', 1, False))
+        self.fill_slot(self.player_slots[3], Character('Player', 1, False))
         
         encounter = game_data.encounters[encounter_id]
         if encounter.monster1:
@@ -541,7 +582,17 @@ class CombatWorld(World):
             assert False # TODO
         else:
             assert False
-            
+        
+        # Consume spin
+        if attack.spin_cost:
+            debug.println('%s consumed %d spin, has %d remaining' % (source.id, attack.spin_cost, source.spin))
+            source.spin = max(0, source.spin - attack.spin_cost)
+
+        # Consume item
+        if (not attack in source.spin_attacks) and (not attack in source.data.standard_attacks):
+            debug.println('%s consumed item %s' % (source.id, attack.name))
+            source.remove_item_attack(attack)
+
         # Apply effects to source
         for effect in attack.effects:
             rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
@@ -599,7 +650,7 @@ class CombatWorld(World):
 
             # Award spin for damage dealt
             if not source.ai:
-                self.award_spin(source, damage)
+                self.award_spin(source, max(0, damage))
 
             debug.println('%s attacks %s with %s for %d' % (source.id, target.id, attack.name, damage))
 
@@ -799,6 +850,7 @@ def main():
         game_data.attacks = parse_table(combat_db['Attacks'], dict(
             name = 'Attack Name',
             description = 'Description',
+            spin_cost = 'Spin Cost',
             target_type = 'Target Type',
             target_count = 'Target Count',
             underlying_stat = 'Underlying Stat',
@@ -813,6 +865,7 @@ def main():
         for attack in game_data.attacks.values():
             attack.target_count = int(attack.target_count)
             attack.effects = convert_idlist_to_objlist(attack.effects, game_data.effects)
+            attack.spin_cost = attack.spin_cost if attack.spin_cost else 0
 
         game_data.standard_attacks = parse_table(combat_db['StandardAttacks'], dict(
             group = 'AttackGroup',
@@ -839,10 +892,11 @@ def main():
             charisma_lvl = 'Cha Lvl',
             flair_base = 'Flr',
             flair_lvl = 'Flr Lvl',
+            attack_group = 'AttackGroup',
             immunities = 'Immunities',
             resistance = 'Resistance',
             weaknesses = 'Weaknesses',
-            attack_group = 'AttackGroup',
+            item_attacks = 'Items',
         ), index_multi=True)
 
         # Parse characters
@@ -851,7 +905,10 @@ def main():
                 character.immunities = convert_idlist_to_objlist(character.immunities, game_data.attacks)
                 character.resistance = convert_idlist_to_objlist(character.resistance, game_data.attacks)
                 character.weaknesses = convert_idlist_to_objlist(character.weaknesses, game_data.attacks)
-                character.standard_attacks = game_data.standard_attacks[character.attack_group]
+                attacks = game_data.standard_attacks[character.attack_group]
+                character.spin_attacks = [attack for attack in attacks if attack.spin_cost]
+                character.standard_attacks = [attack for attack in attacks if not attack.spin_cost]
+                character.item_attacks = convert_idlist_to_objlist(character.item_attacks, game_data.attacks)
 
         game_data.encounters = parse_table(combat_db['Encounters'], dict(
             id = 'ID',
@@ -863,6 +920,8 @@ def main():
             monster3_lvl = 'Monster 3 Lvl',
             monster4 = 'Monster 4',
             monster4_lvl = 'Monster 4 Lvl',
+            xp = 'XP',
+            drops = 'Drops'
         ), index_unique=True)
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:
