@@ -292,7 +292,7 @@ class Character(object):
         self.level = level
         self.ai = True
         self.dead = False
-        row = random.choice(game_data.characters[id])
+        self.data = row = random.choice(game_data.characters[id])
         self.votes = self.calc_stat(row.votes_base, row.votes_lvl)
         self.spin = self.calc_stat(row.spin_base, row.spin_lvl)
         self.speed = self.calc_stat(row.speed_base, row.speed_lvl)
@@ -365,7 +365,7 @@ class CombatMenuMain(Menu):
 class CombatOffenseMenu(Menu):
     def __init__(self, world):
         super(CombatOffenseMenu, self).__init__(world)
-        for attack in game_data.attacks:
+        for attack in game_data.attacks.values():
             self.items.append(MenuItem(attack.name, attack.description, partial(self.select, attack)))
 
     def select(self, attack):
@@ -424,6 +424,9 @@ class CombatWorld(World):
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
+        self.fill_slot(self.player_slots[1], Character('Player', 1))
+        self.fill_slot(self.player_slots[2], Character('Player', 1))
+        self.fill_slot(self.player_slots[3], Character('Player', 1))
         
         encounter = game_data.encounters[encounter_id]
         if encounter.monster1:
@@ -528,6 +531,10 @@ class CombatWorld(World):
             assert False
 
         for target in targets:
+            if attack in target.data.immunities:
+                debug.println('%s is immune to %s' % (target.id, attack.name))
+                continue
+
             modifiers = 0
             crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max + 1)
             crit_success = random.randrange(0, 100) <= crit_chance
@@ -538,6 +545,13 @@ class CombatWorld(World):
         
             if debug.massive_damage and not source.ai:
                 damage *= 100
+
+            if attack in target.data.resistance:
+                debug.println('%s is resistant to %s' % (target.id, attack.name))
+                damage = int(damage * 0.7)
+            elif attack in target.data.weaknesses:
+                debug.println('%s is weak to %s' % (target.id, attack.name))
+                damage = int(damage * 1.3)
 
             self.apply_damage(target, damage)
 
@@ -613,6 +627,7 @@ class Debug(object):
             self.println('massive_damage = %s' % self.massive_damage)
 
     def println(self, msg):
+        print msg
         self.message = msg
         self.message_timeout = 1.0
 
@@ -691,6 +706,9 @@ def parse_table(table, columns, cls=TableRow, index_unique=False, index_multi=Fa
 
     for row in table[1:]:
         if len(row) < column_count:
+            row.extend([''] * (column_count - len(row)))
+
+        if row[0] == '':
             continue
 
         obj_row = cls()
@@ -713,6 +731,14 @@ def parse_table(table, columns, cls=TableRow, index_unique=False, index_multi=Fa
 class GameData(object):
     pass
 
+def convert_idlist_to_objlist(value, index):
+    result = []
+    for id in value.split(','):
+        id = id.strip()
+        if id:
+            result.append(index[id])
+    return result
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('--import-ods')
@@ -723,6 +749,17 @@ def main():
         import odsimport
         combat_db = odsimport.import_ods(os.path.join(options.import_ods, 'Combat.ods'))
         game_data = GameData()
+        
+        game_data.effects = parse_table(combat_db['Effects'], dict(
+            id = 'ID',
+            apply_to_source = 'Apply To Source',
+            function = 'Function',
+            rounds_min = 'Number Rounds Base',
+            rounds_max = 'Number Rounds Max',
+            attribute = 'Attribute Effected',
+            value = 'Base Damage',
+        ), index_unique=True, cls=Effect)
+
         game_data.attacks = parse_table(combat_db['Attacks'], dict(
             name = 'Attack Name',
             description = 'Description',
@@ -735,30 +772,11 @@ def main():
             crit_base_damage = 'Crit Base Damage',
             crit_chance_min = 'Chance To Crit Base (%)',
             crit_chance_max = 'Chance To Crit Max (%)',
-        ))
+        ), index_unique=True)
 
-        # Fix up attack types
-        for attack in game_data.attacks:
+        for attack in game_data.attacks.values():
             attack.target_count = int(attack.target_count)
-
-        game_data.effects = parse_table(combat_db['Effects'], dict(
-            id = 'ID',
-            apply_to_source = 'Apply To Source',
-            function = 'Function',
-            rounds_min = 'Number Rounds Base',
-            rounds_max = 'Number Rounds Max',
-            attribute = 'Attribute Effected',
-            value = 'Base Damage',
-        ), index_unique=True, cls=Effect)
-
-        # Parse effect id list
-        for attack in game_data.attacks:
-            effects = []
-            for effect_id in attack.effects.split(','):
-                effect_id = effect_id.strip()
-                if effect_id:
-                    effects.append(game_data.effects[effect_id])
-            attack.effects = effects
+            attack.effects = convert_idlist_to_objlist(attack.effects, game_data.effects)
 
         game_data.characters = parse_table(combat_db['Characters'], dict(
             id = 'ID',
@@ -776,7 +794,18 @@ def main():
             charisma_lvl = 'Cha Lvl',
             flair_base = 'Flr',
             flair_lvl = 'Flr Lvl',
+            immunities = 'Immunities',
+            resistance = 'Resistance',
+            weaknesses = 'Weaknesses'
         ), index_multi=True)
+
+        # Parse characters
+        for characters in game_data.characters.values():
+            for character in characters:
+                character.immunities = convert_idlist_to_objlist(character.immunities, game_data.attacks)
+                character.resistance = convert_idlist_to_objlist(character.resistance, game_data.attacks)
+                character.weaknesses = convert_idlist_to_objlist(character.weaknesses, game_data.attacks)
+
         game_data.encounters = parse_table(combat_db['Encounters'], dict(
             id = 'ID',
             monster1 = 'Monster 1',
