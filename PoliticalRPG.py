@@ -412,7 +412,7 @@ class CombatMenuMain(Menu):
         self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.data.standard_attacks))
 
     def on_defense(self):
-        self.world.action_attack(game_data.attacks['Defense'], [])
+        self.world.action_attack(game_data.attacks['DEFENSE'], [])
 
     def on_spin(self):
         self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.spin_attacks))
@@ -486,10 +486,10 @@ class CombatTargetMenu(Menu):
             self.selected_index = (self.selected_index - 1) % (len(self.slots) - self.target_count + 1)
         elif key == bacon.Keys.right:
             self.selected_index = (self.selected_index + 1) % (len(self.slots) - self.target_count + 1)
-        elif key == bacon.Keys.up or key == bacon.Keys.escape:
+        elif key == bacon.Keys.escape:
             if self.can_dismiss:
                 self.world.pop_menu()
-        elif key == bacon.Keys.down or key == bacon.Keys.enter:
+        elif key == bacon.Keys.enter:
             self.func([slot.character for slot in self.selected_slots])
 
     def draw(self):
@@ -512,6 +512,8 @@ class CombatWorld(World):
         self.menu_start_y = ui_height - 100
 
         self.floaters = []
+        self.active_attack = None
+        self.active_targets = None
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
@@ -573,6 +575,10 @@ class CombatWorld(World):
             self.push_menu(CombatMenuMain(self))
 
     def end_turn(self):
+        # End attack
+        self.active_attack = None
+        self.active_targets = None
+
         # Check end condition
         win = True
         lose = True
@@ -645,8 +651,16 @@ class CombatWorld(World):
         self.action_attack(attack, targets)
 
     def action_attack(self, attack, targets):
-        source = self.current_character
         self.pop_all_menus()
+
+        self.active_attack = attack
+        self.active_targets = targets
+        self.after(1, self.action_attack_step2)
+
+    def action_attack_step2(self):
+        source = self.current_character
+        attack = self.active_attack
+        targets = self.active_targets
         
         if not attack.underlying_stat:
             base_stat = 0
@@ -727,7 +741,7 @@ class CombatWorld(World):
             self.apply_damage(target, damage)
 
             if damage == 0:
-                self.add_floater(target, 'Undamaged')
+                self.add_floater(target, '0')
 
             # Apply target effects
             for effect in attack.effects:
@@ -770,6 +784,9 @@ class CombatWorld(World):
 
     def draw(self):
         super(CombatWorld, self).draw()
+
+        if self.active_attack:
+            bacon.draw_string(debug.font, self.active_attack.name, ui_width / 2, 40, None, None, bacon.Alignment.center)
 
         for floater in self.floaters[:]:
             floater.timeout -= bacon.timestep
@@ -983,6 +1000,7 @@ def main():
         ), index_unique=True, cls=Effect)
 
         game_data.attacks = parse_table(combat_db['Attacks'], dict(
+            id = 'ID',
             name = 'Attack Name',
             description = 'Description',
             spin_cost = 'Spin Cost',
