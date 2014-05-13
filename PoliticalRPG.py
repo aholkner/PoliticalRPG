@@ -67,9 +67,7 @@ class Menu(object):
         for item in self.items:
             self.width = max(font_tiny.measure_string(item.name), self.width)
 
-        # select first enabled item
-        self.selected_index = -1
-        self.move_selection(1)
+        self.selected_index = 0
 
     @property
     def selected_item(self):
@@ -90,8 +88,6 @@ class Menu(object):
     def move_selection(self, dir):
         start = max(0, self.selected_index)
         self.selected_index = (self.selected_index + dir) % len(self.items)
-        while self.selected_index != start and not self.selected_item.enabled:
-            self.selected_index = (self.selected_index + dir) % len(self.items)
 
     def draw(self):
         y = self.y
@@ -99,11 +95,14 @@ class Menu(object):
         for i, item in enumerate(self.items):
             y -= font_tiny.ascent
             if not item.enabled:
-                bacon.set_color(0.7, 0.7, 0.7, 1)
-            elif i == self.selected_index:
-                bacon.set_color(1, 1, 0, 1)
+                m = 0.7
             else:
-                bacon.set_color(1, 1, 1, 1)
+                m = 1
+
+            if i == self.selected_index:
+                bacon.set_color(m, m, 0, 1)
+            else:
+                bacon.set_color(m, m, m, 1)
             bacon.draw_string(font_tiny, item.name, self.x, y)
             y += font_tiny.descent
         bacon.pop_color()
