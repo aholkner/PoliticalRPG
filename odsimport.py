@@ -1,5 +1,7 @@
 from odf.opendocument import load
 from odf.table import Table, TableRow, TableCell
+from odf.namespaces import TABLENS
+
 from odf.text import P
 
 def import_ods(path):
@@ -20,7 +22,16 @@ def import_ods(path):
                     db_value = float(db_value)
                 except:
                     pass
-                db_row.append(db_value)
+                
+                try:
+                    repeat_count = int(cell.getAttribute('numbercolumnsrepeated'))
+                except:
+                    repeat_count = 1
+
+                if not cell.nextSibling:
+                    repeat_count = 1
+                for i in range(repeat_count):
+                    db_row.append(db_value)
 
     return db
          
