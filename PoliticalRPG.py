@@ -57,9 +57,9 @@ class Menu(object):
     def __init__(self, world):
         self.world = world
         self.items = []
-        self.selected_index = 0
         self.x = self.y = 0
         self.can_dismiss = True
+        self.selected_index = 0
 
     def layout(self):
         self.width = 0
@@ -67,20 +67,30 @@ class Menu(object):
         for item in self.items:
             self.width = max(font_tiny.measure_string(item.name), self.width)
 
+        # select first enabled item
+        self.selected_index = -1
+        self.move_selection(1)
+
     @property
     def selected_item(self):
         return self.items[self.selected_index]
 
     def on_key_pressed(self, key):
         if key == bacon.Keys.up:
-            self.selected_index = (self.selected_index - 1) % len(self.items)
+            self.move_selection(-1)
         elif key == bacon.Keys.down:
-            self.selected_index = (self.selected_index + 1) % len(self.items)
+            self.move_selection(1)
         elif key == bacon.Keys.left or key == bacon.Keys.escape:
             if self.can_dismiss:
                 self.world.pop_menu()
         elif key == bacon.Keys.right or key == bacon.Keys.enter:
             self.selected_item.func()
+
+    def move_selection(self, dir):
+        start = self.selected_index
+        self.selected_index = (self.selected_index + dir) % len(self.items)
+        while self.selected_index != start and not self.selected_item.enabled:
+            self.selected_index = (self.selected_index + dir) % len(self.items)
 
     def draw(self):
         y = self.y
