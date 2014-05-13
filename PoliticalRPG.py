@@ -281,8 +281,22 @@ class Effect(object):
     value = None
 
     def _add_value(self, character, value):
-        old_value = getattr(character, self.attribute)
-        setattr(character, self.attribute, old_value + value)
+        if self.attribute == 'spin':
+            character.spin = clamp(character.spin + value, 0, character.max_spin)
+        elif self.attribute == 'votes':
+            character.votes = clamp(character.votes + value, 0, character.max_votes)
+        elif self.attribute == 'wit':
+            character.wit = max(0, character.wit + value)
+        elif self.attribute == 'cunning':
+            character.cunning = max(0, character.cunning + value)
+        elif self.attribute == 'charisma':
+            character.charisma = max(0, character.charisma + value)
+        elif self.attribute == 'flair':
+            character.flair = max(0, character.flair + value)
+        elif self.attribute == 'resistance':
+            character.resistance = max(0, character.resistance + value)
+        elif self.attribute == 'money':
+            character.resistance = max(0, character.money + value)
 
     def apply(self, character):
         if self.function == 'reduce':
@@ -372,7 +386,8 @@ class Character(object):
             self.remove_active_effect(active_effect)
 
     def remove_active_effect(self, active_effect):
-        active_effect.effect.unapply(self)
+        if active_effect.rounds != 0:
+            active_effect.effect.unapply(self) # unapply is not given to 0-round effects, these are treated as permanent
         self.active_effects.remove(active_effect)
         debug.println('Remove effect %s from %s' % (active_effect.effect.id, self.id))
 
@@ -638,8 +653,10 @@ class CombatWorld(World):
             slots = [slot for slot in self.monster_slots if slot.character and slot.character.dead]
         elif target_type == 'All':
             slots = [slot for slot in self.slots if slot.character and not slot.character.dead]
+        elif target_type == 'None':
+            slots = [self.get_slot(source)]
         else:
-            assert False
+            assert False, 'Unsupported target type'
 
         # Choose target(s)
         slots.sort(key=lambda slot: slot.x)
