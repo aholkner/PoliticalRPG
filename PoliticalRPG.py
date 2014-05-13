@@ -369,41 +369,53 @@ class CombatOffenseMenu(Menu):
             self.items.append(MenuItem(attack.name, attack.description, partial(self.select, attack)))
 
     def select(self, attack):
-        self.world.push_menu(CombatTargetMenu(self.world, partial(self.choose_target, attack)))
+        self.world.push_menu(CombatTargetMenu(self.world, attack.target_type, attack.target_count, partial(self.choose_target, attack)))
 
-    def choose_target(self, attack, target):
-        self.world.action_attack(attack, target)
+    def choose_target(self, attack, targets):
+        self.world.action_attack(attack, targets)
 
 class CombatTargetMenu(Menu):
-    def __init__(self, world, func):
+    def __init__(self, world, target_type, target_count, func):
         super(CombatTargetMenu, self).__init__(world)
+        self.target_type = target_type
+        self.target_count = target_count
         self.func = func
         self.can_dismiss = True
         self.width = 0
         self.height = 0
 
-        self.slots = [slot for slot in self.world.monster_slots if slot.character and not slot.character.dead]
+        if target_type == 'AllEnemy':
+            self.slots = [slot for slot in self.world.monster_slots if slot.character and not slot.character.dead]
+        elif target_type == 'AllFriendly':
+            self.slots = [slot for slot in self.world.player_slots if slot.character and not slot.character.dead]
+        elif target_type == 'All':
+            self.slots = [slot for slot in self.world.slots if slot.character and not slot.character.dead]
+
+        self.slots.sort(key=lambda slot: slot.x)
+        self.target_count = min(self.target_count, len(self.slots))
 
     @property
-    def selected_slot(self):
-        return self.slots[self.selected_index]
+    def selected_slots(self):
+        return self.slots[self.selected_index:self.selected_index+self.target_count]
 
     def layout(self):
         pass
 
     def on_key_pressed(self, key):
         if key == bacon.Keys.left:
-            self.selected_index = (self.selected_index - 1) % len(self.slots)
+            self.selected_index = (self.selected_index - 1) % (len(self.slots) - self.target_count + 1)
         elif key == bacon.Keys.right:
-            self.selected_index = (self.selected_index + 1) % len(self.slots)
+            self.selected_index = (self.selected_index + 1) % (len(self.slots) - self.target_count + 1)
         elif key == bacon.Keys.up or key == bacon.Keys.escape:
             if self.can_dismiss:
                 self.world.pop_menu()
         elif key == bacon.Keys.down or key == bacon.Keys.enter:
-            self.func(self.selected_slot.character)
+            self.func([slot.character for slot in self.selected_slots])
 
     def draw(self):
-        debug.draw_string('>', self.selected_slot.x * self.world.tile_size * map_scale, self.selected_slot.y * self.world.tile_size * map_scale)
+        for i in range(self.target_count):
+            slot = self.slots[self.selected_index + i]
+            debug.draw_string('>', slot.x * self.world.tile_size * map_scale, slot.y * self.world.tile_size * map_scale)
         self.draw_status('Choose target')
 
 class CombatWorld(World):
@@ -502,42 +514,45 @@ class CombatWorld(World):
     def ai(self, character):
         self.after(0.5, self.end_turn)
 
-    def action_attack(self, attack, target):
+    def action_attack(self, attack, targets):
         source = self.current_character
         self.pop_all_menus()
-
+        
         if attack.underlying_stat == 'Cunning':
             base_stat = max(source.cunning, 0)
         elif attack.underlying_stat == 'Wit':
             base_stat = max(source.wit, 0)
         elif attack.underlying_stat == 'Money':
-            assert False
+            assert False # TODO
         else:
             assert False
-        modifiers = 0
-        crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max + 1)
-        crit_success = random.randrange(0, 100) <= crit_chance
-        if crit_success:
-            damage = base_stat * (attack.crit_base_damage + modifiers)
-        else:
-            damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max + 1) + modifiers)
-        
-        if debug.massive_damage and not source.ai:
-            damage *= 100
 
-        self.apply_damage(target, damage)
-
-        for effect in attack.effects:
-            rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
-            if effect.apply_to_source:
-                source.add_active_effect(ActiveEffect(effect, rounds))
+        for target in targets:
+            modifiers = 0
+            crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max + 1)
+            crit_success = random.randrange(0, 100) <= crit_chance
+            if crit_success:
+                damage = base_stat * (attack.crit_base_damage + modifiers)
             else:
-                target.add_active_effect(ActiveEffect(effect, rounds))
+                damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max + 1) + modifiers)
+        
+            if debug.massive_damage and not source.ai:
+                damage *= 100
 
-        if not source.ai:
-            self.award_spin(source, damage)
+            self.apply_damage(target, damage)
 
-        debug.println('%s attacks %s with %s for %d' % (source.id, target.id, attack.name, damage))
+            for effect in attack.effects:
+                rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
+                if effect.apply_to_source:
+                    source.add_active_effect(ActiveEffect(effect, rounds))
+                else:
+                    target.add_active_effect(ActiveEffect(effect, rounds))
+
+            if not source.ai:
+                self.award_spin(source, damage)
+
+            debug.println('%s attacks %s with %s for %d' % (source.id, target.id, attack.name, damage))
+
         self.after(1, self.end_turn)
 
     def apply_damage(self, target, damage):
@@ -711,6 +726,8 @@ def main():
         game_data.attacks = parse_table(combat_db['Attacks'], dict(
             name = 'Attack Name',
             description = 'Description',
+            target_type = 'Target Type',
+            target_count = 'Target Count',
             underlying_stat = 'Underlying Stat',
             effects = 'Special Effects',
             base_damage_min = 'Base Damage',
@@ -719,6 +736,11 @@ def main():
             crit_chance_min = 'Chance To Crit Base (%)',
             crit_chance_max = 'Chance To Crit Max (%)',
         ))
+
+        # Fix up attack types
+        for attack in game_data.attacks:
+            attack.target_count = int(attack.target_count)
+
         game_data.effects = parse_table(combat_db['Effects'], dict(
             id = 'ID',
             apply_to_source = 'Apply To Source',
