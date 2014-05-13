@@ -285,6 +285,10 @@ class Effect(object):
             self._add_value(character, -self.value)
         elif self.function == 'add':
             self._add_value(character, self.value)
+        elif self.function == 'revive':
+            character.votes = int(character.max_votes * self.value)
+            game.world.set_dead(character, False)
+            game.world.add_floater(character, 'Revived!')
 
     def unapply(self, character):
         if self.function == 'reduce':
@@ -359,6 +363,9 @@ class Character(object):
         self.active_effects.append(active_effect)
         active_effect.effect.apply(self)
         debug.println('Add effect %s to %s' % (active_effect.effect.id, self.id))
+        
+        if active_effect.rounds == 0:
+            self.remove_active_effect(active_effect)
 
     def remove_active_effect(self, active_effect):
         active_effect.effect.unapply(self)
@@ -425,6 +432,9 @@ class CombatOffenseMenu(Menu):
                 name = attack.name
 
             enabled = world.current_character.spin >= attack.spin_cost
+            if attack.target_type == 'DeadFriendly' and not [slot for slot in self.world.player_slots if slot.character and slot.character.dead]:
+                enabled = False
+
             self.items.append(MenuItem(name, attack.description, partial(self.select, attack), enabled=enabled))
 
     def select(self, attack):
@@ -450,6 +460,8 @@ class CombatTargetMenu(Menu):
             self.slots = [slot for slot in self.world.monster_slots if slot.character and not slot.character.dead]
         elif target_type == 'AllFriendly':
             self.slots = [slot for slot in self.world.player_slots if slot.character and not slot.character.dead]
+        elif target_type == 'DeadFriendly':
+            self.slots = [slot for slot in self.world.player_slots if slot.character and slot.character.dead]
         elif target_type == 'All':
             self.slots = [slot for slot in self.world.slots if slot.character and not slot.character.dead]
         else:
@@ -691,13 +703,16 @@ class CombatWorld(World):
 
         if damage > 0:
             self.add_floater(target, '%d' % damage)
-        else:
+        elif damage < 0:
             self.add_floater(target, '+%d' % -damage)
 
         if target.votes <= 0:
             target.votes = 0
-            target.dead = True
-            self.get_slot(target).sprite.effect_dead = True
+            self.set_dead(target, True)
+            
+    def set_dead(self, character, dead):
+        character.dead = dead
+        self.get_slot(character).sprite.effect_dead = dead
 
     def award_spin(self, target, damage):
         target.spin += damage # TODO AMANDA
