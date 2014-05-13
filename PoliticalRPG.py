@@ -535,6 +535,8 @@ class CombatWorld(World):
     def begin_round(self):
         self.characters.sort(key=lambda c:c.speed, reverse=True)
         self.current_character_index = 0
+        while self.current_character_index < len(self.characters) and self.current_character.dead:
+                self.current_character_index += 1
         self.begin_turn()
 
     def begin_turn(self):
@@ -777,6 +779,12 @@ class Debug(object):
         elif key == bacon.Keys.f1:
             self.massive_damage = not self.massive_damage
             self.println('massive_damage = %s' % self.massive_damage)
+        elif key == bacon.Keys.numpad_add:
+            if isinstance(game.world, CombatWorld):
+                game.world.apply_damage(game.world.current_character, -10)
+        elif key == bacon.Keys.numpad_sub:
+            if isinstance(game.world, CombatWorld):
+                game.world.apply_damage(game.world.current_character, 10)
 
     def println(self, msg):
         print msg
