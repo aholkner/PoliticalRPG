@@ -295,12 +295,12 @@ class Effect(object):
         elif self.attribute == 'resistance':
             character.resistance = max(0, character.resistance + value)
         elif self.attribute == 'money':
-            character.resistance = max(0, character.money + value)
+            character.money = max(0, character.money + value)
 
     def apply(self, character):
         if self.function == 'reduce':
             self._add_value(character, -self.value)
-        elif self.function == 'add':
+        elif self.function == 'add' or self.function == 'add_permanent':
             self._add_value(character, self.value)
         elif self.function == 'revive':
             character.votes = int(character.max_votes * self.value)
@@ -385,8 +385,7 @@ class Character(object):
             self.remove_active_effect(active_effect)
 
     def remove_active_effect(self, active_effect):
-        if active_effect.rounds != 0:
-            active_effect.effect.unapply(self) # unapply is not given to 0-round effects, these are treated as permanent
+        active_effect.effect.unapply(self)
         self.active_effects.remove(active_effect)
         debug.println('Remove effect %s from %s' % (active_effect.effect.id, self.id))
 
@@ -642,6 +641,7 @@ class CombatWorld(World):
 
         # Random choice of attack
         attack = random.choice(attacks)
+        attack = game_data.attacks['DEFENSE']
 
         # Find applicable targets
         target_type = attack.target_type
