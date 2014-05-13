@@ -271,10 +271,14 @@ class Effect(object):
     def apply(self, character):
         if self.function == 'reduce':
             self._add_value(character, -self.value)
+        elif self.function == 'add':
+            self._add_value(character, self.value)
 
     def unapply(self, character):
         if self.function == 'reduce':
             self._add_value(character, self.value)
+        elif self.function == 'add':
+            self._add_value(character, -self.value)
 
     def update(self, character):
         if self.function == 'drain':
@@ -301,6 +305,7 @@ class Character(object):
         self.charisma = self.calc_stat(row.charisma_base, row.charisma_lvl)
         self.flair = self.calc_stat(row.flair_base, row.flair_lvl)
         self.money = 0
+        self.resistance = 0
         self.active_effects = []
         
     def calc_stat(self, base, exp):
@@ -369,7 +374,10 @@ class CombatOffenseMenu(Menu):
             self.items.append(MenuItem(attack.name, attack.description, partial(self.select, attack)))
 
     def select(self, attack):
-        self.world.push_menu(CombatTargetMenu(self.world, attack.target_type, attack.target_count, partial(self.choose_target, attack)))
+        if attack.target_type == 'None':
+            self.world.action_attack(attack, [])
+        else:
+            self.world.push_menu(CombatTargetMenu(self.world, attack.target_type, attack.target_count, partial(self.choose_target, attack)))
 
     def choose_target(self, attack, targets):
         self.world.action_attack(attack, targets)
@@ -390,6 +398,8 @@ class CombatTargetMenu(Menu):
             self.slots = [slot for slot in self.world.player_slots if slot.character and not slot.character.dead]
         elif target_type == 'All':
             self.slots = [slot for slot in self.world.slots if slot.character and not slot.character.dead]
+        else:
+            assert False
 
         self.slots.sort(key=lambda slot: slot.x)
         self.target_count = min(self.target_count, len(self.slots))
@@ -427,6 +437,8 @@ class CombatWorld(World):
         self.fill_slot(self.player_slots[1], Character('Player', 1))
         self.fill_slot(self.player_slots[2], Character('Player', 1))
         self.fill_slot(self.player_slots[3], Character('Player', 1))
+        for slot in self.player_slots:
+            slot.character.ai = False
         
         encounter = game_data.encounters[encounter_id]
         if encounter.monster1:
@@ -521,7 +533,9 @@ class CombatWorld(World):
         source = self.current_character
         self.pop_all_menus()
         
-        if attack.underlying_stat == 'Cunning':
+        if not attack.underlying_stat:
+            base_stat = 0
+        elif attack.underlying_stat == 'Cunning':
             base_stat = max(source.cunning, 0)
         elif attack.underlying_stat == 'Wit':
             base_stat = max(source.wit, 0)
@@ -529,39 +543,63 @@ class CombatWorld(World):
             assert False # TODO
         else:
             assert False
+            
+        # Apply effects to source
+        for effect in attack.effects:
+            rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
+            if effect.apply_to_source:
+                source.add_active_effect(ActiveEffect(effect, rounds))
 
+        # Attack targets
         for target in targets:
+            # Immunity
             if attack in target.data.immunities:
                 debug.println('%s is immune to %s' % (target.id, attack.name))
                 continue
 
+            # Crit
             modifiers = 0
-            crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max + 1)
-            crit_success = random.randrange(0, 100) <= crit_chance
+            if attack.crit_chance_max:
+                crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max + 1)
+                crit_success = random.randrange(0, 100) <= crit_chance
+            else:
+                crit_success = False
+
+            # Damage
             if crit_success:
                 damage = base_stat * (attack.crit_base_damage + modifiers)
             else:
                 damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max + 1) + modifiers)
         
+            # Cheat damage
             if debug.massive_damage and not source.ai:
                 damage *= 100
 
-            if attack in target.data.resistance:
-                debug.println('%s is resistant to %s' % (target.id, attack.name))
-                damage = int(damage * 0.7)
-            elif attack in target.data.weaknesses:
-                debug.println('%s is weak to %s' % (target.id, attack.name))
-                damage = int(damage * 1.3)
+            if damage > 0:
+                # Resistance and weakness
+                if attack in target.data.resistance:
+                    debug.println('%s is resistant to %s' % (target.id, attack.name))
+                    damage -= damage * 0.3
+                elif attack in target.data.weaknesses:
+                    debug.println('%s is weak to %s' % (target.id, attack.name))
+                    damage += damage * 0.3
 
+                # Global resistance (defense)
+                if target.resistance:
+                    debug.println('%s defends' % target.id)
+                damage -= damage * min(1, target.resistance)
+
+            # Apply damage
+            damage = int(damage)
             self.apply_damage(target, damage)
 
+            # Apply target effects
             for effect in attack.effects:
                 rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
-                if effect.apply_to_source:
-                    source.add_active_effect(ActiveEffect(effect, rounds))
-                else:
+                if not effect.apply_to_source:
                     target.add_active_effect(ActiveEffect(effect, rounds))
 
+            # Award spin for damage dealt
             if not source.ai:
                 self.award_spin(source, damage)
 
@@ -757,7 +795,7 @@ def main():
             rounds_min = 'Number Rounds Base',
             rounds_max = 'Number Rounds Max',
             attribute = 'Attribute Effected',
-            value = 'Base Damage',
+            value = 'Value',
         ), index_unique=True, cls=Effect)
 
         game_data.attacks = parse_table(combat_db['Attacks'], dict(
