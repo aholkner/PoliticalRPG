@@ -700,12 +700,17 @@ class CombatWorld(World):
             source.remove_item_attack(attack)
 
         # Apply effects to source
+        critical_fail_effect = None
         for effect in attack.effects:
-            rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
-            if effect.apply_to_source:
-                source.add_active_effect(ActiveEffect(effect, rounds))
+            if effect.id == 'Critical Fail':
+                critical_fail_effect = effect
+            else:
+                rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
+                if effect.apply_to_source:
+                    source.add_active_effect(ActiveEffect(effect, rounds))
 
         # Attack targets
+        critical_fail = True
         for target in targets:
             # Immunity
             if attack in target.data.immunities:
@@ -751,6 +756,9 @@ class CombatWorld(World):
                     self.add_floater(target, 'Defends', 1)
                     debug.println('%s defends' % target.id)
                 damage -= damage * min(1, target.resistance)
+                
+            if not tried_damage or damage == 0:
+                critical_fail = False
 
             # Apply damage
             damage = int(damage)
@@ -770,6 +778,13 @@ class CombatWorld(World):
                 self.award_spin(source, max(0, damage))
 
             debug.println('%s attacks %s with %s for %d' % (source.id, target.id, attack.name, damage))
+
+        # Critical fail effect
+        if critical_fail and critical_fail_effect:
+            rounds = random.randrange(effect.rounds_min, critical_fail_effect.rounds_max + 1)
+            if effect.apply_to_source:
+                source.add_active_effect(ActiveEffect(critical_fail_effect, rounds))
+                self.add_floater(source, 'Critical fail')
 
         self.after(1, self.end_turn)
 
