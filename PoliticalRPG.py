@@ -148,10 +148,9 @@ class World(object):
         menu.layout()
         if self.menu_stack:
             menu.x = self.menu_stack[-1].x + self.menu_stack[-1].width
-            menu.y = self.menu_stack[-1].y
         else:
             menu.x = self.menu_start_x
-            menu.y = self.menu_start_y - menu.height
+        menu.y = self.menu_start_y - menu.height
         self.menu_stack.append(menu)
 
     def pop_menu(self):
@@ -347,7 +346,7 @@ class CombatMenuMain(Menu):
     def __init__(self, world):
         super(CombatMenuMain, self).__init__(world)
         self.items.append(MenuItem('Offense>', 'Launch a political attack', self.offense))
-        self.items.append(MenuItem('Defense', 'Gather strength; -20% to incoming attacks', self.defense))
+        self.items.append(MenuItem('Defense', game_data.attacks['Defense'].description, self.defense))
         self.items.append(MenuItem('Spin>', 'Run spin to get control of the situation', self.spin))
         self.items.append(MenuItem('Campaign>', 'Run a campaign to get an edge on your opponents', self.campaign))
         self.can_dismiss = False
@@ -356,8 +355,7 @@ class CombatMenuMain(Menu):
         self.world.push_menu(CombatOffenseMenu(self.world))
 
     def defense(self):
-        self.world.pop_menu()
-        self.world.end_turn()
+        self.world.action_attack(game_data.attacks['Defense'], [])
 
     def spin(self):
         self.world.pop_menu()
@@ -370,7 +368,7 @@ class CombatMenuMain(Menu):
 class CombatOffenseMenu(Menu):
     def __init__(self, world):
         super(CombatOffenseMenu, self).__init__(world)
-        for attack in game_data.attacks.values():
+        for attack in world.current_character.data.standard_attacks:
             self.items.append(MenuItem(attack.name, attack.description, partial(self.select, attack)))
 
     def select(self, attack):
@@ -816,6 +814,15 @@ def main():
             attack.target_count = int(attack.target_count)
             attack.effects = convert_idlist_to_objlist(attack.effects, game_data.effects)
 
+        game_data.standard_attacks = parse_table(combat_db['StandardAttacks'], dict(
+            group = 'AttackGroup',
+            attack = 'Attack',
+        ), index_multi=True)
+
+        for attacks in game_data.standard_attacks.values():
+            for i, row in enumerate(attacks):
+                attacks[i] = game_data.attacks[row.attack]
+
         game_data.characters = parse_table(combat_db['Characters'], dict(
             id = 'ID',
             votes_base = 'Votes',
@@ -834,7 +841,8 @@ def main():
             flair_lvl = 'Flr Lvl',
             immunities = 'Immunities',
             resistance = 'Resistance',
-            weaknesses = 'Weaknesses'
+            weaknesses = 'Weaknesses',
+            attack_group = 'AttackGroup',
         ), index_multi=True)
 
         # Parse characters
@@ -843,6 +851,7 @@ def main():
                 character.immunities = convert_idlist_to_objlist(character.immunities, game_data.attacks)
                 character.resistance = convert_idlist_to_objlist(character.resistance, game_data.attacks)
                 character.weaknesses = convert_idlist_to_objlist(character.weaknesses, game_data.attacks)
+                character.standard_attacks = game_data.standard_attacks[character.attack_group]
 
         game_data.encounters = parse_table(combat_db['Encounters'], dict(
             id = 'ID',
