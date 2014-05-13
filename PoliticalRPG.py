@@ -84,10 +84,11 @@ class Menu(object):
             if self.can_dismiss:
                 self.world.pop_menu()
         elif key == bacon.Keys.right or key == bacon.Keys.enter:
-            self.selected_item.func()
+            if self.selected_item.enabled:
+                self.selected_item.func()
 
     def move_selection(self, dir):
-        start = self.selected_index
+        start = max(0, self.selected_index)
         self.selected_index = (self.selected_index + dir) % len(self.items)
         while self.selected_index != start and not self.selected_item.enabled:
             self.selected_index = (self.selected_index + dir) % len(self.items)
@@ -690,8 +691,8 @@ class CombatWorld(World):
                 if not effect.apply_to_source:
                     target.add_active_effect(ActiveEffect(effect, rounds))
 
-            # Award spin for damage dealt
-            if not source.ai:
+            # Award spin for damage dealt unless this was a spin action
+            if not source.ai and not attack.spin_cost:
                 self.award_spin(source, max(0, damage))
 
             debug.println('%s attacks %s with %s for %d' % (source.id, target.id, attack.name, damage))
@@ -715,7 +716,7 @@ class CombatWorld(World):
         self.get_slot(character).sprite.effect_dead = dead
 
     def award_spin(self, target, damage):
-        target.spin += damage # TODO AMANDA
+        target.spin += 1 # TODO AMANDA
         target.spin = min(target.spin, target.max_spin)
         
     def add_floater(self, character, text, offset=0):
