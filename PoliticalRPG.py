@@ -25,6 +25,17 @@ map_height = bacon.window.height / map_scale
 ui_width = bacon.window.width
 ui_height = bacon.window.height
 
+def weighted_choice(seq, weight_key):
+    total = sum(weight_key(c) for c in seq)
+    r = random.uniform(0, total)
+    upto = 0
+    for c in seq:
+        w = weight_key(c)
+        if upto + w > r:
+            return c
+        upto += w
+    return seq[-1]
+
 def map_to_ui(x, y):
     return (x * map_scale, y * map_scale)
 
@@ -640,7 +651,7 @@ class CombatWorld(World):
         attacks += [ia.attack for ia in source.item_attacks if ia.attack.spin_cost <= source.spin]
 
         # Random choice of attack
-        attack = random.choice(attacks)
+        attack = weighted_choice(attacks, lambda a: a.weight)
 
         # Find applicable targets
         target_type = attack.target_type
@@ -1044,12 +1055,14 @@ def main():
             crit_base_damage = 'Crit Base Damage',
             crit_chance_min = 'Chance To Crit Base (%)',
             crit_chance_max = 'Chance To Crit Max (%)',
+            weight = 'AI Weight',
         ), index_unique=True)
 
         for attack in game_data.attacks.values():
             attack.target_count = int(attack.target_count)
             attack.effects = convert_idlist_to_objlist(attack.effects, game_data.effects)
             attack.spin_cost = attack.spin_cost if attack.spin_cost else 0
+            attack.weight = attack.weight if attack.weight else 1
 
         game_data.standard_attacks = parse_table(combat_db['StandardAttacks'], dict(
             group = 'AttackGroup',
