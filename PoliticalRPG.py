@@ -339,7 +339,7 @@ class ItemAttack(object):
         self.quantity = quantity
        
 class Character(object):
-    def __init__(self, id, level, ai=True):
+    def __init__(self, id, level, item_attacks, ai=True):
         self.id = id
         self.image = game_sprites[id]
         self.level = level
@@ -356,9 +356,7 @@ class Character(object):
         self.money = 0
         self.resistance = 0
         self.active_effects = []
-        self.item_attacks = []
-        for attack in row.item_attacks:
-            self.add_item_attack(attack)
+        self.item_attacks = item_attacks
 
         if ai:
             self.spin_attacks = row.spin_attacks
@@ -379,7 +377,7 @@ class Character(object):
                 if ia.quantity == 0:
                     self.item_attacks.remove(ia)
                 return
-
+        
     def calc_stat(self, base, exp):
         return int(base * pow(exp, self.level - 1))
     
@@ -542,15 +540,16 @@ class CombatWorld(World):
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
         
-        encounter = game_data.encounters[encounter_id]
+        self.encounter = encounter = game_data.encounters[encounter_id]
+        item_attacks = list(encounter.item_attacks)
         if encounter.monster1:
-            self.fill_slot(self.monster_slots[0], Character(encounter.monster1, encounter.monster1_lvl))
+            self.fill_slot(self.monster_slots[0], Character(encounter.monster1, encounter.monster1_lvl, item_attacks))
         if encounter.monster2:
-            self.fill_slot(self.monster_slots[1], Character(encounter.monster2, encounter.monster2_lvl))
+            self.fill_slot(self.monster_slots[1], Character(encounter.monster2, encounter.monster2_lvl, item_attacks))
         if encounter.monster3:
-            self.fill_slot(self.monster_slots[2], Character(encounter.monster3, encounter.monster3_lvl))
+            self.fill_slot(self.monster_slots[2], Character(encounter.monster3, encounter.monster3_lvl, item_attacks))
         if encounter.monster4:
-            self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl))
+            self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl, item_attacks))
 
         self.slots = self.player_slots + self.monster_slots
         self.begin_round()
@@ -885,6 +884,9 @@ class CombatWorld(World):
                     for e in c.active_effects:
                         y += dy 
                         debug.draw_string('+%s for %d rounds' % (e.effect.id, e.rounds), x, y)
+                    for ia in c.item_attacks:
+                        y += dy
+                        debug.draw_string('%s (x%d)' %  (ia.attack.id, ia.quantity), x, y)
 
 class Debug(object):
     def __init__(self):
@@ -942,8 +944,7 @@ def load_sprites(path):
 
 class Game(bacon.Game):
     def __init__(self):
-        self.player = Character('Player', 1)
-        self.player.ai = False
+        self.player = Character('Player', 1, [], False)
         self.world = None
         self.world_stack = []
 
@@ -1096,7 +1097,6 @@ def main():
             immunities = 'Immunities',
             resistance = 'Resistance',
             weaknesses = 'Weaknesses',
-            item_attacks = 'Items',
         ), index_multi=True)
 
         # Parse characters
@@ -1108,8 +1108,7 @@ def main():
                 attacks = game_data.standard_attacks[character.attack_group]
                 character.spin_attacks = [attack for attack in attacks if attack.spin_cost]
                 character.standard_attacks = [attack for attack in attacks if not attack.spin_cost]
-                character.item_attacks = convert_idlist_to_objlist(character.item_attacks, game_data.attacks)
-
+                
         game_data.encounters = parse_table(combat_db['Encounters'], dict(
             id = 'ID',
             monster1 = 'Monster 1',
@@ -1120,9 +1119,14 @@ def main():
             monster3_lvl = 'Monster 3 Lvl',
             monster4 = 'Monster 4',
             monster4_lvl = 'Monster 4 Lvl',
+            item_attacks = 'Attack Items',
             xp = 'XP',
             drops = 'Drops'
         ), index_unique=True)
+
+        for encounter in game_data.encounters.values():
+            encounter.item_attacks = [ItemAttack(attack, 1) for attack in convert_idlist_to_objlist(encounter.item_attacks, game_data.attacks)]
+
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:
         game_data = pickle.load(open_res('res/game_data.bin', 'rb'))
