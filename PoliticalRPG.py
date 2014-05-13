@@ -20,12 +20,11 @@ map_scale = 4
 map_width = bacon.window.width / map_scale
 map_height = bacon.window.height / map_scale
 
-ui_scale = 2
-ui_width = bacon.window.width / ui_scale
-ui_height = bacon.window.height / ui_scale
+ui_width = bacon.window.width
+ui_height = bacon.window.height
 
 def map_to_ui(x, y):
-    return (x / ui_scale * map_scale, y / ui_scale * map_scale)
+    return (x * map_scale, y * map_scale)
 
 def open_res(path, mode = 'rb'):
     return open(bacon.get_resource_path(path), mode)
@@ -56,6 +55,12 @@ class Menu(object):
         self.x = self.y = 0
         self.can_dismiss = True
 
+    def layout(self):
+        self.width = 0
+        self.height = len(self.items) * font_tiny.height
+        for item in self.items:
+            self.width = max(font_tiny.measure_string(item.name), self.width)
+
     @property
     def selected_item(self):
         return self.items[self.selected_index]
@@ -75,21 +80,23 @@ class Menu(object):
         y = self.y
         bacon.push_color()
         for i, item in enumerate(self.items):
+            y -= font_tiny.ascent
             if i == self.selected_index:
                 bacon.set_color(1, 1, 0, 1)
             else:
                 bacon.set_color(1, 1, 1, 1)
             bacon.draw_string(font_tiny, item.name, self.x, y)
-            y += font_tiny.descent - font_tiny.ascent
+            y += font_tiny.descent
         bacon.pop_color()
 
-        debug.draw_string(self.selected_item.description, 0, ui_height - debug.font.height)
+        if self.world.menu_stack[-1] is self:
+            debug.draw_string(self.selected_item.description, 0, ui_height)
 
 class World(object):
     def __init__(self, map):
         self.menu_stack = []
         self.menu_start_x = 0
-        self.menu_start_y = 0
+        self.menu_start_y = ui_height - 16
 
         self.timeout_func = None
         self.timeout = 0
@@ -130,16 +137,20 @@ class World(object):
         return None
 
     def push_menu(self, menu):
+        menu.layout()
         if self.menu_stack:
-            menu.x = self.menu_stack[-1].x + 20
+            menu.x = self.menu_stack[-1].x + self.menu_stack[-1].width
             menu.y = self.menu_stack[-1].y
         else:
             menu.x = self.menu_start_x
-            menu.y = self.menu_start_y
+            menu.y = self.menu_start_y - menu.height
         self.menu_stack.append(menu)
 
     def pop_menu(self):
         self.menu_stack.pop()
+
+    def pop_all_menus(self):
+        del self.menu_stack[:]
 
     def after(self, timeout, func):
         assert self.timeout_func is None
@@ -246,7 +257,7 @@ class Character(object):
         return int(base * pow(exp, self.level - 1))
 
 class CombatMenuMain(Menu):
-    def __init__(self, world, character):
+    def __init__(self, world):
         super(CombatMenuMain, self).__init__(world)
         self.items.append(MenuItem('Offense>', 'Launch a political attack', self.offense))
         self.items.append(MenuItem('Defense', 'Gather strength; -20% to incoming attacks', self.defense))
@@ -255,8 +266,7 @@ class CombatMenuMain(Menu):
         self.can_dismiss = False
 
     def offense(self):
-        self.world.pop_menu()
-        self.world.end_turn()
+        self.world.push_menu(CombatOffenseMenu(self.world))
 
     def defense(self):
         self.world.pop_menu()
@@ -268,6 +278,17 @@ class CombatMenuMain(Menu):
 
     def campaign(self):
         self.world.pop_menu()
+        self.world.end_turn()
+
+class CombatOffenseMenu(Menu):
+    def __init__(self, world):
+        super(CombatOffenseMenu, self).__init__(world)
+        for attack in game_data.attacks:
+            self.items.append(MenuItem(attack.name, attack.description, lambda: self.select(attack)))
+
+    def select(self, attack):
+        debug.println(attack.name)
+        self.world.pop_all_menus()
         self.world.end_turn()
 
 class CombatWorld(World):
@@ -312,7 +333,7 @@ class CombatWorld(World):
         if self.current_character.ai:
             self.ai(self.current_character)
         else:
-            self.push_menu(CombatMenuMain(self, self.current_character))
+            self.push_menu(CombatMenuMain(self))
 
     def end_turn(self):
         self.current_character_index += 1
@@ -367,7 +388,7 @@ class Debug(object):
     def draw(self):
         self.message_timeout -= bacon.timestep
         if self.message and self.message_timeout > 0:
-            self.draw_string(self.message, 0, bacon.window.height - self.font.height)
+            self.draw_string(self.message, 0, ui_height)
 
     def draw_string(self, text, x, y):
         bacon.push_color()
@@ -472,6 +493,7 @@ if __name__ == '__main__':
         game_data = GameData()
         game_data.attacks = parse_table(combat_db['Attacks'], dict(
             name = 'Attack Name',
+            description = 'Description',
             stat = 'Underlying Stat',
             effects = 'Special Effects',
             base_damage_min = 'Base Damage',
