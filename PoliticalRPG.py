@@ -257,6 +257,7 @@ class MapWorld(World):
 
 class Effect(object):
     id = None
+    apply_to_source = False
     function = None
     rounds_min = None
     rounds_max = None
@@ -331,6 +332,12 @@ class Character(object):
         for ae in self.active_effects[:]:
             self.remove_active_effect(ae)
 
+    def has_effect_function(self, function):
+        for ae in self.active_effects:
+            if ae.effect.function == function:
+                return True
+        return False
+    
 class CombatMenuMain(Menu):
     def __init__(self, world):
         super(CombatMenuMain, self).__init__(world)
@@ -445,9 +452,17 @@ class CombatWorld(World):
             self.begin_round()
             return
 
+        # Check if character misses turn after effects
+        miss_turn = self.current_character.has_effect_function('miss_turn')
+
+        # Update character effects
         self.current_character.update_active_effects()
 
-        if self.current_character.ai:
+        # Miss turn, do AI or show UI
+        if miss_turn:
+            debug.println('%s misses turn' % self.current_character.id)
+            self.after(1, self.end_turn)
+        elif self.current_character.ai:
             self.ai(self.current_character)
         else:
             self.push_menu(CombatMenuMain(self))
@@ -492,20 +507,20 @@ class CombatWorld(World):
         self.pop_all_menus()
 
         if attack.underlying_stat == 'Cunning':
-            base_stat = source.cunning
+            base_stat = max(source.cunning, 0)
         elif attack.underlying_stat == 'Wit':
-            base_stat = source.wit
+            base_stat = max(source.wit, 0)
         elif attack.underlying_stat == 'Money':
             assert False
         else:
             assert False
         modifiers = 0
-        crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max)
+        crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max + 1)
         crit_success = random.randrange(0, 100) <= crit_chance
         if crit_success:
             damage = base_stat * (attack.crit_base_damage + modifiers)
         else:
-            damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max) + modifiers)
+            damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max + 1) + modifiers)
         
         if debug.massive_damage and not source.ai:
             damage *= 100
@@ -513,8 +528,11 @@ class CombatWorld(World):
         self.apply_damage(target, damage)
 
         for effect in attack.effects:
-            rounds = random.randrange(effect.rounds_min, effect.rounds_max)
-            target.add_active_effect(ActiveEffect(effect, rounds))
+            rounds = random.randrange(effect.rounds_min, effect.rounds_max + 1)
+            if effect.apply_to_source:
+                source.add_active_effect(ActiveEffect(effect, rounds))
+            else:
+                target.add_active_effect(ActiveEffect(effect, rounds))
 
         if not source.ai:
             self.award_spin(source, damage)
@@ -703,6 +721,7 @@ def main():
         ))
         game_data.effects = parse_table(combat_db['Effects'], dict(
             id = 'ID',
+            apply_to_source = 'Apply To Source',
             function = 'Function',
             rounds_min = 'Number Rounds Base',
             rounds_max = 'Number Rounds Max',
