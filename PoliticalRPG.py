@@ -112,7 +112,10 @@ class Menu(object):
 
     def draw_status(self, msg):
         if self.world.menu_stack[-1] is self:
-            debug.draw_string(msg, 0, ui_height)
+            bacon.set_color(0, 0, 0, 1)
+            bacon.fill_rect(0, ui_height - debug.font.height * 2, ui_width, ui_height)
+            bacon.set_color(1, 1, 1, 1)
+            bacon.draw_string(debug.font, msg, 0, ui_height - debug.font.height * 2, ui_width, debug.font.height * 2, bacon.Alignment.left, bacon.VerticalAlignment.top) 
 
 class World(object):
     def __init__(self, map):
@@ -400,7 +403,7 @@ class CombatMenuMain(Menu):
         character = self.world.current_character
 
         self.items.append(MenuItem('Offense>', 'Launch a political attack', self.on_offense))
-        self.items.append(MenuItem('Defense', game_data.attacks['Defense'].description, self.on_defense))
+        self.items.append(MenuItem('Defense', game_data.attacks['DEFENSE'].description, self.on_defense))
         self.items.append(MenuItem('Spin>', 'Run spin to get control of the situation', self.on_spin, enabled=bool(character.spin_attacks)))
         self.items.append(MenuItem('Items>', 'Use an item from your briefcase', self.on_items, enabled=bool(character.item_attacks)))
         self.can_dismiss = False
@@ -742,13 +745,14 @@ class CombatWorld(World):
 
     def apply_damage(self, target, damage):
         target.votes -= damage
+        target.votes = clamp(target.votes, 0, target.max_votes)
 
         if damage > 0:
             self.add_floater(target, '%d' % damage)
         elif damage < 0:
             self.add_floater(target, '+%d' % -damage)
 
-        if target.votes <= 0:
+        if target.votes == 0:
             target.votes = 0
             self.set_dead(target, True)
             
