@@ -337,6 +337,13 @@ class ItemAttack(object):
     def __init__(self, attack, quantity=1):
         self.attack = attack
         self.quantity = quantity
+
+def add_attack_to_itemattack_list(item_attacks, attack):
+    for ia in item_attacks:
+        if ia.attack is attack:
+            ia.quantity += 1
+            return
+    item_attacks.append(ItemAttack(attack, 1))
        
 class Character(object):
     def __init__(self, id, level, item_attacks, ai=True):
@@ -364,11 +371,7 @@ class Character(object):
             self.spin_attacks = list(row.spin_attacks)
 
     def add_item_attack(self, attack):
-        for ia in self.item_attacks:
-            if ia.attack is attack:
-                ia.quantity += 1
-                return
-        self.item_attacks.append(ItemAttack(attack, 1))
+        add_attack_to_itemattack_list(self.item_attacks, attack)
 
     def remove_item_attack(self, attack):
         for ia in self.item_attacks:
@@ -625,13 +628,14 @@ class CombatWorld(World):
             self.begin_turn()
 
     def win(self):
+        game.push_world(WinCombatWorld(self))
+
+    def reset(self):
         for character in self.characters:
             character.remove_all_active_effects()
-        game.pop_world()
 
     def lose(self):
-        for character in self.characters:
-            character.remove_all_active_effects()
+        self.reset()
         game.pop_world() # TODO
 
     def ai(self):
@@ -888,6 +892,46 @@ class CombatWorld(World):
                         y += dy
                         debug.draw_string('%s (x%d)' %  (ia.attack.id, ia.quantity), x, y)
 
+class WinCombatWorld(World):
+    def __init__(self, combat_world):
+        map = tiled.parse('res/ui_win_combat.tmx')
+        super(WinCombatWorld, self).__init__(map)
+        self.combat_world = combat_world
+
+    def draw(self):
+        encounter = self.combat_world.encounter
+        self.combat_world.draw()
+        cx = ui_width / 2
+        y = 128
+        font = debug.font
+        bacon.draw_string(font, 'XP: +%d' % encounter.xp, cx, y, align = bacon.Alignment.center)
+        
+        y = 256
+        for item in encounter.quest_item_drops:
+            bacon.draw_string(font, item.name, cx, y, align = bacon.Alignment.center)
+            y += font.height
+        for ia in encounter.item_attack_drops:
+            if ia.quantity == 1:
+                name = ia.attack.name
+            else:
+                name = '%s (x%d)' % (ia.attack.name, ia.quantity)
+            bacon.draw_string(font, name, cx, y, align = bacon.Alignment.center)
+            y += font.height
+
+    def on_key_pressed(self, key):
+        self.combat_world.reset()
+
+        # Actually award results
+        encounter = self.combat_world.encounter
+        game.quest_items.extend(encounter.quest_item_drops)
+        for ia in encounter.item_attack_drops:
+            for i in range(ia.quantity):
+                add_attack_to_itemattack_list(game.player.item_attacks, ia.attack)
+        game.xp += encounter.xp
+
+        game.pop_world()
+        game.pop_world()
+
 class Debug(object):
     def __init__(self):
         self.font = font_tiny
@@ -945,6 +989,9 @@ def load_sprites(path):
 class Game(bacon.Game):
     def __init__(self):
         self.player = Character('Player', 1, [], False)
+        self.quest_items = []
+        self.xp = 0
+
         self.world = None
         self.world_stack = []
 
@@ -1031,8 +1078,14 @@ def main():
     if options.import_ods:
         import odsimport
         combat_db = odsimport.import_ods(os.path.join(options.import_ods, 'Combat.ods'))
+        quest_db = odsimport.import_ods(os.path.join(options.import_ods, 'Quest.ods'))
         game_data = GameData()
         
+        game_data.quest_items = parse_table(quest_db['Items'], dict(
+            id = 'ID',
+            name = 'Name'
+        ), index_unique=True)
+
         game_data.effects = parse_table(combat_db['Effects'], dict(
             id = 'ID',
             abbrv = 'Abbrev',
@@ -1121,11 +1174,17 @@ def main():
             monster4_lvl = 'Monster 4 Lvl',
             item_attacks = 'Attack Items',
             xp = 'XP',
-            drops = 'Drops'
+            item_attack_drops = 'Attack Drops',
+            quest_item_drops = 'Quest Drops',
         ), index_unique=True)
 
         for encounter in game_data.encounters.values():
             encounter.item_attacks = [ItemAttack(attack, 1) for attack in convert_idlist_to_objlist(encounter.item_attacks, game_data.attacks)]
+            attack_drops = convert_idlist_to_objlist(encounter.item_attack_drops, game_data.attacks)
+            encounter.item_attack_drops = []
+            for attack in attack_drops:
+                add_attack_to_itemattack_list(encounter.item_attack_drops, attack)
+            encounter.quest_item_drops = convert_idlist_to_objlist(encounter.quest_item_drops, game_data.quest_items)
 
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:
