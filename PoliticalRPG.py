@@ -581,6 +581,7 @@ class CombatWorld(World):
 
         # Miss turn, do AI or show UI
         if miss_turn:
+            self.active_attack = game_data.attacks['MISSTURN']
             debug.println('%s misses turn' % self.current_character.id)
             self.after(2, self.end_turn)
         elif self.current_character.ai:
@@ -757,7 +758,7 @@ class CombatWorld(World):
                     debug.println('%s defends' % target.id)
                 damage -= damage * min(1, target.resistance)
                 
-            if not tried_damage or damage == 0:
+            if not tried_damage or damage != 0:
                 critical_fail = False
 
             # Apply damage
