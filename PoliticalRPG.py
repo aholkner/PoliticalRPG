@@ -1,6 +1,7 @@
 from functools import partial
 import os
 import logging
+import math
 logging.getLogger('bacon').addHandler(logging.NullHandler())
 
 import bacon
@@ -31,6 +32,8 @@ def open_res(path, mode = 'rb'):
     return open(bacon.get_resource_path(path), mode)
 
 class Sprite(object):
+    effect_dead = False
+
     def __init__(self, image, x, y):
         self.image = image
         self.x = x
@@ -40,7 +43,8 @@ class Slot(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.content = None
+        self.character = None
+        self.sprite = None
 
 class MenuItem(object):
     def __init__(self, name, description, func=None):
@@ -184,7 +188,14 @@ class World(object):
         
         self.map.draw(viewport)
         for sprite in self.sprites:
-            bacon.draw_image(sprite.image, sprite.x * ts, sprite.y * ts)
+            if sprite.effect_dead:
+                bacon.push_transform()
+                bacon.translate(sprite.x * ts + 4, sprite.y * ts + 4)
+                bacon.rotate(-math.pi / 2)
+                bacon.draw_image(sprite.image, -4, -4)
+                bacon.pop_transform()
+            else:
+                bacon.draw_image(sprite.image, sprite.x * ts, sprite.y * ts)
 
         bacon.pop_transform()
 
@@ -250,6 +261,7 @@ class Character(object):
         self.image = game_sprites[id]
         self.level = level
         self.ai = True
+        self.dead = False
         row = random.choice(game_data.characters[id])
         self.votes = self.calc_stat(row.votes_base, row.votes_lvl)
         self.spin = self.calc_stat(row.spin_base, row.spin_lvl)
@@ -307,7 +319,7 @@ class CombatTargetMenu(Menu):
         self.width = 0
         self.height = 0
 
-        self.slots = [slot for slot in self.world.monster_slots if slot.content]
+        self.slots = [slot for slot in self.world.monster_slots if slot.character and not slot.character.dead]
 
     @property
     def selected_slot(self):
@@ -325,7 +337,7 @@ class CombatTargetMenu(Menu):
             if self.can_dismiss:
                 self.world.pop_menu()
         elif key == bacon.Keys.down or key == bacon.Keys.enter:
-            self.func(self.selected_slot.content)
+            self.func(self.selected_slot.character)
 
     def draw(self):
         debug.draw_string('>', self.selected_slot.x * self.world.tile_size * map_scale, self.selected_slot.y * self.world.tile_size * map_scale)
@@ -356,9 +368,16 @@ class CombatWorld(World):
         return self.characters[self.current_character_index]
 
     def fill_slot(self, slot, character):
-        slot.content = character
-        self.sprites.append(Sprite(character.image, slot.x, slot.y))
+        slot.character = character
+        slot.sprite = Sprite(character.image, slot.x, slot.y)
+        self.sprites.append(slot.sprite)
         self.characters.append(character)
+
+    def get_slot(self, character):
+        for slot in self.slots:
+            if slot.character is character:
+                return slot
+        return None
 
     def begin_round(self):
         self.characters.sort(key=lambda c:c.speed, reverse=True)
@@ -376,33 +395,92 @@ class CombatWorld(World):
             self.push_menu(CombatMenuMain(self))
 
     def end_turn(self):
-        self.current_character_index += 1
-        self.begin_turn()
+        # Check end condition
+        win = True
+        lose = True
+        for character in self.characters:
+            if not character.dead:
+                if character.ai:
+                    win = False
+                else:
+                    lose = False
+        
+        if win:
+            self.win()
+        elif lose:
+            self.lose()
+        else:
+            # Next character's turn
+            self.current_character_index += 1
+            while self.current_character_index < len(self.characters) and self.current_character.dead:
+                self.current_character_index += 1
+            self.begin_turn()
+
+    def win(self):
+        game.pop_world()
+
+    def lose(self):
+        game.pop_world() # TODO
 
     def ai(self, character):
         self.after(0.5, self.end_turn)
 
     def action_attack(self, attack, target):
-        debug.println('%s attacks %s with %s' % (self.current_character.id, target.id, attack.name))
+        source = self.current_character
         self.pop_all_menus()
+
+        if attack.underlying_stat == 'Cunning':
+            base_stat = source.cunning
+        elif attack.underlying_stat == 'Wit':
+            base_stat = source.wit
+        elif attack.underlying_stat == 'Money':
+            assert False
+        else:
+            assert False
+        modifiers = 0
+        crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max)
+        crit_success = random.randrange(0, 100) <= crit_chance
+        if crit_success:
+            damage = base_stat * (attack.crit_base_damage + modifiers)
+        else:
+            damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max) + modifiers)
+        
+        if debug.massive_damage and not source.ai:
+            damage *= 100
+
+        self.apply_damage(target, damage)
+        if not source.ai:
+            self.award_spin(source, damage)
+
+        debug.println('%s attacks %s with %s for %d' % (source.id, target.id, attack.name, damage))
         self.after(1, self.end_turn)
+
+    def apply_damage(self, target, damage):
+        target.votes -= damage
+        if target.votes <= 0:
+            target.votes = 0
+            target.dead = True
+            self.get_slot(target).sprite.effect_dead = True
+
+    def award_spin(self, target, damage):
+        target.spin += damage # TODO AMANDA
 
     def draw(self):
         super(CombatWorld, self).draw()
 
         i = -1
         for slot in self.slots:
-            if slot.content:
-                if slot.content is self.current_character:
+            if slot.character:
+                if slot.character is self.current_character:
                     x = slot.x * self.tile_size * map_scale
                     y = slot.y * self.tile_size * map_scale
                     debug.draw_string('^', x, y)
 
                 i += 1
                 if i == debug.show_slot_stats:
-                    c = slot.content
+                    c = slot.character
                     x = slot.x * self.tile_size * map_scale
-                    y = slot.y * self.tile_size * map_scale
+                    y = slot.y * self.tile_size * map_scale + 8 * map_scale
                     dy = debug.font.height
                     debug.draw_string(c.id, x, y)
                     debug.draw_string('level=%d' % c.level, x, y + dy)
@@ -418,6 +496,7 @@ class Debug(object):
     def __init__(self):
         self.font = font_tiny
         self.show_slot_stats = -1
+        self.massive_damage = False
         self.message = None
         self.message_timeout = 0
 
@@ -425,6 +504,9 @@ class Debug(object):
         if key == bacon.Keys.k or key == bacon.Keys.j:
             self.show_slot_stats += 1 if key == bacon.Keys.k else -1
             self.println('show_slot_stats = %d' % self.show_slot_stats)
+        elif key == bacon.Keys.f1:
+            self.massive_damage = not self.massive_damage
+            self.println('massive_damage = %s' % self.massive_damage)
 
     def println(self, msg):
         self.message = msg
@@ -527,11 +609,12 @@ def parse_table(table, columns, cls=TableRow, index_unique=False, index_multi=Fa
 class GameData(object):
     pass
 
-if __name__ == '__main__':
+def main():
     parser = optparse.OptionParser()
     parser.add_option('--import-ods')
     options, args = parser.parse_args()
 
+    global game_data
     if options.import_ods:
         import odsimport
         combat_db = odsimport.import_ods(os.path.join(options.import_ods, 'Combat.ods'))
@@ -539,7 +622,7 @@ if __name__ == '__main__':
         game_data.attacks = parse_table(combat_db['Attacks'], dict(
             name = 'Attack Name',
             description = 'Description',
-            stat = 'Underlying Stat',
+            underlying_stat = 'Underlying Stat',
             effects = 'Special Effects',
             base_damage_min = 'Base Damage',
             base_damage_max = 'Max Base Damage',
@@ -579,9 +662,18 @@ if __name__ == '__main__':
     else:
         game_data = pickle.load(open_res('res/game_data.bin', 'rb'))
 
+    global game_sprites
     game_sprites = load_sprites('res/sprites.tsx')
 
+    global game
     game = Game()
     game.world = MapWorld(tiled.parse('res/map.tmx'))
 
     bacon.run(game)
+
+if __name__ == '__main__':
+    import traceback
+    try:
+        main()
+    except:
+        traceback.print_exc()

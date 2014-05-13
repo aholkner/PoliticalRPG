@@ -22,13 +22,13 @@ NtRp9
 S'base_damage_max'
 p11
 F5
-sS'stat'
-p12
-S'Cunning'
-p13
 sS'description'
-p14
+p12
 S'abc'
+p13
+sS'name'
+p14
+S'Stay On Message'
 p15
 sS'crit_chance_max'
 p16
@@ -46,9 +46,9 @@ p20
 sS'crit_base_damage'
 p21
 F8
-sS'name'
+sS'underlying_stat'
 p22
-S'Stay On Message'
+S'Cunning'
 p23
 sbag1
 (g8
@@ -58,10 +58,10 @@ NtRp24
 g11
 F3
 sg12
-S'Cunning'
+S'def'
 p26
 sg14
-S'def'
+S'Slander Opposition'
 p27
 sg16
 F10
@@ -75,7 +75,7 @@ p28
 sg21
 F5
 sg22
-S'Slander Opposition'
+S'Cunning'
 p29
 sbag1
 (g8
@@ -85,10 +85,10 @@ NtRp30
 g11
 F8
 sg12
-S'Cunning'
+S'ghi'
 p32
 sg14
-S'ghi'
+S'Lie'
 p33
 sg16
 F10
@@ -102,7 +102,7 @@ p34
 sg21
 F15
 sg22
-S'Lie'
+S'Cunning'
 p35
 sbag1
 (g8
@@ -112,10 +112,10 @@ NtRp36
 g11
 F3
 sg12
-S'Wit'
+S'jkl'
 p38
 sg14
-S'jkl'
+S'Joke'
 p39
 sg16
 F10
@@ -129,7 +129,7 @@ p40
 sg21
 F6
 sg22
-S'Joke'
+S'Wit'
 p41
 sbasS'encounters'
 p42
