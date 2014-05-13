@@ -245,7 +245,7 @@ class Text(Childless, Node):
         self.data = data
 
     def __str__(self):
-        return self.data.encode()
+        return self.data.encode('utf-8')
 
     def __unicode__(self):
         return self.data
