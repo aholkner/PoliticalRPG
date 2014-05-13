@@ -481,12 +481,21 @@ class CombatTargetMenu(Menu):
             slot = self.slots[self.selected_index + i]
             debug.draw_string('>', slot.x * self.world.tile_size * map_scale, slot.y * self.world.tile_size * map_scale)
         self.draw_status('Choose target')
+        
+class Floater(object):
+    def __init__(self, text, x, y):
+        self.text = text
+        self.x = x
+        self.y = y
+        self.timeout = 1.0
 
 class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
 
         self.menu_start_y = ui_height - 100
+
+        self.floaters = []
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
@@ -618,6 +627,7 @@ class CombatWorld(World):
         for target in targets:
             # Immunity
             if attack in target.data.immunities:
+                self.add_floater(target, 'Immune')
                 debug.println('%s is immune to %s' % (target.id, attack.name))
                 continue
 
@@ -642,14 +652,17 @@ class CombatWorld(World):
             if damage > 0:
                 # Resistance and weakness
                 if attack in target.data.resistance:
+                    self.add_floater(target, 'Resist', 1)
                     debug.println('%s is resistant to %s' % (target.id, attack.name))
                     damage -= damage * 0.3
                 elif attack in target.data.weaknesses:
+                    self.add_floater(target, 'Weak', 1)
                     debug.println('%s is weak to %s' % (target.id, attack.name))
                     damage += damage * 0.3
 
                 # Global resistance (defense)
                 if target.resistance:
+                    self.add_floater(target, 'Defends', 1)
                     debug.println('%s defends' % target.id)
                 damage -= damage * min(1, target.resistance)
 
@@ -673,6 +686,12 @@ class CombatWorld(World):
 
     def apply_damage(self, target, damage):
         target.votes -= damage
+
+        if damage > 0:
+            self.add_floater(target, '%d' % damage)
+        else:
+            self.add_floater(target, '+%d' % -damage)
+
         if target.votes <= 0:
             target.votes = 0
             target.dead = True
@@ -681,9 +700,22 @@ class CombatWorld(World):
     def award_spin(self, target, damage):
         target.spin += damage # TODO AMANDA
         target.spin = min(target.spin, target.max_spin)
+        
+    def add_floater(self, character, text, offset=0):
+        slot = self.get_slot(character)
+        self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale, (slot.y - offset) * self.tile_size * map_scale))
 
     def draw(self):
         super(CombatWorld, self).draw()
+
+        for floater in self.floaters[:]:
+            floater.timeout -= bacon.timestep
+            if floater.timeout < 0.5:
+                floater.y -= bacon.timestep * 80
+            if floater.timeout < 0:
+                self.floaters.remove(floater)
+            else:
+                debug.draw_string(floater.text, floater.x, int(floater.y))
 
         for i, slot in enumerate(self.player_slots):
             character = slot.character
