@@ -1,3 +1,4 @@
+from functools import partial
 import os
 import logging
 logging.getLogger('bacon').addHandler(logging.NullHandler())
@@ -89,8 +90,11 @@ class Menu(object):
             y += font_tiny.descent
         bacon.pop_color()
 
+        self.draw_status(self.selected_item.description)
+
+    def draw_status(self, msg):
         if self.world.menu_stack[-1] is self:
-            debug.draw_string(self.selected_item.description, 0, ui_height)
+            debug.draw_string(msg, 0, ui_height)
 
 class World(object):
     def __init__(self, map):
@@ -188,6 +192,9 @@ class World(object):
             menu.draw()
 
     def on_key_pressed(self, key):
+        if self.timeout_func:
+            return
+
         if self.menu_stack:
             self.menu_stack[-1].on_key_pressed(key)
 
@@ -284,12 +291,45 @@ class CombatOffenseMenu(Menu):
     def __init__(self, world):
         super(CombatOffenseMenu, self).__init__(world)
         for attack in game_data.attacks:
-            self.items.append(MenuItem(attack.name, attack.description, lambda: self.select(attack)))
+            self.items.append(MenuItem(attack.name, attack.description, partial(self.select, attack)))
 
     def select(self, attack):
-        debug.println(attack.name)
-        self.world.pop_all_menus()
-        self.world.end_turn()
+        self.world.push_menu(CombatTargetMenu(self.world, partial(self.choose_target, attack)))
+
+    def choose_target(self, attack, target):
+        self.world.action_attack(attack, target)
+
+class CombatTargetMenu(Menu):
+    def __init__(self, world, func):
+        super(CombatTargetMenu, self).__init__(world)
+        self.func = func
+        self.can_dismiss = True
+        self.width = 0
+        self.height = 0
+
+        self.slots = [slot for slot in self.world.monster_slots if slot.content]
+
+    @property
+    def selected_slot(self):
+        return self.slots[self.selected_index]
+
+    def layout(self):
+        pass
+
+    def on_key_pressed(self, key):
+        if key == bacon.Keys.left:
+            self.selected_index = (self.selected_index - 1) % len(self.slots)
+        elif key == bacon.Keys.right:
+            self.selected_index = (self.selected_index + 1) % len(self.slots)
+        elif key == bacon.Keys.up or key == bacon.Keys.escape:
+            if self.can_dismiss:
+                self.world.pop_menu()
+        elif key == bacon.Keys.down or key == bacon.Keys.enter:
+            self.func(self.selected_slot.content)
+
+    def draw(self):
+        debug.draw_string('>', self.selected_slot.x * self.world.tile_size * map_scale, self.selected_slot.y * self.world.tile_size * map_scale)
+        self.draw_status('Choose target')
 
 class CombatWorld(World):
     def __init__(self, map, encounter_id):
@@ -341,6 +381,11 @@ class CombatWorld(World):
 
     def ai(self, character):
         self.after(0.5, self.end_turn)
+
+    def action_attack(self, attack, target):
+        debug.println('%s attacks %s with %s' % (self.current_character.id, target.id, attack.name))
+        self.pop_all_menus()
+        self.after(1, self.end_turn)
 
     def draw(self):
         super(CombatWorld, self).draw()
