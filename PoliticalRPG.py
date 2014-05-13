@@ -739,6 +739,7 @@ class CombatWorld(World):
 
             # Damage
             if crit_success:
+                debug.println('Critical hit')
                 damage = base_stat * (attack.crit_base_damage + modifiers)
             else:
                 damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max + 1) + modifiers)
@@ -792,6 +793,7 @@ class CombatWorld(World):
 
         # Critical fail effect
         if critical_fail and critical_fail_effect:
+            debug.println('Critical fail')
             rounds = random.randrange(effect.rounds_min, critical_fail_effect.rounds_max + 1)
             if effect.apply_to_source:
                 source.add_active_effect(ActiveEffect(critical_fail_effect, rounds))
@@ -908,8 +910,8 @@ class Debug(object):
 
     def println(self, msg):
         print msg
-        self.message = msg
-        self.message_timeout = 1.0
+        #self.message = msg
+        #self.message_timeout = 1.0
 
     def draw(self):
         self.message_timeout -= bacon.timestep
