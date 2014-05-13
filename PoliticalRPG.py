@@ -512,9 +512,6 @@ class CombatWorld(World):
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
-        self.fill_slot(self.player_slots[1], Character('Player', 1, False))
-        self.fill_slot(self.player_slots[2], Character('Player', 1, False))
-        self.fill_slot(self.player_slots[3], Character('Player', 1, False))
         
         encounter = game_data.encounters[encounter_id]
         if encounter.monster1:
@@ -568,7 +565,7 @@ class CombatWorld(World):
             debug.println('%s misses turn' % self.current_character.id)
             self.after(1, self.end_turn)
         elif self.current_character.ai:
-            self.ai(self.current_character)
+            self.after(0.5, self.ai)
         else:
             self.push_menu(CombatMenuMain(self))
 
@@ -604,8 +601,45 @@ class CombatWorld(World):
             character.remove_all_active_effects()
         game.pop_world() # TODO
 
-    def ai(self, character):
-        self.after(0.5, self.end_turn)
+    def ai(self):
+        source = self.current_character
+
+        # Look for a character to revive
+        # TODO
+
+        # List of all possible attacks
+        attacks = list(source.data.standard_attacks)
+
+        # Add spin attacks we can afford
+        attacks += [a for a in source.spin_attacks if a.spin_cost <= source.spin]
+
+        # Add item attacks (TODO only if applicable)
+        attacks += [ia.attack for ia in source.item_attacks if ia.attack.spin_cost <= source.spin]
+
+        # Random choice of attack
+        attack = random.choice(attacks)
+
+        # Find applicable targets
+        target_type = attack.target_type
+        if target_type == 'AllEnemy':
+            slots = [slot for slot in self.player_slots if slot.character and not slot.character.dead]
+        elif target_type == 'AllFriendly':
+            slots = [slot for slot in self.monster_slots if slot.character and not slot.character.dead]
+        elif target_type == 'DeadFriendly':
+            slots = [slot for slot in self.monster_slots if slot.character and slot.character.dead]
+        elif target_type == 'All':
+            slots = [slot for slot in self.slots if slot.character and not slot.character.dead]
+        else:
+            assert False
+
+        # Choose target(s)
+        slots.sort(key=lambda slot: slot.x)
+        target_count = min(attack.target_count, len(slots))
+        max_slot_index = len(slots) - target_count + 1
+        slot_index = random.randrange(0, max_slot_index)
+        targets = [slot.character for slot in slots[slot_index:slot_index + target_count]]
+
+        self.action_attack(attack, targets)
 
     def action_attack(self, attack, targets):
         source = self.current_character
