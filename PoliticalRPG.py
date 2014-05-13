@@ -664,7 +664,11 @@ class CombatWorld(World):
             if debug.massive_damage and not source.ai:
                 damage *= 100
 
+            tried_damage = True
             if damage > 0:
+                # Charisma
+                damage = max(0, damage - target.charisma)
+
                 # Resistance and weakness
                 if attack in target.data.resistance:
                     self.add_floater(target, 'Resist', 1)
@@ -684,6 +688,9 @@ class CombatWorld(World):
             # Apply damage
             damage = int(damage)
             self.apply_damage(target, damage)
+
+            if damage == 0:
+                self.add_floater(target, 'Undamaged')
 
             # Apply target effects
             for effect in attack.effects:
