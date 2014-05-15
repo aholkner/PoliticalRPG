@@ -522,6 +522,11 @@ class MapWorld(World):
         if other.name in game_data.script:
             self.run_script(other, other.name)
 
+    def get_script_sprite(self, param):
+        for sprite in self.sprites:
+            if sprite.name == param:
+                return sprite
+
     def get_room_name(self):
         if not self.rooms_layer:
             return ''
