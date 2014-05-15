@@ -352,6 +352,18 @@ class World(object):
         elif action == 'GiveItem':
             game.quest_items.append(game_data.quest_items[param])
             return self.do_dialog(None, dialog)
+        elif action == 'GiveVotes':
+            amount = int(param)
+            game.player.votes = min(game.player.votes + amount, game.player.max_votes)
+            for ally in game.allies:
+                ally.votes = min(ally.votes + amount, ally.max_votes)
+            return self.do_dialog(sprite, dialog)
+        elif action == 'GiveSpin':
+            amount = int(param)
+            game.player.spin = min(game.player.spin + amount, game.player.max_spin)
+            for ally in game.allies:
+                ally.spin = min(ally.spin + amount, ally.max_spin)
+            return self.do_dialog(sprite, dialog)
         elif action == 'RestoreVotes':
             game.player.votes = game.player.max_votes
             for ally in game.allies:

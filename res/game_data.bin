@@ -61,12 +61,12 @@ g3
 NtRp26
 (dp27
 g13
-S'RestoreVotes'
+S'GiveVotes'
 p28
 sg15
 g24
 sg16
-S''
+F10
 sg18
 S'Here are votes'
 p29
@@ -76,13 +76,13 @@ g3
 NtRp30
 (dp31
 g13
-S'RestoreSpin'
+S'GiveSpin'
 p32
 sg15
 S'FlunkyTest'
 p33
 sg16
-S''
+F2
 sg18
 S'Here is spin'
 p34
