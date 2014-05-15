@@ -350,6 +350,8 @@ class MapWorld(World):
             self.do_dialog(self.player_sprite, param)
         elif action == 'Encounter':
             game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), param))
+        elif action == 'Destroy':
+            self.sprites.remove(sprite)
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
@@ -1007,6 +1009,7 @@ class WinCombatWorld(World):
 
         game.pop_world()
         game.pop_world()
+        game.world.continue_script()
 
 class Debug(object):
     def __init__(self):
@@ -1023,6 +1026,10 @@ class Debug(object):
         elif key == bacon.Keys.f1:
             self.massive_damage = not self.massive_damage
             self.println('massive_damage = %s' % self.massive_damage)
+        elif key == bacon.Keys.f2:
+            if isinstance(game.world, CombatWorld):
+                game.world.win()
+                self.println('cheat win')
         elif key == bacon.Keys.numpad_add:
             if isinstance(game.world, CombatWorld):
                 game.world.apply_damage(game.world.current_character, -10)
