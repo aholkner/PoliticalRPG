@@ -295,7 +295,7 @@ class World(object):
     def draw_stats(self):
         for i, character in enumerate(game.allies):
             x = i * ui_width / 4
-            y = ui_height - 80
+            y = ui_height - 100
             if character:
                 if character is self.current_character:
                     bacon.push_color()
@@ -305,10 +305,9 @@ class World(object):
 
                 dy = debug.font.height
                 debug.draw_string(character.data.name, x, y)
-                debug.draw_string('XP: %d/%d' % (character.xp, get_level_row(character.level + 1).xp), x, y + dy)
+                debug.draw_string('LVL: %d  XP: %d/%d' % (character.level, character.xp, get_level_row(character.level + 1).xp), x, y + dy)
                 debug.draw_string('Votes: %d/%d' % (character.votes, character.max_votes), x, y + dy * 2)
                 debug.draw_string('Spin:  %d/%d' % (character.spin, character.max_spin), x, y + dy * 3)
-                debug.draw_string(character.get_effects_abbrv(), x, y + dy * 3) 
 
     def on_dismiss_dialog(self):
         self.continue_script()
@@ -805,7 +804,7 @@ class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
         self.encounter = encounter = game_data.encounters[encounter_id]
-        self.menu_start_y = ui_height - 100
+        self.menu_start_y = ui_height - 120
 
     def start(self):
         encounter = self.encounter
@@ -1177,16 +1176,24 @@ class CombatWorld(World):
         i = -1
         for slot in self.slots:
             if slot.character:
-                if slot.character is self.current_character:
-                    x = slot.x * self.tile_size * map_scale
-                    y = slot.y * self.tile_size * map_scale
+                x = slot.x * self.tile_size * map_scale
+                y = slot.y * self.tile_size * map_scale
+                if slot.character is self.current_character:    
                     debug.draw_string('^', x, y)
+
+                    bacon.set_color(0, 0, 0, 1)
+                    bacon.draw_string(debug.font, slot.character.data.name, x + 4 * map_scale, y + 16 * map_scale, vertical_align=bacon.VerticalAlignment.top, align=bacon.Alignment.center) 
+                    bacon.set_color(1, 1, 1, 1)
+
+                bacon.set_color(0, 0, 0, 1)
+                bacon.draw_string(debug.font, slot.character.get_effects_abbrv(), x + 4 * map_scale, y + 8 * map_scale, vertical_align=bacon.VerticalAlignment.top, align=bacon.Alignment.center) 
+                bacon.set_color(1, 1, 1, 1)
 
                 i += 1
                 if i == debug.show_slot_stats:
                     c = slot.character
                     x = slot.x * self.tile_size * map_scale
-                    y = slot.y * self.tile_size * map_scale + 8 * map_scale
+                    y = slot.y * self.tile_size * map_scale + 24 * map_scale
                     dy = debug.font.height
                     debug.draw_string(c.id, x, y)
                     debug.draw_string('xp=%d' % c.xp, x, y + dy)
