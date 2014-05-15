@@ -175,6 +175,9 @@ class World(object):
                 print '%s says %s' % (sprite.name, text)
             else:
                 print 'message: %s' % text
+            return True
+        else:
+            return False
 
     def add_sprite(self, image, x, y):
         if hasattr(image, 'properties'):
@@ -364,7 +367,7 @@ class MapWorld(World):
             return False
         elif action == 'GiveItem':
             game.quest_items.append(game_data.quest_items[param])
-            self.do_dialog(None, dialog)
+            return self.do_dialog(None, dialog)
         elif action == 'RequireItem':
             if param in (item.id for item in game.quest_items):
                 return False # satisfied, move to next line immediately
@@ -384,7 +387,9 @@ class MapWorld(World):
         elif action == 'UnsetFlag':
             if param in game.quest_flags:
                 game.quest_flags.remove(param)
-        
+        elif action == 'LearnAttack':
+            game.player.standard_attacks.append(game_data.attacks[param])
+            return self.do_dialog(None, dialog)
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
@@ -478,8 +483,10 @@ class Character(object):
 
         if ai:
             self.spin_attacks = row.spin_attacks
+            self.standard_attacks = row.standard_attacks
         else:
             self.spin_attacks = list(row.spin_attacks)
+            self.standard_attacks = list(row.standard_attacks)
 
     def add_item_attack(self, attack):
         add_attack_to_itemattack_list(self.item_attacks, attack)
@@ -545,7 +552,7 @@ class CombatMenuMain(Menu):
         self.can_dismiss = False
 
     def on_offense(self):
-        self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.data.standard_attacks))
+        self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.standard_attacks))
 
     def on_defense(self):
         self.world.action_attack(game_data.attacks['DEFENSE'], [])
@@ -756,7 +763,7 @@ class CombatWorld(World):
         # TODO
 
         # List of all possible attacks
-        attacks = list(source.data.standard_attacks)
+        attacks = list(source.standard_attacks)
 
         # Add spin attacks we can afford
         attacks += [a for a in source.spin_attacks if a.spin_cost <= source.spin]
@@ -820,7 +827,7 @@ class CombatWorld(World):
             source.spin = max(0, source.spin - attack.spin_cost)
 
         # Consume item
-        if (not attack in source.spin_attacks) and (not attack in source.data.standard_attacks):
+        if (not attack in source.spin_attacks) and (not attack in source.standard_attacks):
             debug.println('%s consumed item %s' % (source.id, attack.name))
             source.remove_item_attack(attack)
 
