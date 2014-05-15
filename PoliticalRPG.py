@@ -352,6 +352,19 @@ class World(object):
         elif action == 'GiveItem':
             game.quest_items.append(game_data.quest_items[param])
             return self.do_dialog(None, dialog)
+        elif action == 'RestoreVotes':
+            game.player.votes = game.player.max_votes
+            for ally in game.allies:
+                ally.votes = ally.max_votes
+            return self.do_dialog(sprite, dialog)
+        elif action == 'RestoreSpin':
+            game.player.spin = game.player.max_spin
+            for ally in game.allies:
+                ally.spin = ally.max_spin
+            return self.do_dialog(sprite, dialog)
+        elif action == 'GiveMoney':
+            game.money += int(param)
+            return self.do_dialog(sprite, dialog)
         elif action == 'RequireItem':
             if param in (item.id for item in game.quest_items):
                 return False # satisfied, move to next line immediately
