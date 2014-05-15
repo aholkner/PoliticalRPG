@@ -134,6 +134,7 @@ class World(object):
     active_script = None
     active_script_sprite = None
     current_character = None
+    quest_name = ''
 
     def __init__(self, map):
         self.menu_stack = []
@@ -279,13 +280,16 @@ class World(object):
     def get_room_name(self):
         return ''
 
+    def get_quest_name(self):
+        return self.quest_name
+
     def draw_hud(self):
         bacon.set_color(0, 0, 0, 1)
         bacon.fill_rect(0, 0, ui_width, debug.font.height)
         bacon.set_color(1, 1, 1, 1)
 
+        bacon.draw_string(debug.font, self.get_quest_name(), 0, 0, align=bacon.Alignment.left, vertical_align=bacon.VerticalAlignment.top)
         bacon.draw_string(debug.font, self.get_room_name(), ui_width / 2, 0, align=bacon.Alignment.center, vertical_align=bacon.VerticalAlignment.top)
-        bacon.draw_string(debug.font, 'LVL: %d  XP: %d/%d' % (game.player.level, game.player.xp, get_level_row(game.player.level + 1).xp), 0, 0, vertical_align=bacon.VerticalAlignment.top)
         bacon.draw_string(debug.font, '$%d' % game.money, ui_width, 0, align=bacon.Alignment.right, vertical_align=bacon.VerticalAlignment.top)
 
     def draw_stats(self):
@@ -364,6 +368,9 @@ class World(object):
             self.do_dialog(self.player_sprite, dialog)
         elif action == 'Message':
             self.do_dialog(None, dialog)
+        elif action == 'QuestName':
+            self.quest_name = dialog
+            return False
         elif action == 'Encounter':
             game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), param))
         elif action == 'Destroy':
@@ -802,6 +809,8 @@ class CombatWorld(World):
 
     def start(self):
         encounter = self.encounter
+        self.quest_name = encounter.name
+
         self.floaters = []
         self.active_attack = None
         self.active_targets = None
@@ -1624,6 +1633,7 @@ def main():
                 
         game_data.encounters = parse_table(combat_db['Encounters'], dict(
             id = 'ID',
+            name = 'Name',
             monster1 = 'Monster 1',
             monster1_lvl = 'Monster 1 Lvl',
             monster2 = 'Monster 2',
