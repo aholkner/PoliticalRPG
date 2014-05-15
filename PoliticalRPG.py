@@ -1081,7 +1081,6 @@ class CombatWorld(World):
             if debug.massive_damage and not source.ai:
                 damage *= 100
 
-            tried_damage = True
             if damage > 0:
                 # Charisma
                 damage = max(0, damage - target.charisma)
@@ -1102,15 +1101,14 @@ class CombatWorld(World):
                     debug.println('%s defends' % target.id)
                 damage -= damage * min(1, target.resistance)
                 
+            tried_damage = attack.base_damage_min != 0 or attack.base_damage_max != 0 or attack.crit_base_damage != 0
             if not tried_damage or damage != 0:
                 critical_fail = False
 
             # Apply damage
             damage = int(damage)
-            self.apply_damage(target, damage)
-
-            if damage == 0:
-                self.add_floater(target, '0')
+            if tried_damage or damage:
+                self.apply_damage(target, damage)
 
             # Apply target effects
             for effect in attack.effects:
@@ -1132,17 +1130,21 @@ class CombatWorld(World):
                 source.add_active_effect(ActiveEffect(critical_fail_effect, rounds))
                 self.add_floater(source, 'Critical fail')
 
-        self.after(2, self.end_turn)
+        if self.floaters:
+            self.after(2, self.end_turn)
+        else:
+            self.after(1, self.end_turn)
 
     def apply_damage(self, target, damage):
         target.votes -= damage
         target.votes = clamp(target.votes, 0, target.max_votes)
 
-        if damage > 0:
+        if damage >= 0:
             self.add_floater(target, '%d' % damage)
         elif damage < 0:
             self.add_floater(target, '+%d' % -damage)
-
+            pass
+            
         if target.votes == 0:
             target.votes = 0
             self.set_dead(target, True)
@@ -1549,7 +1551,7 @@ def main():
     parser = optparse.OptionParser()
     parser.add_option('--import-ods')
     options, args = parser.parse_args()
-
+    
     global game_data
     if options.import_ods:
         import odsimport
