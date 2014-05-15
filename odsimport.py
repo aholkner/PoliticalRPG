@@ -18,6 +18,7 @@ def import_ods(path):
             db_table.append(db_row)
             for cell in row.getElementsByType(TableCell):
                 db_value = '\n'.join(map(str, cell.getElementsByType(P)))
+                db_value = db_value.strip()
                 try:
                     db_value = float(db_value)
                 except:

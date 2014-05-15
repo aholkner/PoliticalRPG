@@ -354,6 +354,9 @@ class MapWorld(World):
 
     def run_script_row(self, sprite, script_row):
         action = script_row.action
+        if action.startswith('_'):
+            return False
+
         param = script_row.param
         dialog = script_row.dialog
         if action == 'Say':
@@ -404,7 +407,7 @@ class MapWorld(World):
             return self.do_dialog(None, dialog)
         elif action == 'AddAlly':
             character_id, level = param.split(':')
-            game.allies.append(Character(character_id, int(level), [], False))
+            game.allies.append(Character(character_id, int(level), game.player.item_attacks, False))
             return self.do_dialog(None, dialog)
         elif action == 'RemoveAlly':
             ally = game.get_ally(param)
@@ -443,7 +446,7 @@ class Effect(object):
         elif self.attribute == 'resistance':
             character.resistance = max(0, character.resistance + value)
         elif self.attribute == 'money':
-            character.money = max(0, character.money + value)
+            game.money = max(0, game.money + value)
 
     def apply(self, character):
         if self.function == 'reduce':
@@ -484,20 +487,27 @@ def add_attack_to_itemattack_list(item_attacks, attack):
        
 class Character(object):
     def __init__(self, id, level, item_attacks, ai=True):
+        level = int(level)
         self.id = id
         self.image = game_sprites[id]
         self.level = level
+        level_row = get_level_row(level)
+        self.xp = level_row.xp
         self.ai = ai
         self.dead = False
         self.data = row = random.choice(game_data.characters[id])
-        self.votes = self.max_votes = self.calc_stat(row.votes_base, row.votes_lvl)
-        self.spin = self.max_spin = self.calc_stat(row.spin_base, row.spin_lvl)
+        if ai:
+            self.votes = self.max_votes = self.calc_stat(row.votes_base, row.votes_lvl)
+            self.spin = self.max_spin = self.calc_stat(row.spin_base, row.spin_lvl)
+        else:
+            self.votes = self.max_votes = level_row.votes
+            self.spin = self.max_spin = level_row.spin
+
         self.speed = self.calc_stat(row.speed_base, row.speed_lvl)
         self.wit = self.calc_stat(row.wit_base, row.wit_lvl)
         self.cunning = self.calc_stat(row.cunning_base, row.cunning_lvl)
         self.charisma = self.calc_stat(row.charisma_base, row.charisma_lvl)
         self.flair = self.calc_stat(row.flair_base, row.flair_lvl)
-        self.money = 0
         self.resistance = 0
         self.active_effects = []
         self.item_attacks = item_attacks
@@ -998,8 +1008,9 @@ class CombatWorld(World):
 
                 dy = debug.font.height
                 debug.draw_string(character.data.name, x, y)
-                debug.draw_string('Votes: %d/%d' % (character.votes, character.max_votes), x, y + dy)
-                debug.draw_string('Spin:  %d/%d' % (character.spin, character.max_spin), x, y + dy * 2)
+                debug.draw_string('XP: %d/%d' % (character.xp, get_level_row(character.level + 1).xp), x, y + dy)
+                debug.draw_string('Votes: %d/%d' % (character.votes, character.max_votes), x, y + dy * 2)
+                debug.draw_string('Spin:  %d/%d' % (character.spin, character.max_spin), x, y + dy * 3)
                 debug.draw_string(character.get_effects_abbrv(), x, y + dy * 3) 
 
         i = -1
@@ -1017,6 +1028,7 @@ class CombatWorld(World):
                     y = slot.y * self.tile_size * map_scale + 8 * map_scale
                     dy = debug.font.height
                     debug.draw_string(c.id, x, y)
+                    debug.draw_string('xp=%d' % c.xp, x, y + dy)
                     debug.draw_string('level=%d' % c.level, x, y + dy)
                     debug.draw_string('votes=%d' % c.votes, x, y + dy * 2)
                     debug.draw_string('spin=%d' % c.spin, x, y + dy * 3)
@@ -1038,7 +1050,22 @@ class WinCombatWorld(World):
         map = tiled.parse('res/ui_win_combat.tmx')
         super(WinCombatWorld, self).__init__(map)
         self.combat_world = combat_world
+        self.characters = [game.player] + game.allies
+        self.queued_dialogs = []
 
+        # Actually award results
+        encounter = self.combat_world.encounter
+        for ia in encounter.item_attack_drops:
+            for i in range(ia.quantity):
+                add_attack_to_itemattack_list(game.player.item_attacks, ia.attack)
+        
+        # Generate XP per character
+        per_character_xp = encounter.xp / len(self.characters)
+        for character in self.characters:
+            character.xp += per_character_xp
+            if get_level_for_xp(character.xp) != character.level:
+                self.queued_dialogs.append(LevelUpWorld(character, self.combat_world))
+        
     def draw(self):
         encounter = self.combat_world.encounter
         self.combat_world.draw()
@@ -1057,18 +1084,46 @@ class WinCombatWorld(World):
             y += font.height
 
     def on_world_key_pressed(self, key):
+        self.next()
+
+    def on_level_up_world_dismissed(self):
+        self.next()
+
+    def next(self):
+        if self.queued_dialogs:
+            game.push_world(self.queued_dialogs.pop(0))
+        else:
+            self.dismiss()
+
+    def dismiss(self):
         self.combat_world.reset()
-
-        # Actually award results
-        encounter = self.combat_world.encounter
-        for ia in encounter.item_attack_drops:
-            for i in range(ia.quantity):
-                add_attack_to_itemattack_list(game.player.item_attacks, ia.attack)
-        game.xp += encounter.xp
-
         game.pop_world()
         game.pop_world()
         game.world.continue_script()
+
+class LevelUpWorld(World):
+    def __init__(self, character, combat_world):
+        map = tiled.parse('res/ui_levelup.tmx')
+        super(LevelUpWorld, self).__init__(map)
+        self.character = character
+        self.combat_world = combat_world
+
+    def on_world_key_pressed(self, key):
+        game.pop_world()
+        game.world.on_level_up_world_dismissed()
+        
+    def draw(self):
+        self.combat_world.draw()
+        cx = ui_width / 2
+        y = 128
+        font = debug.font
+        bacon.draw_string(font, 'LEVEL UP!', cx, y, align = bacon.Alignment.center)
+        bacon.draw_string(font, self.character.id, cx, y + 64, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'XP: %d' % self.character.xp, cx, y + 128, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'Level: %d' % self.character.level, cx, y + 128 +64, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'Votes: %d' % self.character.votes, cx, y + 128 +128, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'Spin: %d' % self.character.spin, cx, y + 128 + 128 + 64, align = bacon.Alignment.center)
+        
 
 class Debug(object):
     def __init__(self):
@@ -1128,13 +1183,21 @@ def load_sprites(path):
             sprite_images[image.properties['character']] = image
     return sprite_images
 
+def get_level_row(level):
+    return game_data.levels[level - 1]
+
+def get_level_for_xp(xp):
+    for level in game_data.levels:
+        if xp < level.xp:
+            return level.level - 1
+
 class Game(bacon.Game):
     def __init__(self):
         self.player = Character('Player', 1, [], False)
         self.allies = []
         self.quest_items = []
         self.quest_flags = set()
-        self.xp = 0
+        self.money = 0
 
         self.world = None
         self.world_stack = []
@@ -1229,6 +1292,7 @@ def main():
         import odsimport
         combat_db = odsimport.import_ods(os.path.join(options.import_ods, 'Combat.ods'))
         quest_db = odsimport.import_ods(os.path.join(options.import_ods, 'Quest.ods'))
+        level_db = odsimport.import_ods(os.path.join(options.import_ods, 'Levels.ods'))
         game_data = GameData()
         
         game_data.quest_items = parse_table(quest_db['Items'], dict(
@@ -1340,6 +1404,14 @@ def main():
             param = 'Param',
             dialog = 'Dialog',
         ), index_multi=True)
+
+        game_data.levels = parse_table(level_db['Levels'], dict(
+            level = 'Level',
+            xp = 'XP',
+            votes = 'Votes',
+            spin = 'Spin',
+            skill_points = 'Skill Points',
+        ))
 
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:

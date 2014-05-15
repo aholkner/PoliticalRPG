@@ -22,5 +22,8 @@
   <object name="Protester1" gid="72" x="32" y="96"/>
   <object name="Head Protester" gid="72" x="48" y="112"/>
   <object name="Protester2" gid="72" x="64" y="104"/>
+  <object name="Journalist" gid="73" x="96" y="48"/>
+  <object name="Wife" gid="86" x="112" y="104"/>
+  <object name="Sponsor" gid="67" x="48" y="16"/>
  </objectgroup>
 </map>
