@@ -168,9 +168,10 @@ class World(object):
                         self.add_sprite(image, x, y)
 
     def do_dialog(self, sprite, text):
-        self.dialog_sprite = sprite
-        self.dialog_text = text
-        print '%s says %s' % (sprite.name, text)
+        if text:
+            self.dialog_sprite = sprite
+            self.dialog_text = text
+            print '%s says %s' % (sprite.name, text)
 
     def add_sprite(self, image, x, y):
         if hasattr(image, 'properties'):
@@ -246,8 +247,8 @@ class World(object):
         bacon.pop_transform()
 
         if self.dialog_sprite:
-            x = (self.dialog_sprite.x  - viewport.x1) * ts * map_scale
-            y = (self.dialog_sprite.y  - viewport.y1) * ts * map_scale
+            x = (self.dialog_sprite.x * ts - viewport.x1) * map_scale
+            y = (self.dialog_sprite.y * ts - viewport.y1) * map_scale
             bacon.draw_string(debug.font, self.dialog_text, x, y)
 
         for menu in self.menu_stack:
@@ -288,6 +289,7 @@ class MapWorld(World):
 
         player_slot = self.player_slots[0]
         self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
+        self.player_sprite.name = 'Player'
         self.sprites.append(self.player_sprite)
 
     def update(self):
@@ -344,14 +346,34 @@ class MapWorld(World):
     def run_script_row(self, sprite, script_row):
         action = script_row.action
         param = script_row.param
+        dialog = script_row.dialog
         if action == 'Say':
-            self.do_dialog(sprite, param)
+            self.do_dialog(sprite, dialog)
         elif action == 'PlayerSay':
-            self.do_dialog(self.player_sprite, param)
+            self.do_dialog(self.player_sprite, dialog)
         elif action == 'Encounter':
             game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), param))
         elif action == 'Destroy':
             self.sprites.remove(sprite)
+        elif action == 'RequireItem':
+            if param in (item.id for item in game.quest_items):
+                return False # satisfied, move to next line immediately
+            else:
+                self.do_dialog(sprite, dialog)
+                sprite.script_index -= 1
+                self.active_script = None
+        elif action == 'RequireFlag':
+            if param in game.quest_flags:
+                return False # satisfied, move to next line immediately
+            else:
+                self.do_dialog(sprite, dialog)
+                sprite.script_index -= 1
+                self.active_script = None
+        elif action == 'SetFlag':
+            game.quest_flags.add(param)
+        elif action == 'UnsetFlag':
+            if param in game.quest_flags:
+                game.quest_flags.remove(param)
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
@@ -1073,6 +1095,7 @@ class Game(bacon.Game):
     def __init__(self):
         self.player = Character('Player', 1, [], False)
         self.quest_items = []
+        self.quest_flags = set()
         self.xp = 0
 
         self.world = None
@@ -1273,6 +1296,7 @@ def main():
             trigger = 'Trigger',
             action = 'Action',
             param = 'Param',
+            dialog = 'Dialog',
         ), index_multi=True)
 
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))

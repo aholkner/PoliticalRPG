@@ -17,5 +17,6 @@
  </layer>
  <objectgroup name="NPCs" width="20" height="16">
   <object name="HippyGirl1" gid="68" x="32" y="48"/>
+  <object name="SuitGuy1" gid="67" x="48" y="72"/>
  </objectgroup>
 </map>
