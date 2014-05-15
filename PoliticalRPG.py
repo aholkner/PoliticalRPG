@@ -373,6 +373,24 @@ class World(object):
             if param in game.quest_flags:
                 game.quest_flags.remove(param)
             return False
+        elif action == 'Increment':
+            if param not in game.quest_vars:
+                game.quest_vars[param] = 0
+            game.quest_vars[param] += 1
+            return False
+        elif action == 'RequireCount':
+            value = 0
+            param, required_value = param.split(':')
+            param = param.strip()
+            required_value = int(required_value)
+            if param in game.quest_vars:
+                value = game.quest_vars[param]
+            if value >= required_value:
+                return False # satisfied
+            else:
+                self.do_dialog(sprite, dialog)
+                sprite.script_index -= 1
+                self.active_script = None
         elif action == 'LearnAttack':
             character = game.player
             attack_id = param
@@ -1345,6 +1363,7 @@ class Game(bacon.Game):
         self.allies = []
         self.quest_items = []
         self.quest_flags = set()
+        self.quest_vars = {}
         self.money = 0
         self.map_worlds = {}
 
