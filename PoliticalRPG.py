@@ -718,12 +718,17 @@ class CombatOffenseMenu(Menu):
             else:
                 quantity = 1
 
+            name = attack.name
+            enabled = True
+
+            if attack.underlying_stat == 'Money':
+                name = '%s ($%d)' % (name, world.encounter.bribe_cost)
+                enabled = enabled and game.money >= world.encounter.bribe_cost
+
             if quantity > 1:
                 name = '%s (x%d)' % (attack.name, quantity)
-            else:
-                name = attack.name
 
-            enabled = world.current_character.spin >= attack.spin_cost
+            enabled = enabled and world.current_character.spin >= attack.spin_cost
             if attack.target_type == 'DeadFriendly' and not [slot for slot in self.world.player_slots if slot.character and slot.character.dead]:
                 enabled = False
 
@@ -1033,14 +1038,16 @@ class CombatWorld(World):
         elif attack.underlying_stat == 'Wit':
             base_stat = max(source.wit, 0)
         elif attack.underlying_stat == 'Money':
-            assert False # TODO
+            base_stat = max(source.cunning, 0)
+            game.money = max(0, game.money - self.encounter.bribe_cost)
+            debug.println('%s consumed %d money, has %d remaining' % (source.id, self.encounter.bribe_cost, game.money))
         else:
             assert False
         
         # Consume spin
         if attack.spin_cost:
-            debug.println('%s consumed %d spin, has %d remaining' % (source.id, attack.spin_cost, source.spin))
             source.spin = max(0, source.spin - attack.spin_cost)
+            debug.println('%s consumed %d spin, has %d remaining' % (source.id, attack.spin_cost, source.spin))
 
         # Consume item
         if (not attack in source.spin_attacks) and (not attack in source.standard_attacks):
@@ -1402,6 +1409,9 @@ class Debug(object):
             if isinstance(game.world, CombatWorld):
                 game.world.win()
                 self.println('cheat win')
+        elif key == bacon.Keys.f3:
+            game.money += 1000
+            self.println('cheat money')
         elif key == bacon.Keys.numpad_add:
             if isinstance(game.world, CombatWorld):
                 game.world.apply_damage(game.world.current_character, -10)
@@ -1658,6 +1668,7 @@ def main():
             monster4 = 'Monster 4',
             monster4_lvl = 'Monster 4 Lvl',
             item_attacks = 'Attack Items',
+            bribe_cost = 'Bribe Cost',
             xp = 'XP',
             item_attack_drops = 'Attack Drops',
         ), index_unique=True)
