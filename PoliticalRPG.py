@@ -17,6 +17,7 @@ font_tiny.height = font_tiny.descent - font_tiny.ascent
 
 bacon.window.width = 640
 bacon.window.height = 480
+bacon.window.fullscreen = True
 
 map_scale = 4
 map_width = bacon.window.width / map_scale
@@ -527,7 +528,7 @@ class Effect(object):
         if self.attribute == 'spin':
             character.spin = clamp(character.spin + value, 0, character.max_spin)
         elif self.attribute == 'votes':
-            character.votes = clamp(character.votes + value, 0, character.max_votes)
+            game.world.apply_damage(character, -value)
         elif self.attribute == 'wit':
             character.wit = max(0, character.wit + value)
         elif self.attribute == 'cunning':
@@ -559,6 +560,7 @@ class Effect(object):
 
     def update(self, character):
         if self.function == 'drain':
+            game.world.add_floater(character, self.id, 1) 
             self._add_value(character, -self.value)
 
 class ActiveEffect(object):
@@ -642,14 +644,6 @@ class Character(object):
         active_effect.effect.unapply(self)
         self.active_effects.remove(active_effect)
         debug.println('Remove effect %s from %s' % (active_effect.effect.id, self.id))
-
-    def update_active_effects(self):
-        for ae in self.active_effects[:]:
-            ae.rounds -= 1
-            debug.println('Update effect %s on %s' % (ae.effect.id, self.id))
-            ae.effect.update(self)
-            if ae.rounds <= 0:
-                self.remove_active_effect(ae)
 
     def remove_all_active_effects(self):
         for ae in self.active_effects[:]:
@@ -845,7 +839,33 @@ class CombatWorld(World):
         miss_turn = self.current_character.has_effect_function('miss_turn')
 
         # Update character effects
-        self.current_character.update_active_effects()
+        self.begin_turn_apply_effect(self.current_character.active_effects, 0, miss_turn)
+
+    def begin_turn_apply_effect(self, effects, effect_index, miss_turn):
+        if self.current_character.dead:
+            self.end_turn()
+
+        if effect_index >= len(effects):
+            self.begin_turn_end_effects(miss_turn)
+            return
+
+        ae = effects[effect_index]
+        ae.rounds -= 1
+        debug.println('Update effect %s on %s' % (ae.effect.id, self.current_character.id))
+        ae.effect.update(self.current_character)
+        if ae.rounds <= 0:
+            self.current_character.remove_active_effect(ae)
+
+        if self.floaters:
+            # Queue up next effect if this one generated a floater
+            self.after(1, partial(self.begin_turn_apply_effect, effects, effect_index + 1, miss_turn))
+        else:
+            # Otherwise continue immediately
+            self.begin_turn_apply_effect(effects, effect_index + 1, miss_turn)
+    
+    def begin_turn_end_effects(self, miss_turn):
+        if self.current_character.dead:
+            self.end_turn()
 
         # Miss turn, do AI or show UI
         if miss_turn:
@@ -1006,6 +1026,7 @@ class CombatWorld(World):
 
             # Damage
             if crit_success:
+                self.add_floater(target, 'Critical Hit!', 1)
                 debug.println('Critical hit')
                 damage = base_stat * (attack.crit_base_damage + modifiers)
             else:

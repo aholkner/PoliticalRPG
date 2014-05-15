@@ -66,7 +66,7 @@ p28
 sg15
 g24
 sg16
-S'PORKBARREL'
+S'SLANDER'
 p29
 sg18
 S'...'
@@ -389,12 +389,12 @@ g3
 NtRp131
 (dp132
 g13
-S'Increment'
+S'LearnAttack'
 p133
 sg15
 g129
 sg16
-S'FLUNKIES'
+S'SLANDER'
 p134
 sg18
 S''
@@ -2134,7 +2134,7 @@ sg543
 S'asdf'
 p656
 sg545
-I1
+F100
 sg546
 F0
 sg547
@@ -2157,7 +2157,7 @@ g3
 NtRp660
 (dp661
 g559
-S'add_permanent'
+S'drain'
 p662
 sg561
 S''
@@ -2165,11 +2165,11 @@ sg563
 S'votes'
 p663
 sg565
-F5
+F-5
 sg566
-F1
+F3
 sg567
-F1
+F3
 sg568
 S'Votes Restore'
 p664
@@ -2654,7 +2654,7 @@ sg563
 S'votes'
 p765
 sg565
-F1
+F15
 sg566
 F2
 sg567
