@@ -17,7 +17,6 @@ font_tiny.height = font_tiny.descent - font_tiny.ascent
 
 bacon.window.width = 640
 bacon.window.height = 480
-bacon.window.fullscreen = True
 
 map_scale = 4
 map_width = bacon.window.width / map_scale
@@ -134,6 +133,7 @@ class Menu(object):
 class World(object):
     active_script = None
     active_script_sprite = None
+    current_character = None
 
     def __init__(self, map):
         self.menu_stack = []
@@ -274,6 +274,7 @@ class World(object):
             menu.draw()
 
         self.draw_hud()
+        self.draw_stats()
 
     def get_room_name(self):
         return ''
@@ -286,6 +287,24 @@ class World(object):
         bacon.draw_string(debug.font, self.get_room_name(), ui_width / 2, 0, align=bacon.Alignment.center, vertical_align=bacon.VerticalAlignment.top)
         bacon.draw_string(debug.font, 'LVL: %d  XP: %d/%d' % (game.player.level, game.player.xp, get_level_row(game.player.level + 1).xp), 0, 0, vertical_align=bacon.VerticalAlignment.top)
         bacon.draw_string(debug.font, '$%d' % game.money, ui_width, 0, align=bacon.Alignment.right, vertical_align=bacon.VerticalAlignment.top)
+
+    def draw_stats(self):
+        for i, character in enumerate(game.allies):
+            x = i * ui_width / 4
+            y = ui_height - 80
+            if character:
+                if character is self.current_character:
+                    bacon.push_color()
+                    bacon.set_color(0.7, 0.7, 0.7, 1)
+                    bacon.fill_rect(x, y + debug.font.ascent, x + ui_width / 4, y + debug.font.height * 3)
+                    bacon.pop_color()
+
+                dy = debug.font.height
+                debug.draw_string(character.data.name, x, y)
+                debug.draw_string('XP: %d/%d' % (character.xp, get_level_row(character.level + 1).xp), x, y + dy)
+                debug.draw_string('Votes: %d/%d' % (character.votes, character.max_votes), x, y + dy * 2)
+                debug.draw_string('Spin:  %d/%d' % (character.spin, character.max_spin), x, y + dy * 3)
+                debug.draw_string(character.get_effects_abbrv(), x, y + dy * 3) 
 
     def on_dismiss_dialog(self):
         self.continue_script()
@@ -355,23 +374,19 @@ class World(object):
             return self.do_dialog(None, dialog)
         elif action == 'GiveVotes':
             amount = int(param)
-            game.player.votes = min(game.player.votes + amount, game.player.max_votes)
             for ally in game.allies:
                 ally.votes = min(ally.votes + amount, ally.max_votes)
             return self.do_dialog(sprite, dialog)
         elif action == 'GiveSpin':
             amount = int(param)
-            game.player.spin = min(game.player.spin + amount, game.player.max_spin)
             for ally in game.allies:
                 ally.spin = min(ally.spin + amount, ally.max_spin)
             return self.do_dialog(sprite, dialog)
         elif action == 'RestoreVotes':
-            game.player.votes = game.player.max_votes
             for ally in game.allies:
                 ally.votes = ally.max_votes
             return self.do_dialog(sprite, dialog)
         elif action == 'RestoreSpin':
-            game.player.spin = game.player.max_spin
             for ally in game.allies:
                 ally.spin = ally.max_spin
             return self.do_dialog(sprite, dialog)
@@ -778,9 +793,8 @@ class CombatWorld(World):
         self.current_character_index = -1
 
         self.characters = []
-        self.fill_slot(self.player_slots[0], game.player)
         for i, ally in enumerate(game.allies):
-            self.fill_slot(self.player_slots[i + 1], ally)
+            self.fill_slot(self.player_slots[i], ally)
         
         self.encounter = encounter = game_data.encounters[encounter_id]
         item_attacks = list(encounter.item_attacks)
@@ -1129,24 +1143,6 @@ class CombatWorld(World):
             else:
                 debug.draw_string(floater.text, floater.x, int(floater.y))
 
-        for i, slot in enumerate(self.player_slots):
-            character = slot.character
-            x = i * ui_width / 4
-            y = ui_height - 80
-            if character:
-                if character is self.current_character:
-                    bacon.push_color()
-                    bacon.set_color(0.7, 0.7, 0.7, 1)
-                    bacon.fill_rect(x, y + debug.font.ascent, x + ui_width / 4, y + debug.font.height * 3)
-                    bacon.pop_color()
-
-                dy = debug.font.height
-                debug.draw_string(character.data.name, x, y)
-                debug.draw_string('XP: %d/%d' % (character.xp, get_level_row(character.level + 1).xp), x, y + dy)
-                debug.draw_string('Votes: %d/%d' % (character.votes, character.max_votes), x, y + dy * 2)
-                debug.draw_string('Spin:  %d/%d' % (character.spin, character.max_spin), x, y + dy * 3)
-                debug.draw_string(character.get_effects_abbrv(), x, y + dy * 3) 
-
         i = -1
         for slot in self.slots:
             if slot.character:
@@ -1184,7 +1180,7 @@ class WinCombatWorld(World):
         map = tiled.parse('res/ui_win_combat.tmx')
         super(WinCombatWorld, self).__init__(map)
         self.combat_world = combat_world
-        self.characters = [game.player] + game.allies
+        self.characters = list(game.allies)
         self.queued_dialogs = []
 
         # Actually award results
@@ -1410,7 +1406,7 @@ def get_level_for_xp(xp):
 class Game(bacon.Game):
     def __init__(self):
         self.player = Character('Player', 1, [], False)
-        self.allies = []
+        self.allies = [self.player]
         self.quest_items = []
         self.quest_flags = set()
         self.quest_vars = {}
