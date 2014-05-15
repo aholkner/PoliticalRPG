@@ -417,6 +417,8 @@ class MapWorld(World):
             if ally:
                 game.allies.remove(ally)
             return self.do_dialog(None, dialog)
+        elif action == 'GotoMap':
+            game.goto_map(param)
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
@@ -1283,6 +1285,7 @@ class Game(bacon.Game):
         self.quest_items = []
         self.quest_flags = set()
         self.money = 0
+        self.map_worlds = {}
 
         self.world = None
         self.world_stack = []
@@ -1294,6 +1297,15 @@ class Game(bacon.Game):
 
     def pop_world(self):
         self.world = self.world_stack.pop()
+
+    def goto_map(self, map_id):
+        if map_id in self.map_worlds:
+            world = self.map_worlds[map_id]
+        else:
+            world = MapWorld(tiled.parse('res/' + map_id + '.tmx'))
+        self.map_worlds[map_id] = world
+        self.world = world
+        del self.world_stack[:]
 
     def on_tick(self):
         bacon.clear(0, 0, 0, 1)
@@ -1508,7 +1520,7 @@ def main():
 
     global game
     game = Game()
-    game.world = MapWorld(tiled.parse('res/map.tmx'))
+    game.goto_map('act1')
 
     bacon.run(game)
 
