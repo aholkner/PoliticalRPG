@@ -617,7 +617,8 @@ class Character(object):
             self.spin = self.max_spin = self.calc_stat(row.spin_base, row.spin_lvl)
         else:
             self.votes = self.max_votes = level_row.votes
-            self.spin = self.max_spin = level_row.spin
+            self.max_spin = level_row.spin
+            self.spin = 0
 
         self.speed = self.calc_stat(row.speed_base, row.speed_lvl)
         self.wit = self.calc_stat(row.wit_base, row.wit_lvl)
@@ -841,8 +842,8 @@ class CombatWorld(World):
         self.pop_all_menus()
         for ally in game.allies:
             ally.dead = False
-            ally.votes = ally.max_votes / 2 # TODO
-            ally.spin = ally.max_spin   # TODO
+            ally.votes = ally.max_votes / 2
+            ally.spin = 0
         self.start()
 
     @property
