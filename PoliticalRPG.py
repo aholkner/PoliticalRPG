@@ -360,6 +360,8 @@ class MapWorld(World):
             self.do_dialog(sprite, dialog)
         elif action == 'PlayerSay':
             self.do_dialog(self.player_sprite, dialog)
+        elif action == 'Message':
+            self.do_dialog(None, dialog)
         elif action == 'Encounter':
             game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), param))
         elif action == 'Destroy':
@@ -388,16 +390,24 @@ class MapWorld(World):
             if param in game.quest_flags:
                 game.quest_flags.remove(param)
         elif action == 'LearnAttack':
-            game.player.standard_attacks.append(game_data.attacks[param])
+            character = game.player
+            attack_id = param
+            if ':' in param:
+                character_id, attack_id = param.split(':')
+                character = game.get_ally(character_id)
+                if not character:
+                    debug.println('Missing ally: %s' % character_id)
+                    return False
+            character.standard_attacks.append(game_data.attacks[attack_id])
             return self.do_dialog(None, dialog)
         elif action == 'AddAlly':
             character_id, level = param.split(':')
             game.allies.append(Character(character_id, int(level), [], False))
             return self.do_dialog(None, dialog)
         elif action == 'RemoveAlly':
-            matches = [a for a in game.allies if a.id == param]
-            for match in matches:
-                game.allies.remove(match)
+            ally = game.get_ally(param)
+            if ally:
+                game.allies.remove(ally)
             return self.do_dialog(None, dialog)
         else:
             raise Exception('Unsupported script action "%s"' % action)
@@ -1145,6 +1155,12 @@ class Game(bacon.Game):
         if pressed:
             self.world.on_key_pressed(key)
             debug.on_key_pressed(key)
+
+    def get_ally(self, id):
+        for ally in self.allies:
+            if ally.id == id:
+                return ally
+        return None
 
 class TableRow(object):
     pass
