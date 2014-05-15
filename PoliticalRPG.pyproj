@@ -15,7 +15,7 @@
     <InterpreterVersion>2.7</InterpreterVersion>
     <IsWindowsApplication>True</IsWindowsApplication>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>--import-ods=Local</CommandLineArguments>
+    <CommandLineArguments>--import-ods=Local _Act2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

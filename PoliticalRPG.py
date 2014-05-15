@@ -155,6 +155,8 @@ class World(object):
 
         for layer in self.map.object_layers:
             for obj in layer.objects:
+                if not obj.image:
+                    continue
                 x = obj.x / self.tile_size
                 y = obj.y / self.tile_size
                 sprite = self.add_sprite(obj.image, x, y - 1)
@@ -269,6 +271,20 @@ class World(object):
 
         for menu in self.menu_stack:
             menu.draw()
+
+        self.draw_hud()
+
+    def get_room_name(self):
+        return ''
+
+    def draw_hud(self):
+        bacon.set_color(0, 0, 0, 1)
+        bacon.fill_rect(0, 0, ui_width, debug.font.height)
+        bacon.set_color(1, 1, 1, 1)
+
+        bacon.draw_string(debug.font, self.get_room_name(), ui_width / 2, 0, align=bacon.Alignment.center, vertical_align=bacon.VerticalAlignment.top)
+        bacon.draw_string(debug.font, 'LVL: %d  XP: %d/%d' % (game.player.level, game.player.xp, get_level_row(game.player.level + 1).xp), 0, 0, vertical_align=bacon.VerticalAlignment.top)
+        bacon.draw_string(debug.font, '$%d' % game.money, ui_width, 0, align=bacon.Alignment.right, vertical_align=bacon.VerticalAlignment.top)
 
     def on_dismiss_dialog(self):
         self.continue_script()
@@ -404,6 +420,11 @@ class MapWorld(World):
         self.player_sprite.name = 'Player'
         self.sprites.append(self.player_sprite)
 
+        self.rooms_layer = None
+        for layer in map.object_layers:
+            if layer.name == 'Rooms':
+                self.rooms_layer = layer
+                
     def update(self):
         self.update_camera()
         
@@ -432,7 +453,19 @@ class MapWorld(World):
         if other.name in game_data.script:
             self.run_script(other, other.name)
 
-    
+    def get_room_name(self):
+        if not self.rooms_layer:
+            return ''
+
+        x = self.player_sprite.x * self.tile_size
+        y = self.player_sprite.y * self.tile_size
+        for room in self.rooms_layer.objects:
+            if x >= room.x and y >= room.y and \
+                x < room.x + room.width and \
+                y < room.y + room.height:
+                return room.name
+
+        return ''
 
 class Effect(object):
     id = None
