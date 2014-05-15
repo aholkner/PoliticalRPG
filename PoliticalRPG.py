@@ -390,6 +390,15 @@ class MapWorld(World):
         elif action == 'LearnAttack':
             game.player.standard_attacks.append(game_data.attacks[param])
             return self.do_dialog(None, dialog)
+        elif action == 'AddAlly':
+            character_id, level = param.split(':')
+            game.allies.append(Character(character_id, int(level), [], False))
+            return self.do_dialog(None, dialog)
+        elif action == 'RemoveAlly':
+            matches = [a for a in game.allies if a.id == param]
+            for match in matches:
+                game.allies.remove(match)
+            return self.do_dialog(None, dialog)
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
@@ -660,6 +669,8 @@ class CombatWorld(World):
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
+        for i, ally in enumerate(game.allies):
+            self.fill_slot(self.player_slots[i + 1], ally)
         
         self.encounter = encounter = game_data.encounters[encounter_id]
         item_attacks = list(encounter.item_attacks)
@@ -1108,6 +1119,7 @@ def load_sprites(path):
 class Game(bacon.Game):
     def __init__(self):
         self.player = Character('Player', 1, [], False)
+        self.allies = []
         self.quest_items = []
         self.quest_flags = set()
         self.xp = 0
