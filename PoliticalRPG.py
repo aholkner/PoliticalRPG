@@ -131,6 +131,9 @@ class Menu(object):
             bacon.draw_string(debug.font, msg, 0, ui_height - debug.font.height * 2, ui_width, debug.font.height * 2, bacon.Alignment.left, bacon.VerticalAlignment.top) 
 
 class World(object):
+    active_script = None
+    active_script_sprite = None
+
     def __init__(self, map):
         self.menu_stack = []
         self.menu_start_x = 0
@@ -268,7 +271,7 @@ class World(object):
             menu.draw()
 
     def on_dismiss_dialog(self):
-        pass
+        self.continue_script()
 
     def on_key_pressed(self, key):
         if self.timeout_func:
@@ -285,57 +288,9 @@ class World(object):
 
         self.on_world_key_pressed(key)
 
-class MapWorld(World):
-     
-    input_movement = {
-        bacon.Keys.left: (-1, 0),
-        bacon.Keys.right: (1, 0),
-        bacon.Keys.up: (0, -1),
-        bacon.Keys.down: (0, 1),
-    }
-
-    active_script = None
-    active_script_sprite = None
-
-    def __init__(self, map):
-        super(MapWorld, self).__init__(map)
-
-        player_slot = self.player_slots[0]
-        self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
-        self.player_sprite.name = 'Player'
-        self.sprites.append(self.player_sprite)
-
-    def update(self):
-        self.update_camera()
-        
-    def update_camera(self):
-        ts = self.tile_size
-
-        self.camera_x = self.player_sprite.x * ts - map_width / 2
-        self.camera_y = self.player_sprite.y * ts - map_height / 2
-        self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - map_width)
-        self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
-
-    def on_world_key_pressed(self, key):
-        if key in self.input_movement:
-            dx, dy = self.input_movement[key]
-            self.move(dx, dy)
-
-    def move(self, dx, dy):
-        other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
-        if other:
-            self.on_collide(other)
-        else:
-            self.player_sprite.x += dx
-            self.player_sprite.y += dy
-        
-    def on_collide(self, other):
-        if other.name in game_data.script:
-            self.run_script(other, other.name)
-
-    def on_dismiss_dialog(self):
-        self.continue_script()
-
+    def get_script_sprite(self, param):
+        return None
+    
     def continue_script(self):
         if not self.active_script:
             return
@@ -352,6 +307,8 @@ class MapWorld(World):
             self.active_script = None
 
     def run_script(self, sprite, trigger):
+        if trigger not in game_data.script:
+            return
         self.active_script = game_data.script[trigger]
         self.active_script_sprite = sprite
         self.continue_script()
@@ -364,6 +321,8 @@ class MapWorld(World):
         param = script_row.param
         dialog = script_row.dialog
         if action == 'Say':
+            if param:
+                sprite = self.get_script_sprite(param)
             self.do_dialog(sprite, dialog)
         elif action == 'PlayerSay':
             self.do_dialog(self.player_sprite, dialog)
@@ -420,11 +379,59 @@ class MapWorld(World):
             return self.do_dialog(None, dialog)
         elif action == 'GotoMap':
             game.goto_map(param)
+        elif action == 'BeginCombat':
+            self.begin_round()
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
         # Return False only if this script row performs no yielding UI
         return True
+
+class MapWorld(World):
+     
+    input_movement = {
+        bacon.Keys.left: (-1, 0),
+        bacon.Keys.right: (1, 0),
+        bacon.Keys.up: (0, -1),
+        bacon.Keys.down: (0, 1),
+    }
+
+    def __init__(self, map):
+        super(MapWorld, self).__init__(map)
+
+        player_slot = self.player_slots[0]
+        self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
+        self.player_sprite.name = 'Player'
+        self.sprites.append(self.player_sprite)
+
+    def update(self):
+        self.update_camera()
+        
+    def update_camera(self):
+        ts = self.tile_size
+
+        self.camera_x = self.player_sprite.x * ts - map_width / 2
+        self.camera_y = self.player_sprite.y * ts - map_height / 2
+        self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - map_width)
+        self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
+
+    def on_world_key_pressed(self, key):
+        if key in self.input_movement:
+            dx, dy = self.input_movement[key]
+            self.move(dx, dy)
+
+    def move(self, dx, dy):
+        other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
+        if other:
+            self.on_collide(other)
+        else:
+            self.player_sprite.x += dx
+            self.player_sprite.y += dy
+        
+    def on_collide(self, other):
+        if other.name in game_data.script:
+            self.run_script(other, other.name)
+
     
 
 class Effect(object):
@@ -694,6 +701,7 @@ class CombatWorld(World):
         self.floaters = []
         self.active_attack = None
         self.active_targets = None
+        self.current_character_index = -1
 
         self.characters = []
         self.fill_slot(self.player_slots[0], game.player)
@@ -712,11 +720,16 @@ class CombatWorld(World):
             self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl, item_attacks))
 
         self.slots = self.player_slots + self.monster_slots
-        self.begin_round()
+
+        self.run_script(self.player_slots[0].sprite, encounter_id)
+
+        if not self.active_script:
+            self.begin_round()
 
     @property
     def current_character(self):
-        return self.characters[self.current_character_index]
+        if self.current_character_index >= 0:
+            return self.characters[self.current_character_index]
 
     def fill_slot(self, slot, character):
         slot.character = character
@@ -736,6 +749,12 @@ class CombatWorld(World):
         while self.current_character_index < len(self.characters) and self.current_character.dead:
                 self.current_character_index += 1
         self.begin_turn()
+
+    def get_script_sprite(self, param):
+        for slot in self.slots:
+            if slot.character and slot.character.id == param:
+                return slot.sprite
+        return None
 
     def begin_turn(self):
         if self.current_character_index >= len(self.characters):
@@ -785,7 +804,10 @@ class CombatWorld(World):
             self.begin_turn()
 
     def win(self):
-        game.push_world(WinCombatWorld(self))
+        if self.active_script:
+            self.continue_script()
+        else:
+            game.push_world(WinCombatWorld(self))
 
     def reset(self):
         for character in self.characters:
@@ -794,6 +816,11 @@ class CombatWorld(World):
     def lose(self):
         self.reset()
         game.pop_world() # TODO
+
+    def on_dismiss_dialog(self):
+        if not self.active_script:
+            game.push_world(WinCombatWorld(self))
+        super(CombatWorld, self).on_dismiss_dialog()
 
     def ai(self):
         source = self.current_character
