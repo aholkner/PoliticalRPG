@@ -171,7 +171,10 @@ class World(object):
         if text:
             self.dialog_sprite = sprite
             self.dialog_text = text
-            print '%s says %s' % (sprite.name, text)
+            if sprite:
+                print '%s says %s' % (sprite.name, text)
+            else:
+                print 'message: %s' % text
 
     def add_sprite(self, image, x, y):
         if hasattr(image, 'properties'):
@@ -246,10 +249,13 @@ class World(object):
 
         bacon.pop_transform()
 
-        if self.dialog_sprite:
-            x = (self.dialog_sprite.x * ts - viewport.x1) * map_scale
-            y = (self.dialog_sprite.y * ts - viewport.y1) * map_scale
-            bacon.draw_string(debug.font, self.dialog_text, x, y)
+        if self.dialog_text:
+            if self.dialog_sprite:
+                x = (self.dialog_sprite.x * ts - viewport.x1) * map_scale
+                y = (self.dialog_sprite.y * ts - viewport.y1) * map_scale
+                bacon.draw_string(debug.font, self.dialog_text, x, y)
+            else:
+                bacon.draw_string(debug.font, self.dialog_text, ui_width / 2, ui_height / 2, None, None, bacon.Alignment.center, bacon.VerticalAlignment.center)
 
         for menu in self.menu_stack:
             menu.draw()
@@ -261,8 +267,8 @@ class World(object):
         if self.timeout_func:
             return
 
-        if self.dialog_sprite:
-            self.dialog_sprite = None
+        if self.dialog_text:
+            self.dialog_text = None
             self.on_dismiss_dialog()
             return
 
@@ -355,6 +361,10 @@ class MapWorld(World):
             game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), param))
         elif action == 'Destroy':
             self.sprites.remove(sprite)
+            return False
+        elif action == 'GiveItem':
+            game.quest_items.append(game_data.quest_items[param])
+            self.do_dialog(None, dialog)
         elif action == 'RequireItem':
             if param in (item.id for item in game.quest_items):
                 return False # satisfied, move to next line immediately
@@ -374,6 +384,7 @@ class MapWorld(World):
         elif action == 'UnsetFlag':
             if param in game.quest_flags:
                 game.quest_flags.remove(param)
+        
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
@@ -1007,9 +1018,6 @@ class WinCombatWorld(World):
         bacon.draw_string(font, 'XP: +%d' % encounter.xp, cx, y, align = bacon.Alignment.center)
         
         y = 256
-        for item in encounter.quest_item_drops:
-            bacon.draw_string(font, item.name, cx, y, align = bacon.Alignment.center)
-            y += font.height
         for ia in encounter.item_attack_drops:
             if ia.quantity == 1:
                 name = ia.attack.name
@@ -1023,7 +1031,6 @@ class WinCombatWorld(World):
 
         # Actually award results
         encounter = self.combat_world.encounter
-        game.quest_items.extend(encounter.quest_item_drops)
         for ia in encounter.item_attack_drops:
             for i in range(ia.quantity):
                 add_attack_to_itemattack_list(game.player.item_attacks, ia.attack)
@@ -1281,7 +1288,6 @@ def main():
             item_attacks = 'Attack Items',
             xp = 'XP',
             item_attack_drops = 'Attack Drops',
-            quest_item_drops = 'Quest Drops',
         ), index_unique=True)
 
         for encounter in game_data.encounters.values():
@@ -1290,7 +1296,6 @@ def main():
             encounter.item_attack_drops = []
             for attack in attack_drops:
                 add_attack_to_itemattack_list(encounter.item_attack_drops, attack)
-            encounter.quest_item_drops = convert_idlist_to_objlist(encounter.quest_item_drops, game_data.quest_items)
 
         game_data.script = parse_table(quest_db['Script'], dict(
             trigger = 'Trigger',
