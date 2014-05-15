@@ -774,6 +774,19 @@ class CombatTargetMenu(Menu):
             debug.draw_string('>', slot.x * self.world.tile_size * map_scale, slot.y * self.world.tile_size * map_scale + 16)
         self.draw_status('Choose target')
         
+class GameOverMenu(Menu):
+    def __init__(self, world):
+        super(GameOverMenu, self).__init__(world)
+        self.title = 'You are defeated'
+        self.items.append(MenuItem('Restart this encounter', 'You failed this time, but next time the dice rolls may be in your favour', self.on_restart_encounter))
+        self.items.append(MenuItem('Quit game', '', self.on_exit))
+
+    def on_restart_encounter(self):
+        self.world.restart()
+
+    def on_exit(self):
+        bacon.quit()
+
 class Floater(object):
     def __init__(self, text, x, y):
         self.text = text
@@ -784,9 +797,11 @@ class Floater(object):
 class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
-
+        self.encounter = encounter = game_data.encounters[encounter_id]
         self.menu_start_y = ui_height - 100
 
+    def start(self):
+        encounter = self.encounter
         self.floaters = []
         self.active_attack = None
         self.active_targets = None
@@ -796,7 +811,6 @@ class CombatWorld(World):
         for i, ally in enumerate(game.allies):
             self.fill_slot(self.player_slots[i], ally)
         
-        self.encounter = encounter = game_data.encounters[encounter_id]
         item_attacks = list(encounter.item_attacks)
         if encounter.monster1:
             self.fill_slot(self.monster_slots[0], Character(encounter.monster1, encounter.monster1_lvl, item_attacks))
@@ -809,10 +823,19 @@ class CombatWorld(World):
 
         self.slots = self.player_slots + self.monster_slots
 
-        self.run_script(self.player_slots[0].sprite, encounter_id)
+        self.run_script(self.player_slots[0].sprite, self.encounter.id)
 
         if not self.active_script:
             self.begin_round()
+            
+    def restart(self):
+        del self.sprites[:]
+        self.pop_all_menus()
+        for ally in game.allies:
+            ally.dead = False
+            ally.votes = ally.max_votes / 2 # TODO
+            ally.spin = ally.max_spin   # TODO
+        self.start()
 
     @property
     def current_character(self):
@@ -928,8 +951,7 @@ class CombatWorld(World):
             character.remove_all_active_effects()
 
     def lose(self):
-        self.reset()
-        game.pop_world() # TODO
+        self.push_menu(GameOverMenu(self))
 
     def on_dismiss_dialog(self):
         if not self.active_script:
