@@ -425,7 +425,11 @@ class World(object):
                 if not character:
                     debug.println('Missing ally: %s' % character_id)
                     return False
-            character.standard_attacks.append(game_data.attacks[attack_id])
+            attack = game_data.attacks[attack_id]
+            if attack.spin_cost:
+                character.spin_attacks.append(game_data.attacks[attack_id])
+            else:
+                character.standard_attacks.append(game_data.attacks[attack_id])
             return self.do_dialog(None, dialog)
         elif action == 'AddAlly':
             character_id, level = param.split(':')
