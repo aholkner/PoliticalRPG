@@ -9,7 +9,21 @@
  <tile id="1">
   <properties>
    <property name="character" value="Politician001"/>
-   <property name="encounter" value="P-easy-01"/>
+  </properties>
+ </tile>
+ <tile id="2">
+  <properties>
+   <property name="character" value="SecretService001"/>
+  </properties>
+ </tile>
+ <tile id="3">
+  <properties>
+   <property name="character" value="HippyGirl001"/>
+  </properties>
+ </tile>
+ <tile id="4">
+  <properties>
+   <property name="character" value="ReligiousNut001"/>
   </properties>
  </tile>
  <tile id="40">

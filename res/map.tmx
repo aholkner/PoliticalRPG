@@ -12,7 +12,10 @@
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJxjYBgFgw1kIrGdBswVo2AUDH8AAEsqAKw=
+   eJxjYBgFgw1kDrQDRsEoGCEAAGxbAGo=
   </data>
  </layer>
+ <objectgroup name="NPCs" width="20" height="16">
+  <object name="HippyGirl1" gid="68" x="32" y="48"/>
+ </objectgroup>
 </map>

@@ -53,6 +53,7 @@ class TilemapObject(object):
         self.y = y
         self.width = width
         self.height = height
+        self.image = None
         self.properties = {}
 
 class TilemapObjectLayer(object):

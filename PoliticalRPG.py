@@ -43,7 +43,10 @@ def open_res(path, mode = 'rb'):
     return open(bacon.get_resource_path(path), mode)
 
 class Sprite(object):
+    name = '??'
     effect_dead = False
+    script_index = 0
+    properties = {}
 
     def __init__(self, image, x, y):
         self.image = image
@@ -144,6 +147,17 @@ class World(object):
         self.player_slots = [None] * 4
         self.monster_slots = [None] * 4
 
+        self.dialog_sprite = None
+        self.dialog_text = None
+
+        for layer in self.map.object_layers:
+            for obj in layer.objects:
+                x = obj.x / self.tile_size
+                y = obj.y / self.tile_size
+                sprite = self.add_sprite(obj.image, x, y - 1)
+                sprite.name = obj.name
+                sprite.properties = obj.properties
+
         for layer in self.map.layers[:]:
             if 'sprite' in layer.properties:
                 self.map.layers.remove(layer)
@@ -152,6 +166,11 @@ class World(object):
                         x = i % self.map.cols
                         y = i / self.map.cols
                         self.add_sprite(image, x, y)
+
+    def do_dialog(self, sprite, text):
+        self.dialog_sprite = sprite
+        self.dialog_text = text
+        print '%s says %s' % (sprite.name, text)
 
     def add_sprite(self, image, x, y):
         if hasattr(image, 'properties'):
@@ -164,6 +183,7 @@ class World(object):
 
         sprite = Sprite(image, x, y)
         self.sprites.append(sprite)
+        return sprite
 
     def get_sprite_at(self, x, y):
         for sprite in self.sprites:
@@ -225,15 +245,31 @@ class World(object):
 
         bacon.pop_transform()
 
+        if self.dialog_sprite:
+            x = (self.dialog_sprite.x  - viewport.x1) * ts * map_scale
+            y = (self.dialog_sprite.y  - viewport.y1) * ts * map_scale
+            bacon.draw_string(debug.font, self.dialog_text, x, y)
+
         for menu in self.menu_stack:
             menu.draw()
+
+    def on_dismiss_dialog(self):
+        pass
 
     def on_key_pressed(self, key):
         if self.timeout_func:
             return
 
+        if self.dialog_sprite:
+            self.dialog_sprite = None
+            self.on_dismiss_dialog()
+            return
+
         if self.menu_stack:
             self.menu_stack[-1].on_key_pressed(key)
+            return
+
+        self.on_world_key_pressed(key)
 
 class MapWorld(World):
      
@@ -243,6 +279,9 @@ class MapWorld(World):
         bacon.Keys.up: (0, -1),
         bacon.Keys.down: (0, 1),
     }
+
+    active_script = None
+    active_script_sprite = None
 
     def __init__(self, map):
         super(MapWorld, self).__init__(map)
@@ -262,12 +301,10 @@ class MapWorld(World):
         self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - map_width)
         self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
 
-    def on_key_pressed(self, key):
-        super(MapWorld, self).on_key_pressed(key)
-        if not self.menu_stack:
-            if key in self.input_movement:
-                dx, dy = self.input_movement[key]
-                self.move(dx, dy)
+    def on_world_key_pressed(self, key):
+        if key in self.input_movement:
+            dx, dy = self.input_movement[key]
+            self.move(dx, dy)
 
     def move(self, dx, dy):
         other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
@@ -278,8 +315,47 @@ class MapWorld(World):
             self.player_sprite.y += dy
         
     def on_collide(self, other):
-        encounter_id = other.image.properties['encounter']
-        game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), encounter_id))
+        if other.name in game_data.script:
+            self.run_script(other, other.name)
+
+    def on_dismiss_dialog(self):
+        self.continue_script()
+
+    def continue_script(self):
+        if not self.active_script:
+            return
+
+        script = self.active_script
+        sprite = self.active_script_sprite
+        done = False
+        while not done and sprite.script_index < len(script):
+            script_row = script[sprite.script_index]
+            done = self.run_script_row(sprite, script_row)
+            sprite.script_index += 1
+
+        if sprite.script_index >= len(script):
+            self.active_script = None
+
+    def run_script(self, sprite, trigger):
+        self.active_script = game_data.script[trigger]
+        self.active_script_sprite = sprite
+        self.continue_script()
+
+    def run_script_row(self, sprite, script_row):
+        action = script_row.action
+        param = script_row.param
+        if action == 'Say':
+            self.do_dialog(sprite, param)
+        elif action == 'PlayerSay':
+            self.do_dialog(self.player_sprite, param)
+        elif action == 'Encounter':
+            game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), param))
+        else:
+            raise Exception('Unsupported script action "%s"' % action)
+
+        # Return False only if this script row performs no yielding UI
+        return True
+    
 
 class Effect(object):
     id = None
@@ -918,7 +994,7 @@ class WinCombatWorld(World):
             bacon.draw_string(font, name, cx, y, align = bacon.Alignment.center)
             y += font.height
 
-    def on_key_pressed(self, key):
+    def on_world_key_pressed(self, key):
         self.combat_world.reset()
 
         # Actually award results
@@ -1185,6 +1261,12 @@ def main():
             for attack in attack_drops:
                 add_attack_to_itemattack_list(encounter.item_attack_drops, attack)
             encounter.quest_item_drops = convert_idlist_to_objlist(encounter.quest_item_drops, game_data.quest_items)
+
+        game_data.script = parse_table(quest_db['Script'], dict(
+            trigger = 'Trigger',
+            action = 'Action',
+            param = 'Param',
+        ), index_multi=True)
 
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:

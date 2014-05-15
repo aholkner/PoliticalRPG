@@ -68,6 +68,16 @@ def parse_tileset_elem(firstgid, elem, base_dir):
 
     return Tileset(firstgid, images)
 
+def get_tileset_image(tilesets, gid):
+    matching_tileset = None
+    for tileset in tilesets:
+        if gid < tileset.firstgid:
+            break
+        matching_tileset = tileset
+
+    if matching_tileset:
+        return matching_tileset.images[gid - matching_tileset.firstgid]
+
 def parse_layer(tm, elem, tilesets):
     name = elem.get('name')
     cols = int(elem.get('width'))
@@ -78,16 +88,10 @@ def parse_layer(tm, elem, tilesets):
     tx = 0
     ty = 0
     tiles = []
+    
     def add_tile(gid):
-        matching_tileset = None
-        for tileset in tilesets:
-            if gid < tileset.firstgid:
-                break
-            matching_tileset = tileset
-
-        if matching_tileset:
-            image = matching_tileset.images[gid - matching_tileset.firstgid]
-            layer.images[ty * tm.cols + tx] = image
+        image = get_tileset_image(tilesets, gid)
+        layer.images[ty * tm.cols + tx] = image
 
     for child in elem:
         if child.tag == 'properties':
@@ -156,6 +160,9 @@ def parse_object_group(tm, elem):
             width = int(object.get('width', 0))
             height = int(object.get('height', 0))
             tilemap_object = tilemap.TilemapObject(name, type, x, y, width, height)
+            gid = int(object.get('gid', -1))
+            if gid != -1:
+                tilemap_object.image = get_tileset_image(tm.tilesets, gid)
             layer.objects.append(tilemap_object)
             for child in object:
                 if child.tag == 'properties':
