@@ -256,10 +256,11 @@ class World(object):
         bacon.pop_transform()
 
         if self.dialog_text:
+            width = min(ui_width / 2, debug.font.measure_string(self.dialog_text))
             if self.dialog_sprite:
-                x = (self.dialog_sprite.x * ts - viewport.x1) * map_scale
+                x = min((self.dialog_sprite.x * ts - viewport.x1) * map_scale, ui_width - width)
                 y = (self.dialog_sprite.y * ts - viewport.y1) * map_scale
-                bacon.draw_string(debug.font, self.dialog_text, x, y)
+                bacon.draw_string(debug.font, self.dialog_text, x, y, width, None, bacon.Alignment.left, bacon.VerticalAlignment.bottom)
             else:
                 bacon.draw_string(debug.font, self.dialog_text, ui_width / 2, ui_height / 2, None, None, bacon.Alignment.center, bacon.VerticalAlignment.center)
 
@@ -1520,7 +1521,10 @@ def main():
 
     global game
     game = Game()
+
     game.goto_map('act1')
+    for arg in args:
+        game.world.run_script(game.world.player_sprite, arg) 
 
     bacon.run(game)
 
