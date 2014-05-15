@@ -69,7 +69,7 @@ sg16
 S'PORKBARREL'
 p29
 sg18
-S'here is pork barrel'
+S'...'
 p30
 sbag1
 (g10
@@ -201,7 +201,7 @@ p72
 sg16
 S''
 sg18
-S'\xe2\x80\xa6'
+S'...'
 p73
 sbag1
 (g10
@@ -704,7 +704,7 @@ p228
 sg16
 S''
 sg18
-S'\xe2\x80\xa6'
+S'...'
 p229
 sbag1
 (g10

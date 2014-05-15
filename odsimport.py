@@ -17,12 +17,13 @@ def import_ods(path):
             db_row = []
             db_table.append(db_row)
             for cell in row.getElementsByType(TableCell):
-                db_value = '\n'.join(map(str, cell.getElementsByType(P)))
+                db_value = '\n'.join(map(str, cell.getElementsByType(P))).decode('utf-8')
                 db_value = db_value.strip()
                 try:
                     db_value = float(db_value)
                 except:
-                    pass
+                    db_value = db_value.replace(u'\u2026', '...')
+                    db_value = db_value.encode('utf-8')
                 
                 try:
                     repeat_count = int(cell.getAttribute('numbercolumnsrepeated'))
