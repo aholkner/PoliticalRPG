@@ -386,9 +386,11 @@ class MapWorld(World):
                 self.active_script = None
         elif action == 'SetFlag':
             game.quest_flags.add(param)
+            return False
         elif action == 'UnsetFlag':
             if param in game.quest_flags:
                 game.quest_flags.remove(param)
+            return False
         elif action == 'LearnAttack':
             character = game.player
             attack_id = param
