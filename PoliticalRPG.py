@@ -166,6 +166,9 @@ class World(object):
                         x = i % self.map.cols
                         y = i / self.map.cols
                         self.add_sprite(image, x, y)
+                    
+    def start(self):
+        pass
 
     def do_dialog(self, sprite, text):
         if text:
@@ -1062,9 +1065,10 @@ class WinCombatWorld(World):
         # Generate XP per character
         per_character_xp = encounter.xp / len(self.characters)
         for character in self.characters:
-            character.xp += per_character_xp
-            if get_level_for_xp(character.xp) != character.level:
-                self.queued_dialogs.append(LevelUpWorld(character, self.combat_world))
+            if get_level_for_xp(character.xp + per_character_xp) != character.level:
+                self.queued_dialogs.append(LevelUpWorld(character, self.combat_world, per_character_xp))
+            else:
+                character.xp += per_character_xp
         
     def draw(self):
         encounter = self.combat_world.encounter
@@ -1101,28 +1105,109 @@ class WinCombatWorld(World):
         game.pop_world()
         game.world.continue_script()
 
+class AssignSkillPointsMenu(Menu):
+    def __init__(self, world):
+        super(AssignSkillPointsMenu, self).__init__(world)
+        self.can_dismiss = False
+        self.cunning_item = MenuItem('Cunning', 'Effectiveness of arguments')
+        self.wit_item = MenuItem('Wit', 'Effectiveness of quips')
+        self.charisma_item = MenuItem('Charisma', 'Defense against opponent\'s attacks')
+        self.flair_item = MenuItem('Flair', 'Chance of critical attack')
+        self.speed_item = MenuItem('Speed', 'Determines order in battle')
+        self.done_item = MenuItem('Done', 'Finish assigning skill points', self.on_done, False)
+        self.items.append(self.cunning_item)
+        self.items.append(self.wit_item)
+        self.items.append(self.charisma_item)
+        self.items.append(self.flair_item)
+        self.items.append(self.speed_item)
+        self.items.append(self.done_item)
+        for item in self.items:
+            item.skill_points_added = 0
+
+        self.format_menu_items()
+
+    def on_key_pressed(self, key):
+        if self.selected_item is self.done_item:
+            super(AssignSkillPointsMenu, self).on_key_pressed(key)
+            return
+
+        if key == bacon.Keys.up:
+            self.move_selection(-1)
+        elif key == bacon.Keys.down:
+            self.move_selection(1)
+        elif key in (bacon.Keys.left, bacon.Keys.minus, bacon.Keys.numpad_sub):
+            self.alter_selection(-1)
+        elif key in (bacon.Keys.right, bacon.Keys.enter, bacon.Keys.plus, bacon.Keys.numpad_add):
+            self.alter_selection(1)
+
+    def alter_selection(self, amount):
+        if amount > 0 and self.world.skill_points == 0:
+            return
+        elif amount < 0 and self.selected_item.skill_points_added == 0:
+            return
+
+        self.selected_item.skill_points_added += amount
+        self.world.skill_points -= amount
+        self.format_menu_items()
+
+    def format_menu_items(self):
+        self.cunning_item.name = '< Cunning: %d +%d >' % (self.world.character.cunning, self.cunning_item.skill_points_added)
+        self.wit_item.name = '< Wit: %d +%d >' % (self.world.character.wit, self.wit_item.skill_points_added)
+        self.charisma_item.name = '< Charisma: %d +%d >' % (self.world.character.charisma, self.charisma_item.skill_points_added)
+        self.flair_item.name = '< Flair: %d +%d >' % (self.world.character.flair, self.flair_item.skill_points_added)
+        self.speed_item.name = '< Speed: %d +%d >' % (self.world.character.speed, self.speed_item.skill_points_added)
+        self.cunning_item.enabled = self.cunning_item.skill_points_added > 0 or self.world.skill_points > 0
+        self.wit_item.enabled = self.wit_item.skill_points_added > 0 or self.world.skill_points > 0
+        self.charisma_item.enabled = self.charisma_item.skill_points_added > 0 or self.world.skill_points > 0
+        self.flair_item.enabled = self.flair_item.skill_points_added > 0 or self.world.skill_points > 0
+        self.speed_item.enabled = self.speed_item.skill_points_added > 0 or self.world.skill_points > 0
+        self.done_item.enabled = self.world.skill_points == 0
+
+    def on_done(self):
+        self.world.character.cunning += self.cunning_item.skill_points_added
+        self.world.character.wit += self.wit_item.skill_points_added
+        self.world.character.charisma += self.charisma_item.skill_points_added
+        self.world.character.flair += self.flair_item.skill_points_added
+        self.world.character.speed += self.speed_item.skill_points_added
+        self.world.dismiss()
+
 class LevelUpWorld(World):
-    def __init__(self, character, combat_world):
+    def __init__(self, character, combat_world, add_xp):
         map = tiled.parse('res/ui_levelup.tmx')
         super(LevelUpWorld, self).__init__(map)
+        self.add_xp = add_xp
         self.character = character
         self.combat_world = combat_world
+        self.menu_start_x = ui_width /2 - 128
+        self.menu_start_y = ui_height - 100
 
-    def on_world_key_pressed(self, key):
+    def start(self):
+        self.character.xp += self.add_xp
+        level = get_level_for_xp(self.character.xp)
+        level_row = get_level_row(level)
+        self.character.level = level
+        self.character.max_spin = level_row.spin
+        self.character.max_votes = level_row.votes
+        self.skill_points = level_row.skill_points
+        self.push_menu(AssignSkillPointsMenu(self))
+
+    def dismiss(self):
         game.pop_world()
         game.world.on_level_up_world_dismissed()
-        
+
     def draw(self):
         self.combat_world.draw()
+        super(LevelUpWorld, self).draw()
         cx = ui_width / 2
         y = 128
         font = debug.font
         bacon.draw_string(font, 'LEVEL UP!', cx, y, align = bacon.Alignment.center)
-        bacon.draw_string(font, self.character.id, cx, y + 64, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'XP: %d' % self.character.xp, cx, y + 128, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'Level: %d' % self.character.level, cx, y + 128 +64, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'Votes: %d' % self.character.votes, cx, y + 128 +128, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'Spin: %d' % self.character.spin, cx, y + 128 + 128 + 64, align = bacon.Alignment.center)
+        bacon.draw_string(font, self.character.id, cx, y + 24, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'XP: %d' % self.character.xp, cx, y + 24 * 2, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'Level: %d' % self.character.level, cx, y + 24 * 3, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'Votes: %d' % self.character.votes, cx, y + 24 * 4, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'Spin: %d' % self.character.spin, cx, y + 24 * 5, align = bacon.Alignment.center)
+        bacon.draw_string(font, 'Skill points to assign: %d' % self.skill_points, cx, y + 24 * 6, align = bacon.Alignment.center)
         
 
 class Debug(object):
@@ -1184,12 +1269,12 @@ def load_sprites(path):
     return sprite_images
 
 def get_level_row(level):
-    return game_data.levels[level - 1]
+    return game_data.levels[int(level - 1)]
 
 def get_level_for_xp(xp):
     for level in game_data.levels:
         if xp < level.xp:
-            return level.level - 1
+            return int(level.level - 1)
 
 class Game(bacon.Game):
     def __init__(self):
@@ -1205,6 +1290,7 @@ class Game(bacon.Game):
     def push_world(self, world):
         self.world_stack.append(self.world)
         self.world = world
+        world.start()
 
     def pop_world(self):
         self.world = self.world_stack.pop()
