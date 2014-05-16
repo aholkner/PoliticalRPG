@@ -926,6 +926,9 @@ class CombatWorld(World):
         self.encounter = encounter = game_data.encounters[encounter_id]
         self.menu_start_x = 0
         self.menu_start_y = ui_height - 250
+        for ally in game.allies:
+            ally.saved_votes = ally.votes
+        self.restart_count = 0
 
     def start(self):
         encounter = self.encounter
@@ -962,9 +965,16 @@ class CombatWorld(World):
         for slot in self.slots:
             slot.character = None
         self.pop_all_menus()
+        self.restart_count += 1
         for ally in game.allies:
             ally.dead = False
-            ally.votes = ally.max_votes / 2
+            if self.restart_count > 1:
+                # Extra help after second retry
+                ally.votes = ally.max_votes
+                ally.spin = ally.max_spin / 2
+            else:
+                ally.votes = max(ally.max_votes / 2, ally.saved_votes)
+
             ally.spin = 0
         self.start()
 
