@@ -97,7 +97,8 @@ class Menu(object):
                 self.world.pop_menu()
         elif key == bacon.Keys.right or key == bacon.Keys.enter:
             if self.selected_item.enabled:
-                self.selected_item.func()
+                if self.selected_item.func:
+                    self.selected_item.func()
 
     def move_selection(self, dir):
         start = max(0, self.selected_index)
@@ -138,8 +139,8 @@ class World(object):
 
     def __init__(self, map):
         self.menu_stack = []
-        self.menu_start_x = 0
-        self.menu_start_y = ui_height - 16
+        self.menu_start_x = ui_width / 2 - 100
+        self.menu_start_y = ui_height / 2
 
         self.timeouts = []
 
@@ -469,6 +470,62 @@ class World(object):
         # Return False only if this script row performs no yielding UI
         return True
 
+class MapMenu(Menu):
+    def __init__(self, world):
+        super(MapMenu, self).__init__(world)
+
+        enable_inventory = game.quest_items or game.player.item_attacks
+
+        self.title = 'Paused'
+        self.items.append(MenuItem('Resume', 'Back to the game', self.on_resume))
+        self.items.append(MenuItem('Inventory', 'Check your briefcase', self.on_inventory, enabled=enable_inventory))
+        self.items.append(MenuItem('Quit', 'Exit the game; your game is not saved', self.on_quit))
+
+    def on_resume(self):
+        self.world.pop_menu()
+
+    def on_inventory(self):
+        self.world.pop_menu()
+        self.world.push_menu(InventoryMenu(self.world))
+
+    def on_quit(self):
+        bacon.quit()
+
+class InventoryMenu(Menu):
+    def __init__(self, world):
+        super(InventoryMenu, self).__init__(world)
+        self.title = 'Inventory'
+        for ia in game.player.item_attacks:
+            name = ia.attack.name
+            if ia.quantity > 1:
+                name = '%s (x%d)' % (name, ia.quantity)
+            func = None
+            for effect in ia.attack.effects:
+                if effect.function == 'add_permanent':
+                    func = partial(self.on_consume, ia)
+            if func:
+                name += ' >'
+            self.items.append(MenuItem(name, ia.attack.description, func, enabled=(func is not None)))
+
+        for item in game.quest_items:
+            self.items.append(MenuItem(item.name, item.description, enabled=False))
+
+    def on_consume(self, ia):
+        self.world.push_menu(InventoryConsumeMenu(self.world, ia))
+
+class InventoryConsumeMenu(Menu):
+    def __init__(self, world, ia):
+        super(InventoryConsumeMenu, self).__init__(world)
+        for ally in game.allies:
+            self.items.append(MenuItem(ally.data.name, 'Apply %s to %s' % (ia.attack.name, ally.data.name), partial(self.on_consume, ia, ally)))
+
+    def on_consume(self, ia, ally):
+        for effect in ia.attack.effects:
+            if effect.function == 'add_permanent':
+                effect.apply(ally)
+        ally.remove_item_attack(ia.attack)
+        self.world.pop_all_menus()
+
 class MapWorld(World):
      
     input_movement = {
@@ -506,6 +563,8 @@ class MapWorld(World):
         if key in self.input_movement:
             dx, dy = self.input_movement[key]
             self.move(dx, dy)
+        elif key == bacon.Keys.escape:
+            self.push_menu(MapMenu(self))
 
     def move(self, dx, dy):
         other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
@@ -551,7 +610,10 @@ class Effect(object):
         if self.attribute == 'spin':
             character.spin = clamp(character.spin + value, 0, character.max_spin)
         elif self.attribute == 'votes':
-            game.world.apply_damage(character, -value)
+            if isinstance(game.world, CombatWorld):
+                game.world.apply_damage(character, -value)
+            else:
+                character.votes = clamp(character.votes + value, 0, character.max_votes)
         elif self.attribute == 'wit':
             character.wit = max(0, character.wit + value)
         elif self.attribute == 'cunning':
@@ -797,12 +859,12 @@ class GameOverMenu(Menu):
         super(GameOverMenu, self).__init__(world)
         self.title = 'You are defeated'
         self.items.append(MenuItem('Restart this encounter', 'You failed this time, but next time the dice rolls may be in your favour', self.on_restart_encounter))
-        self.items.append(MenuItem('Quit game', '', self.on_exit))
+        self.items.append(MenuItem('Quit game', 'Exit the game; your game is not saved', self.on_quit))
 
     def on_restart_encounter(self):
         self.world.restart()
 
-    def on_exit(self):
+    def on_quit(self):
         bacon.quit()
 
 class Floater(object):
@@ -816,7 +878,8 @@ class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
         self.encounter = encounter = game_data.encounters[encounter_id]
-        self.menu_start_y = ui_height - 120
+        self.menu_start_x = 0
+        self.menu_start_y = ui_height - 250
 
     def start(self):
         encounter = self.encounter
@@ -1610,7 +1673,8 @@ def main():
         
         game_data.quest_items = parse_table(quest_db['Items'], dict(
             id = 'ID',
-            name = 'Name'
+            name = 'Name',
+            description = 'Description',
         ), index_unique=True)
 
         game_data.effects = parse_table(combat_db['Effects'], dict(
