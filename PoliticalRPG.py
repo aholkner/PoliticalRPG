@@ -73,6 +73,7 @@ class UI(object):
         self.stat_border_active = self.get_border_tiles(6)
         self.speech_border = self.get_border_tiles(9)
         self.white_border = self.get_border_tiles(48)
+        self.menu_border = self.get_border_tiles(51)
         self.speech_point = self.get_tile_2x(6)
 
     def get_border_tiles(self, index):
