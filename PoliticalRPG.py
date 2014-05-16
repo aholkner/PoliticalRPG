@@ -76,6 +76,8 @@ class UI(object):
         self.white_border = self.get_border_tiles(48)
         self.menu_border = self.get_border_tiles(51)
         self.speech_point = self.get_tile_2x(6)
+        self.menu_up_image = self.get_tile_2x(19)
+        self.menu_down_image = self.get_tile_2x(20)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -189,30 +191,65 @@ class MenuItem(object):
         self.enabled = enabled
 
 class Menu(object):
-    max_items = 3
+    max_items = 6
+    title = None
+    align = bacon.Alignment.center
+    vertical_align = bacon.VerticalAlignment.center
+    x = ui_width / 2
+    y = ui_height / 2
+    min_width = 200
 
     def __init__(self, world):
         self.world = world
         self.items = []
-        self.x = self.y = 0
         self.can_dismiss = True
         self.selected_index = 0
         self.scroll_offset = 0
 
     def layout(self):
         self.width = 0
-        self.scrollable = len(self.items) >= self.max_items
-        self.height = len(self.items) * font_tiny.height
-        if self.scrollable:
-            self.height += font_tiny.height * 2
-        for item in self.items:
-            self.width = max(font_tiny.measure_string(item.name), self.width)
-
+        self.scrollable = len(self.items) > self.max_items
         self.selected_index = 0
 
+        height = self.visible_item_count * ui.font.height
+        width = max(ui.font.measure_string(item.name) for item in self.visible_items)
+        width = max(width, self.min_width)
+
+        if self.title:
+            height += ui.font.height * 2
+            width = max(width, ui.font.measure_string(self.title))
+        
+        if self.scrollable:
+            height += 64
+
+        if self.align == bacon.Alignment.left:
+            x1 = self.x
+        elif self.align == bacon.Alignment.center:
+            x1 = self.x - width / 2
+
+        if self.vertical_align == bacon.VerticalAlignment.top:
+            y1 = self.y
+        elif self.vertical_align == bacon.VerticalAlignment.center:
+            y1 = self.y - height / 2
+        elif self.vertical_align == bacon.VerticalAlignment.bottom:
+            y1 = self.y - height
+
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x1 + width
+        self.y2 = y1 + height
+        
     @property
     def selected_item(self):
         return self.items[self.selected_index]
+
+    @property
+    def visible_item_count(self):
+        return min(self.max_items, len(self.items))
+
+    @property
+    def visible_items(self):
+        return self.items[self.scroll_offset:self.scroll_offset + self.visible_item_count]
 
     def on_key_pressed(self, key):
         if key == bacon.Keys.up:
@@ -236,14 +273,27 @@ class Menu(object):
             self.scroll_offset = self.selected_index - self.max_items + 1
         
     def draw(self):
-        y = self.y
-        bacon.push_color()
+        x1 = self.x1
+        y1 = self.y1
+        x2 = self.x2
+        y2 = self.y2
+        align = self.align
+        
+        if align == bacon.Alignment.left:
+            x = self.x1
+        elif align == bacon.Alignment.center:
+            x = (self.x1 + self.x2) / 2
+
+        ui.draw_box(Rect(x1, y1, x2, y2), ui.menu_border)
+
+        y = y1
+        if self.title:
+            bacon.draw_string(ui.font, self.title, x, y, None, None, align, bacon.VerticalAlignment.top)
+            y += ui.font.height * 2
 
         if self.scrollable:
-            y -= font_tiny.ascent
-            bacon.set_color(1, 1, 1, 1)
-            bacon.draw_string(font_tiny, '/\\', self.x, y)
-            y += font_tiny.descent
+            ui.draw_image(ui.menu_up_image, (x1 + x2) / 2 - 16, y)
+            y += 32
 
         for i, item in enumerate(self.items):
             if i < self.scroll_offset:
@@ -251,26 +301,22 @@ class Menu(object):
             if i - self.scroll_offset >= self.max_items:
                 break
 
-            y -= font_tiny.ascent
             if not item.enabled:
                 m = 0.7
             else:
                 m = 1
 
             if i == self.selected_index:
-                bacon.set_color(m, m, 0, 1)
-            else:
                 bacon.set_color(m, m, m, 1)
-            bacon.draw_string(font_tiny, item.name, self.x, y)
-            y += font_tiny.descent
+            else:
+                bacon.set_color(m * 52.0 / 255, m * 108.0 / 255, m * 149.0 / 255, 1)
+            bacon.draw_string(ui.font, item.name, x, y, align = align, vertical_align = bacon.VerticalAlignment.top)
+            y += ui.font.height
 
+        bacon.set_color(1, 1, 1, 1)
         if self.scrollable:
-            y -= font_tiny.ascent
-            bacon.set_color(1, 1, 1, 1)
-            bacon.draw_string(font_tiny, '\\/', self.x, y)
-            y += font_tiny.descent
-
-        bacon.pop_color()
+            ui.draw_image(ui.menu_down_image, (x1 + x2) / 2 - 16, y)
+            y += 32
 
         self.draw_status(self.selected_item.description)
 
@@ -289,8 +335,6 @@ class World(object):
 
     def __init__(self, map):
         self.menu_stack = []
-        self.menu_start_x = ui_width / 2 - 100
-        self.menu_start_y = ui_height / 2
 
         self.timeouts = []
 
@@ -360,11 +404,6 @@ class World(object):
 
     def push_menu(self, menu):
         menu.layout()
-        if self.menu_stack:
-            menu.x = self.menu_stack[-1].x + self.menu_stack[-1].width
-        else:
-            menu.x = self.menu_start_x
-        menu.y = self.menu_start_y - menu.height
         self.menu_stack.append(menu)
 
     def pop_menu(self):
@@ -970,7 +1009,21 @@ class Character(object):
     def get_effects_abbrv(self):
         return ' '.join(ae.effect.abbrv for ae in self.active_effects)
 
-class CombatMenuMain(Menu):
+class CombatMenu(Menu):
+    min_width = 96
+
+    def layout(self):
+        if self.world.menu_stack:
+            self.x = self.world.menu_stack[-1].x2
+        else:
+            self.x = 16
+        self.y = ui_height - 100
+        self.align = bacon.Alignment.left
+        self.vertical_align = bacon.VerticalAlignment.bottom
+
+        super(CombatMenu, self).layout()
+
+class CombatMenuMain(CombatMenu):
     def __init__(self, world):
         super(CombatMenuMain, self).__init__(world)
         character = self.world.current_character
@@ -993,7 +1046,7 @@ class CombatMenuMain(Menu):
     def on_items(self):
         self.world.push_menu(CombatOffenseMenu(self.world, self.world.current_character.item_attacks))
 
-class CombatOffenseMenu(Menu):
+class CombatOffenseMenu(CombatMenu):
     def __init__(self, world, attacks):
         super(CombatOffenseMenu, self).__init__(world)
         for attack in attacks:
@@ -1028,7 +1081,7 @@ class CombatOffenseMenu(Menu):
     def choose_target(self, attack, targets):
         self.world.action_attack(attack, targets)
         
-class CombatTargetMenu(Menu):
+class CombatTargetMenu(CombatMenu):
     def __init__(self, world, target_type, target_count, func):
         super(CombatTargetMenu, self).__init__(world)
         self.target_type = target_type
@@ -1100,8 +1153,6 @@ class CombatWorld(World):
     def __init__(self, map, encounter_id):
         super(CombatWorld, self).__init__(map)
         self.encounter = encounter = game_data.encounters[encounter_id]
-        self.menu_start_x = 0
-        self.menu_start_y = ui_height - 250
         for ally in game.allies:
             ally.saved_votes = ally.votes
         self.restart_count = 0
@@ -1686,8 +1737,6 @@ class LevelUpWorld(World):
         self.add_xp = add_xp
         self.character = character
         self.combat_world = combat_world
-        self.menu_start_x = ui_width /2 - 128
-        self.menu_start_y = ui_height - 100
 
     def start(self):
         self.character.xp += self.add_xp
