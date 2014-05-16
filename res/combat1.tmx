@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="20" height="16" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" name="combat-tiles" tilewidth="8" tileheight="8">
+  <image source="combat-tiles.png" width="64" height="64"/>
+ </tileset>
+ <tileset firstgid="65" source="sprites.tsx"/>
+ <layer name="Tile Layer 1" width="20" height="16">
+  <data encoding="base64" compression="zlib">
+   eJxjYmBgYBrFo3iYYEYqY85RPKwxADvPBbU=
+  </data>
+ </layer>
+ <layer name="Sprites" width="20" height="16">
+  <properties>
+   <property name="sprite" value=""/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2DgQQ6UzobSWVA6E0lNLpTOg9L5ULqAhu4aBcMbAAD9cQNl
+  </data>
+ </layer>
+</map>
