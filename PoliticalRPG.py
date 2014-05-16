@@ -71,6 +71,7 @@ class UI(object):
         self.stat_border = self.get_border_tiles(0)
         self.stat_border_disabled = self.get_border_tiles(3)
         self.stat_border_active = self.get_border_tiles(6)
+        self.white_border = self.get_border_tiles(9)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -95,7 +96,7 @@ class UI(object):
         # 6 7 8
 
         if not border_tiles:
-            border_tiles = self.border_white
+            border_tiles = self.white_border
         ts = self.ts
 
         bacon.push_transform()
@@ -123,6 +124,24 @@ class UI(object):
         bacon.draw_image(border_tiles[4], x1, y1, x2, y2)
 
         bacon.pop_transform()
+
+    def draw_speech_box(self, text, speaker_x, speaker_y):
+        width = min(self.font.measure_string(text), ui_width / 2)
+        x1 = max(0, min(speaker_x - 16, ui_width - width))
+        x2 = x1 + width
+        y2 = speaker_y
+
+        style = bacon.Style(self.font)
+        run = bacon.GlyphRun(style, text)
+        glyph_layout = bacon.GlyphLayout([run], x1, y2, width, None, bacon.Alignment.left, bacon.VerticalAlignment.bottom)
+        y1 = y2 - glyph_layout.content_height - 4 # HACK workaround
+        x2 = x1 + glyph_layout.content_width
+
+        self.draw_box(Rect(x1, y1, x2, y2))
+
+        bacon.set_color(0, 0, 0, 1)
+        bacon.draw_glyph_layout(glyph_layout)
+        bacon.set_color(1, 1, 1, 1)
 
 ui = UI()
 
@@ -330,9 +349,9 @@ class World(object):
         if self.dialog_text:
             width = min(ui_width / 2, debug.font.measure_string(self.dialog_text))
             if self.dialog_sprite:
-                x = min((self.dialog_sprite.x * ts - viewport.x1) * map_scale, ui_width - width)
-                y = (self.dialog_sprite.y * ts - viewport.y1) * map_scale
-                bacon.draw_string(debug.font, self.dialog_text, x, y, width, None, bacon.Alignment.left, bacon.VerticalAlignment.bottom)
+                speaker_x = (self.dialog_sprite.x * ts - viewport.x1) * map_scale
+                speaker_y = (self.dialog_sprite.y * ts - viewport.y1) * map_scale
+                ui.draw_speech_box(self.dialog_text, speaker_x, speaker_y)
             else:
                 bacon.draw_string(debug.font, self.dialog_text, ui_width / 2, ui_height / 2, None, None, bacon.Alignment.center, bacon.VerticalAlignment.center)
 
