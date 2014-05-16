@@ -23,6 +23,7 @@ def import_ods(path):
                     db_value = float(db_value)
                 except:
                     db_value = db_value.replace(u'\u2026', '...')
+                    db_value = db_value.replace(u'\u200b', '')
                     db_value = db_value.encode('utf-8')
                 
                 try:

@@ -2,6 +2,7 @@ from functools import partial
 import os
 import logging
 import math
+from math import ceil
 logging.getLogger('bacon').addHandler(logging.NullHandler())
 
 import bacon
@@ -21,6 +22,8 @@ bacon.window.height = 480
 map_scale = 4
 map_width = bacon.window.width / map_scale
 map_height = bacon.window.height / map_scale
+
+ui_scale = 4
 
 ui_width = bacon.window.width
 ui_height = bacon.window.height
@@ -59,6 +62,70 @@ class Slot(object):
         self.y = y
         self.character = None
         self.sprite = None
+
+class UI(object):
+    def __init__(self):
+        self.ts = 4
+        self.font = font_tiny
+        self.image = bacon.Image('res/ui.png', sample_nearest=True)
+        self.stat_border = self.get_border_tiles(0)
+        self.stat_border_disabled = self.get_border_tiles(3)
+        self.stat_border_active = self.get_border_tiles(6)
+
+    def get_border_tiles(self, index):
+        return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
+
+    def get_tile(self, i):
+        ts = self.ts
+        x = i % 16
+        y = i / 16
+        return self.image.get_region(x * ts, y * ts, (x + 1) * ts, (y + 1) * ts)
+
+    def align_rect(self, rect):
+        tx = ceil(rect.width / self.ts)
+        ty = ceil(rect.height / self.ts)
+        return Rect(rect.x1, rect.y1, rect.x1 + tx * self.ts, rect.y1 + ty * self.ts)
+
+    def get_ui_rect(self, rect):
+        return Rect(rect.x1 / ui_scale, rect.y1 / ui_scale, rect.x2 / ui_scale, rect.y2 / ui_scale)
+
+    def draw_box(self, rect, border_tiles=None):
+        # 0 1 2
+        # 3 4 5
+        # 6 7 8
+
+        if not border_tiles:
+            border_tiles = self.border_white
+        ts = self.ts
+
+        bacon.push_transform()
+        bacon.scale(ui_scale, ui_scale)
+        x1 = rect.x1 / ui_scale
+        y1 = rect.y1 / ui_scale
+        x2 = rect.x2 / ui_scale
+        y2 = rect.y2 / ui_scale
+
+        # corners
+        bacon.draw_image(border_tiles[0], x1 - ts, y1 - ts)
+        bacon.draw_image(border_tiles[2], x2, y1 - ts)
+        bacon.draw_image(border_tiles[6], x1 - ts, y2)
+        bacon.draw_image(border_tiles[8], x2, y2)
+
+        # top/bottom
+        bacon.draw_image(border_tiles[1], x1, y1 - ts, x2, y1)
+        bacon.draw_image(border_tiles[7], x1, y2, x2, y2 + ts)
+
+        # left/right
+        bacon.draw_image(border_tiles[3], x1 - ts, y1, x1, y2)
+        bacon.draw_image(border_tiles[5], x2, y1, x2 + ts, y2)
+
+        # fill
+        bacon.draw_image(border_tiles[4], x1, y1, x2, y2)
+
+        bacon.pop_transform()
+
+ui = UI()
+
 
 class MenuItem(object):
     def __init__(self, name, description, func=None, enabled=True):
@@ -291,21 +358,34 @@ class World(object):
         bacon.draw_string(debug.font, '$%d' % game.money, ui_width, 0, align=bacon.Alignment.right, vertical_align=bacon.VerticalAlignment.top)
 
     def draw_stats(self):
-        for i, character in enumerate(game.allies):
-            x = i * ui_width / 4
-            y = ui_height - 100
-            if character:
-                if character is self.current_character:
-                    bacon.push_color()
-                    bacon.set_color(0.7, 0.7, 0.7, 1)
-                    bacon.fill_rect(x, y + debug.font.ascent, x + ui_width / 4, y + debug.font.height * 3)
-                    bacon.pop_color()
+        margin = 4
+        padding = 4
+        box_width = ui_width / 4 - margin * 2
+        box_height = ui.font.height * 4 + padding * 2
+        line_height = ui.font.height
 
-                dy = debug.font.height
-                debug.draw_string(character.data.name, x, y)
-                debug.draw_string('LVL: %d  XP: %d/%d' % (character.level, character.xp, get_level_row(character.level + 1).xp), x, y + dy)
-                debug.draw_string('Votes: %d/%d' % (character.votes, character.max_votes), x, y + dy * 2)
-                debug.draw_string('Spin:  %d/%d' % (character.spin, character.max_spin), x, y + dy * 3)
+        for i in range(4):
+            character = game.allies[i] if i < len(game.allies) else None
+            if not character:
+                border = ui.stat_border_disabled
+            elif character is self.current_character:
+                border = ui.stat_border_active
+            else:
+                border = ui.stat_border
+
+            x = margin + i * (box_width + margin * 2)
+            y = ui_height - box_height - margin
+            ui.draw_box(Rect(x, y, x + box_width, y + box_height), border)
+            
+            if character:
+                y -= ui.font.ascent
+                x += padding
+                y += padding
+                bacon.set_color(1, 1, 1, 1)
+                bacon.draw_string(ui.font, character.data.name, x, y)
+                bacon.draw_string(ui.font, 'LVL: %d  XP: %d/%d' % (character.level, character.xp, get_level_row(character.level + 1).xp), x, y + line_height)
+                bacon.draw_string(ui.font, 'Votes: %d/%d' % (character.votes, character.max_votes), x, y + line_height * 2)
+                bacon.draw_string(ui.font, 'Spin:  %d/%d' % (character.spin, character.max_spin), x, y + line_height * 3)
 
     def on_dismiss_dialog(self):
         self.continue_script()
