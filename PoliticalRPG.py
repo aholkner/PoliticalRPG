@@ -597,7 +597,7 @@ class MapWorld(World):
         ts = self.tile_size
 
         self.camera_x = self.player_sprite.x * ts - map_width / 2
-        self.camera_y = self.player_sprite.y * ts - map_height / 2
+        self.camera_y = self.player_sprite.y * ts - map_height / 2 + 2 * ts
         self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - map_width)
         self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
 

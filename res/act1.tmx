@@ -27,9 +27,17 @@
   <tile id="21" terrain="1,0,0,0"/>
  </tileset>
  <tileset firstgid="129" source="sprites.tsx"/>
+ <tileset firstgid="177" name="props" tilewidth="8" tileheight="8">
+  <image source="props.png" width="64" height="64"/>
+ </tileset>
  <layer name="Tiles" width="48" height="32">
   <data encoding="base64" compression="zlib">
-   eJztmNsKwjAMhvtqnvC4eWIIeqFsF4p3vv/NIjooobUhjjRiLj4oLINv4c9aWjjnCiMbA6DyGL7Ba1wTqq/QuyMB/xJYEKiJdT4rAf+5+Wf3r4lo9U/1nfsNGvy/YWn+JP9jggdw9zgR/TXlhzO/WvLTIP9GkT9l/+X6S+SndOn//hiYADuPKXDwmKHnz/q9kv6H+rhG/hsBV27+f90/NIda/LfuldUu3/66I5RjLf5czN/8zf///PF9h+RdRR/+sf1e4qz3yf8MXAjE9svc/lRi/Zc4q5p/PD/S/lfgxkCLP5e+57cFNpjTqA==
+   eJzt1mkLgkAQgOH9axVSVnYSQXdWFF1QRND525uFkYZFTSXGVfbDg3nBi8ymjhDCMQxDFEAPFMEVjfAY3VfPF/GaMTkuj5WY+xugqljg1lX26fkzmivn6sz9rz/3vzPW/0i5fw+26Ibb04/9Hem/k/ulA3O/TVqSUJ9/jbn/AgYRDAP6dVy/Hpf8Pkbs12H9emvUFf5rNs/93PNjY6dqAizwREtQBn2iAlbkGnl9V5Pn7zcHTaW/xdxq+vXrb4vv/FJ+c6xjfxxh/d53OJXG93TS/jhzqEv/FMxQUD/3+yBOP+XktF/n+cna81+DTYAszH+YLPz/hJHvwQ6yCO7vOcPIuw8GfuL8
+  </data>
+ </layer>
+ <layer name="Props" width="48" height="32">
+  <data encoding="base64" compression="zlib">
+   eJzt1esKQDAYBmD3fzfOEzn9cSy35PuhsDZmpqH3qTcs33qTmuMAwF9ElJhbY8u1kzyr7AFqZN/U1j6gh52/8iq17QKLUnOuMVnihpaSCdYTSnowN23uA6ONrsspBbdWXZgPDXZ5Sk8ZNhnt1tlxKR7Ft13khi/8AyL8uYlzFAAAAABgNQPf1Roy
   </data>
  </layer>
  <layer name="Sprites" width="48" height="32">
@@ -43,18 +51,18 @@
  <objectgroup name="NPCs" width="48" height="32">
   <object name="Receptionist" gid="135" x="88" y="96"/>
   <object name="Mayor" gid="139" x="48" y="136"/>
-  <object name="Protester1" gid="136" x="96" y="160"/>
-  <object name="Head Protester" gid="136" x="88" y="144"/>
-  <object name="Protester2" gid="136" x="104" y="136"/>
-  <object name="Journalist" gid="137" x="160" y="136"/>
-  <object name="Wife" gid="150" x="248" y="232"/>
-  <object name="Sponsor" gid="131" x="152" y="56"/>
-  <object name="Constituent1" gid="138" x="48" y="64"/>
-  <object name="Constituent2" gid="138" x="48" y="48"/>
-  <object name="Constituent3" gid="138" x="32" y="64"/>
+  <object name="Protester1" gid="136" x="32" y="168"/>
+  <object name="Head Protester" gid="136" x="40" y="184"/>
+  <object name="Protester2" gid="136" x="48" y="168"/>
+  <object name="Journalist" gid="137" x="168" y="56"/>
+  <object name="Wife" gid="150" x="192" y="192"/>
+  <object name="Sponsor" gid="131" x="168" y="80"/>
+  <object name="Constituent1" gid="138" x="40" y="48"/>
+  <object name="Constituent2" gid="138" x="72" y="48"/>
+  <object name="Constituent3" gid="138" x="112" y="64"/>
   <object gid="160" x="200" y="96"/>
  </objectgroup>
- <objectgroup name="Rooms" width="48" height="32">
+ <objectgroup name="Rooms" width="48" height="32" visible="0">
   <object name="Mayor's Office" x="8" y="80" width="64" height="64"/>
   <object name="Receptionist's Office" x="72" y="80" width="32" height="32"/>
  </objectgroup>
