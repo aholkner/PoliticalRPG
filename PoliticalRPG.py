@@ -369,7 +369,7 @@ class World(object):
             self.quest_name = dialog
             return False
         elif action == 'Encounter':
-            game.push_world(CombatWorld(tiled.parse('res/combat.tmx'), param))
+            game.push_world(CombatWorld(tiled.parse('res/combat1.tmx'), param))
         elif action == 'Destroy':
             self.sprites.remove(sprite)
             return False

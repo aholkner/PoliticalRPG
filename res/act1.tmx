@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="48" height="32" tilewidth="8" tileheight="8">
+<map version="1.0" orientation="orthogonal" width="28" height="28" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="65" name="tiles2" tilewidth="8" tileheight="8">
   <image source="tiles2.png" width="64" height="64"/>
@@ -30,25 +30,25 @@
  <tileset firstgid="177" name="props" tilewidth="8" tileheight="8">
   <image source="props.png" width="64" height="64"/>
  </tileset>
- <layer name="Tiles" width="48" height="32">
+ <layer name="Tiles" width="28" height="28">
   <data encoding="base64" compression="zlib">
-   eJzt1mkLgkAQgOH9axVSVnYSQXdWFF1QRND525uFkYZFTSXGVfbDg3nBi8ymjhDCMQxDFEAPFMEVjfAY3VfPF/GaMTkuj5WY+xugqljg1lX26fkzmivn6sz9rz/3vzPW/0i5fw+26Ibb04/9Hem/k/ulA3O/TVqSUJ9/jbn/AgYRDAP6dVy/Hpf8Pkbs12H9emvUFf5rNs/93PNjY6dqAizwREtQBn2iAlbkGnl9V5Pn7zcHTaW/xdxq+vXrb4vv/FJ+c6xjfxxh/d53OJXG93TS/jhzqEv/FMxQUD/3+yBOP+XktF/n+cna81+DTYAszH+YLPz/hJHvwQ6yCO7vOcPIuw8GfuL8
+   eJztlekKwjAMgPtqToZOnScieDsVxQsUETyf3RQyCGVb1tKCqD8+up4fTbM2FEKEf76CAtAFPOCCDLGN1tV+D8eMSLtsKzK+OlBRmGMZKXXaf0JmSl+N8T0t+16OfXdN3w7YIFcsj0x9S3w3Ml+yZ3wBmWuCur8q4zsD/RwMUnw28iUmIt+HnD6TfIlzIhLJOfJJPi6eAa6rMgZ84IEsgBLQI5SBJRkjx3cM95cUl4biazJr/6KvReJPSToHGz4dsnzxu0bJ8z6Z+nTOxdQ3AaZImo/7H3V8lPBDfDbj6Xp/K2Cdgovzy8JFfmYh74024hPkvfEGZBwAzA==
   </data>
  </layer>
- <layer name="Props" width="48" height="32">
+ <layer name="Props" width="28" height="28">
   <data encoding="base64" compression="zlib">
-   eJzt1esKQDAYBmD3fzfOEzn9cSy35PuhsDZmpqH3qTcs33qTmuMAwF9ElJhbY8u1kzyr7AFqZN/U1j6gh52/8iq17QKLUnOuMVnihpaSCdYTSnowN23uA6ONrsspBbdWXZgPDXZ5Sk8ZNhnt1tlxKR7Ft13khi/8AyL8uYlzFAAAAABgNQPf1Roy
+   eJxjYBh84OJAO2AQgKESBtuAeDua2A4ofRIHnxgzBgvA5WZKzLlEJTMpAdR2ww7CSigCh8jUd4BMfcfJ1HcCiPdgEd8JxLvx6DuPxN5Cop37gHg/mthBEvRvJdE+YsApID6NhM9QYNZGIN4ExJuRxGhdPtIiTLAB9PKFWuUNvcBgKMtGwSigBhjsaXkwtgkBjEUgvg==
   </data>
  </layer>
- <layer name="Sprites" width="48" height="32">
+ <layer name="Sprites" width="28" height="28">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJztzjEBAAAIA6D1b2JLW8xDSEACAAC0zHUAAAB4YwFY+ACq
+   eJztzgENAAAIA6D3b2JLY3xOSEACAPdNOwDwxAKjXQCq
   </data>
  </layer>
- <objectgroup name="NPCs" width="48" height="32">
+ <objectgroup name="NPCs" width="28" height="28">
   <object name="Receptionist" gid="135" x="88" y="96"/>
   <object name="Mayor" gid="139" x="48" y="136"/>
   <object name="Protester1" gid="136" x="32" y="168"/>
@@ -62,8 +62,8 @@
   <object name="Constituent3" gid="138" x="112" y="64"/>
   <object gid="160" x="200" y="96"/>
  </objectgroup>
- <objectgroup name="Rooms" width="48" height="32" visible="0">
-  <object name="Mayor's Office" x="8" y="80" width="64" height="64"/>
-  <object name="Receptionist's Office" x="72" y="80" width="32" height="32"/>
+ <objectgroup name="Rooms" width="28" height="28" visible="0">
+  <object name="Mayor's Office" x="32" y="80" width="40" height="64"/>
+  <object name="Receptionist's Office" x="72" y="80" width="40" height="32"/>
  </objectgroup>
 </map>
