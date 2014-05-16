@@ -543,12 +543,26 @@ class ShopMenu(Menu):
         wares = game_data.shops[shop_id]
         for ware in wares:
             name = '%s ($%d)' % (ware.item_attack.name, ware.price)
-            self.items.append(MenuItem(name, ware.item_attack.description, partial(self.on_purchase, ware), ware.price <= game.money))
+            item = MenuItem(name, '', partial(self.on_purchase, ware))
+            item.ware = ware
+            self.items.append(item)
         self.items.append(MenuItem('Done', 'Leave store', self.on_done))
+        self.update_items()
+
+    def update_items(self):
+        for item in self.items:
+            if hasattr(item, 'ware'):
+                count = 0
+                for ia in game.player.item_attacks:
+                    if ia.attack == item.ware.item_attack:
+                        count = ia.quantity
+                item.description = '%s (You currently have %d of these).' % (item.ware.item_attack.description, count)
+                item.enabled = item.ware.price <= game.money
 
     def on_purchase(self, ware):
         game.money -= ware.price
         game.player.add_item_attack(ware.item_attack)
+        self.update_items()
 
     def on_done(self):
         self.world.pop_menu()
