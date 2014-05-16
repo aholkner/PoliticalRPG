@@ -17,6 +17,7 @@ font_tiny.height = font_tiny.descent - font_tiny.ascent
 
 bacon.window.width = 640
 bacon.window.height = 480
+bacon.window.title = 'Goodnight, Mr President'
 
 map_scale = 4
 map_width = bacon.window.width / map_scale
@@ -325,6 +326,9 @@ class World(object):
 
         self.on_world_key_pressed(key)
 
+    def on_key_released(self, key):
+        pass
+
     def get_script_sprite(self, param):
         return None
     
@@ -565,6 +569,7 @@ class MapWorld(World):
 
     def __init__(self, map):
         super(MapWorld, self).__init__(map)
+        self.move_timeout = -1
 
         player_slot = self.player_slots[0]
         self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
@@ -578,6 +583,15 @@ class MapWorld(World):
                 
     def update(self):
         self.update_camera()
+        if self.move_timeout > 0:
+            self.move_timeout -= bacon.timestep
+            if self.move_timeout <= 0:
+                dx = dy = 0
+                for k, v in self.input_movement.items():
+                    if k in bacon.keys:
+                        dx += v[0]
+                        dy += v[1]
+                self.move(dx, dy)
         
     def update_camera(self):
         ts = self.tile_size
@@ -594,7 +608,11 @@ class MapWorld(World):
         elif key == bacon.Keys.escape:
             self.push_menu(MapMenu(self))
 
+    def on_key_released(self, key):
+        self.move_timeout = -1
+
     def move(self, dx, dy):
+        self.move_timeout = 0.2
         other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
         if other:
             self.on_collide(other)
@@ -1624,6 +1642,8 @@ class Game(bacon.Game):
         if pressed:
             self.world.on_key_pressed(key)
             debug.on_key_pressed(key)
+        else:
+            self.world.on_key_released(key)
 
     def get_ally(self, id):
         for ally in self.allies:
