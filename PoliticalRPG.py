@@ -18,6 +18,7 @@ font_tiny.height = font_tiny.descent - font_tiny.ascent
 
 bacon.window.width = 640
 bacon.window.height = 480
+bacon.window.title = 'Goodnight, Mr President'
 
 map_scale = 4
 map_width = bacon.window.width / map_scale
@@ -188,16 +189,22 @@ class MenuItem(object):
         self.enabled = enabled
 
 class Menu(object):
+    max_items = 3
+
     def __init__(self, world):
         self.world = world
         self.items = []
         self.x = self.y = 0
         self.can_dismiss = True
         self.selected_index = 0
+        self.scroll_offset = 0
 
     def layout(self):
         self.width = 0
+        self.scrollable = len(self.items) >= self.max_items
         self.height = len(self.items) * font_tiny.height
+        if self.scrollable:
+            self.height += font_tiny.height * 2
         for item in self.items:
             self.width = max(font_tiny.measure_string(item.name), self.width)
 
@@ -223,11 +230,27 @@ class Menu(object):
     def move_selection(self, dir):
         start = max(0, self.selected_index)
         self.selected_index = (self.selected_index + dir) % len(self.items)
-
+        if self.selected_index < self.scroll_offset:
+            self.scroll_offset = self.selected_index
+        elif self.selected_index >= self.scroll_offset + self.max_items:
+            self.scroll_offset = self.selected_index - self.max_items + 1
+        
     def draw(self):
         y = self.y
         bacon.push_color()
+
+        if self.scrollable:
+            y -= font_tiny.ascent
+            bacon.set_color(1, 1, 1, 1)
+            bacon.draw_string(font_tiny, '/\\', self.x, y)
+            y += font_tiny.descent
+
         for i, item in enumerate(self.items):
+            if i < self.scroll_offset:
+                continue
+            if i - self.scroll_offset >= self.max_items:
+                break
+
             y -= font_tiny.ascent
             if not item.enabled:
                 m = 0.7
@@ -240,6 +263,13 @@ class Menu(object):
                 bacon.set_color(m, m, m, 1)
             bacon.draw_string(font_tiny, item.name, self.x, y)
             y += font_tiny.descent
+
+        if self.scrollable:
+            y -= font_tiny.ascent
+            bacon.set_color(1, 1, 1, 1)
+            bacon.draw_string(font_tiny, '\\/', self.x, y)
+            y += font_tiny.descent
+
         bacon.pop_color()
 
         self.draw_status(self.selected_item.description)
@@ -457,6 +487,9 @@ class World(object):
             return
 
         self.on_world_key_pressed(key)
+
+    def on_key_released(self, key):
+        pass
 
     def get_script_sprite(self, param):
         return None
@@ -712,6 +745,7 @@ class MapWorld(World):
 
     def __init__(self, map):
         super(MapWorld, self).__init__(map)
+        self.move_timeout = -1
 
         player_slot = self.player_slots[0]
         self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
@@ -725,6 +759,15 @@ class MapWorld(World):
                 
     def update(self):
         self.update_camera()
+        if self.move_timeout > 0:
+            self.move_timeout -= bacon.timestep
+            if self.move_timeout <= 0:
+                dx = dy = 0
+                for k, v in self.input_movement.items():
+                    if k in bacon.keys:
+                        dx += v[0]
+                        dy += v[1]
+                self.move(dx, dy)
         
     def update_camera(self):
         ts = self.tile_size
@@ -741,7 +784,11 @@ class MapWorld(World):
         elif key == bacon.Keys.escape:
             self.push_menu(MapMenu(self))
 
+    def on_key_released(self, key):
+        self.move_timeout = -1
+
     def move(self, dx, dy):
+        self.move_timeout = 0.2
         other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
         if other:
             self.on_collide(other)
@@ -1055,6 +1102,9 @@ class CombatWorld(World):
         self.encounter = encounter = game_data.encounters[encounter_id]
         self.menu_start_x = 0
         self.menu_start_y = ui_height - 250
+        for ally in game.allies:
+            ally.saved_votes = ally.votes
+        self.restart_count = 0
 
     def start(self):
         encounter = self.encounter
@@ -1091,9 +1141,16 @@ class CombatWorld(World):
         for slot in self.slots:
             slot.character = None
         self.pop_all_menus()
+        self.restart_count += 1
         for ally in game.allies:
             ally.dead = False
-            ally.votes = ally.max_votes / 2
+            if self.restart_count > 1:
+                # Extra help after second retry
+                ally.votes = ally.max_votes
+                ally.spin = ally.max_spin / 2
+            else:
+                ally.votes = max(ally.max_votes / 2, ally.saved_votes)
+
             ally.spin = 0
         self.start()
 
@@ -1771,6 +1828,8 @@ class Game(bacon.Game):
         if pressed:
             self.world.on_key_pressed(key)
             debug.on_key_pressed(key)
+        else:
+            self.world.on_key_released(key)
 
     def get_ally(self, id):
         for ally in self.allies:
