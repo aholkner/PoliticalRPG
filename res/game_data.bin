@@ -3161,14 +3161,14 @@ g3
 NtRp1005
 (dp1006
 g13
-S'Say'
+S'Message'
 p1007
 sg14
 g1003
 sg15
 S''
 sg16
-S'...'
+S'Message box'
 p1008
 sbag1
 (g10

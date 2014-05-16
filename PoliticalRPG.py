@@ -71,7 +71,8 @@ class UI(object):
         self.stat_border = self.get_border_tiles(0)
         self.stat_border_disabled = self.get_border_tiles(3)
         self.stat_border_active = self.get_border_tiles(6)
-        self.white_border = self.get_border_tiles(9)
+        self.speech_border = self.get_border_tiles(9)
+        self.white_border = self.get_border_tiles(48)
         self.speech_point = self.get_tile_2x(6)
 
     def get_border_tiles(self, index):
@@ -146,11 +147,30 @@ class UI(object):
         glyph_layout = bacon.GlyphLayout([run], x1, y2, width, None, bacon.Alignment.left, bacon.VerticalAlignment.bottom)
         if glyph_layout.content_width < 48:
             glyph_layout = bacon.GlyphLayout([run], x1, y2, 48, None, bacon.Alignment.center, bacon.VerticalAlignment.bottom)
-        y1 = y2 - glyph_layout.content_height - 4 # HACK workaround
+        y1 = y2 - glyph_layout.content_height - 8 # HACK workaround
         x2 = x1 + max(glyph_layout.content_width, 48)
 
-        self.draw_box(Rect(x1, y1, x2, y2))
+        self.draw_box(Rect(x1, y1, x2, y2), self.speech_border)
         self.draw_image(self.speech_point, speaker_x + 16, y2)
+
+        bacon.set_color(0, 0, 0, 1)
+        bacon.draw_glyph_layout(glyph_layout)
+        bacon.set_color(1, 1, 1, 1)
+
+    def draw_message_box(self, text):
+        width = min(self.font.measure_string(text), ui_width / 3)
+        cx = ui_width / 2
+        cy = ui_height / 2 - 32
+
+        style = bacon.Style(self.font)
+        run = bacon.GlyphRun(style, text)
+        glyph_layout = bacon.GlyphLayout([run], cx - width / 2, cy, width, None, bacon.Alignment.center, bacon.VerticalAlignment.center)
+        y1 = cy - glyph_layout.content_height / 2
+        y2 = cy + glyph_layout.content_height / 2
+        x1 = cx - glyph_layout.content_width / 2
+        x2 = cx + glyph_layout.content_width / 2
+
+        self.draw_box(Rect(x1, y1, x2, y2))
 
         bacon.set_color(0, 0, 0, 1)
         bacon.draw_glyph_layout(glyph_layout)
@@ -366,7 +386,7 @@ class World(object):
                 speaker_y = (self.dialog_sprite.y * ts - viewport.y1) * map_scale
                 ui.draw_speech_box(self.dialog_text, speaker_x, speaker_y)
             else:
-                bacon.draw_string(debug.font, self.dialog_text, ui_width / 2, ui_height / 2, None, None, bacon.Alignment.center, bacon.VerticalAlignment.center)
+                ui.draw_message_box(self.dialog_text)
 
         for menu in self.menu_stack:
             menu.draw()
