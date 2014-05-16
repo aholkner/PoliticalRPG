@@ -464,6 +464,17 @@ class World(object):
             game.goto_map(param)
         elif action == 'BeginCombat':
             self.begin_round()
+        elif action == 'Shop':
+            self.push_menu(ShopMenu(self, param))
+            return True
+        elif action == 'Label':
+            return False
+        elif action == 'Reset' or action == 'Jump':
+            for i, row in enumerate(self.active_script):
+                if row.action == 'Label' and row.param == param:
+                    sprite.script_index = i
+                    break
+            return action == 'Reset'
         else:
             raise Exception('Unsupported script action "%s"' % action)
 
@@ -525,6 +536,23 @@ class InventoryConsumeMenu(Menu):
                 effect.apply(ally)
         ally.remove_item_attack(ia.attack)
         self.world.pop_all_menus()
+
+class ShopMenu(Menu):
+    def __init__(self, world, shop_id):
+        super(ShopMenu, self).__init__(world)
+        wares = game_data.shops[shop_id]
+        for ware in wares:
+            name = '%s ($%d)' % (ware.item_attack.name, ware.price)
+            self.items.append(MenuItem(name, ware.item_attack.description, partial(self.on_purchase, ware), ware.price <= game.money))
+        self.items.append(MenuItem('Done', 'Leave store', self.on_done))
+
+    def on_purchase(self, ware):
+        game.money -= ware.price
+        game.player.add_item_attack(ware.item_attack)
+
+    def on_done(self):
+        self.world.pop_menu()
+        self.world.on_dismiss_dialog()
 
 class MapWorld(World):
      
@@ -1791,6 +1819,15 @@ def main():
             spin = 'Spin',
             skill_points = 'Skill Points',
         ))
+
+        game_data.shops = parse_table(quest_db['Shops'], dict(
+            shop_id = 'ID',
+            item_attack = 'Attack Item',
+            price = 'Price',
+        ), index_multi=True)
+        for shop in game_data.shops.values():
+            for ware in shop:
+                ware.item_attack = game_data.attacks[ware.item_attack]
 
         pickle.dump(game_data, open_res('res/game_data.bin', 'wb'))
     else:
