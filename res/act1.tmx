@@ -1,29 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE map SYSTEM "http://mapeditor.org/dtd/1.0/map.dtd">
-<map version="1.0" orientation="orthogonal" width="20" height="16" tilewidth="8" tileheight="8">
+<map version="1.0" orientation="orthogonal" width="48" height="32" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="tiles.tsx"/>
- <tileset firstgid="65" source="sprites.tsx"/>
- <layer name="Tiles" width="20" height="16">
+ <tileset firstgid="65" name="tiles2" tilewidth="8" tileheight="8">
+  <image source="tiles2.png" width="64" height="64"/>
+  <terraintypes>
+   <terrain name="Interior" tile="-1"/>
+   <terrain name="Exterior" tile="-1"/>
+  </terraintypes>
+  <tile id="0" terrain="1,1,1,0"/>
+  <tile id="1" terrain="1,1,0,0"/>
+  <tile id="2" terrain="1,1,0,1"/>
+  <tile id="3" terrain="0,0,0,1"/>
+  <tile id="4" terrain="0,0,1,1"/>
+  <tile id="5" terrain="0,0,1,0"/>
+  <tile id="8" terrain="1,0,1,0"/>
+  <tile id="9" terrain="0,0,0,0"/>
+  <tile id="10" terrain="0,1,0,1"/>
+  <tile id="11" terrain="0,1,0,1"/>
+  <tile id="12" terrain="1,1,1,1"/>
+  <tile id="13" terrain="1,0,1,0"/>
+  <tile id="16" terrain="1,0,1,1"/>
+  <tile id="17" terrain="0,0,1,1"/>
+  <tile id="18" terrain="0,1,1,1"/>
+  <tile id="19" terrain="0,1,0,0"/>
+  <tile id="20" terrain="1,1,0,0"/>
+  <tile id="21" terrain="1,0,0,0"/>
+ </tileset>
+ <tileset firstgid="129" source="sprites.tsx"/>
+ <layer name="Tiles" width="48" height="32">
   <data encoding="base64" compression="zlib">
-   eJzjZWBg4KUAi6NhSswaiuYxAjETEDNDaWwYlxwzFvM4gZiLAObGI45uniAQCwGxMJXM4yXCjQNtHszPpGJhHOYN5vQ3ah5l5gEAI8URwQ==
+   eJztmNsKwjAMhvtqnvC4eWIIeqFsF4p3vv/NIjooobUhjjRiLj4oLINv4c9aWjjnCiMbA6DyGL7Ba1wTqq/QuyMB/xJYEKiJdT4rAf+5+Wf3r4lo9U/1nfsNGvy/YWn+JP9jggdw9zgR/TXlhzO/WvLTIP9GkT9l/+X6S+SndOn//hiYADuPKXDwmKHnz/q9kv6H+rhG/hsBV27+f90/NIda/LfuldUu3/66I5RjLf5czN/8zf///PF9h+RdRR/+sf1e4qz3yf8MXAjE9svc/lRi/Zc4q5p/PD/S/lfgxkCLP5e+57cFNpjTqA==
   </data>
  </layer>
- <layer name="Sprites" width="20" height="16">
+ <layer name="Sprites" width="48" height="32">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJxjYBgFgw1kDrQDRsEoGCEAAGxbAGo=
+   eJztzjEBAAAIA6D1b2JLW8xDSEACAAC0zHUAAAB4YwFY+ACq
   </data>
  </layer>
- <objectgroup name="NPCs" width="20" height="16">
-  <object name="Receptionist" gid="71" x="32" y="48"/>
-  <object name="Mayor" gid="75" x="48" y="72"/>
-  <object name="Protester1" gid="72" x="32" y="96"/>
-  <object name="Head Protester" gid="72" x="48" y="112"/>
-  <object name="Protester2" gid="72" x="64" y="104"/>
-  <object name="Journalist" gid="73" x="96" y="48"/>
-  <object name="Wife" gid="86" x="112" y="104"/>
-  <object name="Sponsor" gid="67" x="48" y="16"/>
+ <objectgroup name="NPCs" width="48" height="32">
+  <object name="Receptionist" gid="135" x="88" y="96"/>
+  <object name="Mayor" gid="139" x="48" y="136"/>
+  <object name="Protester1" gid="136" x="96" y="160"/>
+  <object name="Head Protester" gid="136" x="88" y="144"/>
+  <object name="Protester2" gid="136" x="104" y="136"/>
+  <object name="Journalist" gid="137" x="160" y="136"/>
+  <object name="Wife" gid="150" x="248" y="232"/>
+  <object name="Sponsor" gid="131" x="152" y="56"/>
+  <object name="Constituent1" gid="138" x="48" y="64"/>
+  <object name="Constituent2" gid="138" x="48" y="48"/>
+  <object name="Constituent3" gid="138" x="32" y="64"/>
+  <object gid="160" x="200" y="96"/>
+ </objectgroup>
+ <objectgroup name="Rooms" width="48" height="32">
+  <object name="Mayor's Office" x="8" y="80" width="64" height="64"/>
+  <object name="Receptionist's Office" x="72" y="80" width="32" height="32"/>
  </objectgroup>
 </map>
