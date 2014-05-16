@@ -141,8 +141,7 @@ class World(object):
         self.menu_start_x = 0
         self.menu_start_y = ui_height - 16
 
-        self.timeout_func = None
-        self.timeout = 0
+        self.timeouts = []
 
         self.map = map
         self.tile_size = map.tile_width
@@ -224,17 +223,15 @@ class World(object):
         del self.menu_stack[:]
 
     def after(self, timeout, func):
-        assert self.timeout_func is None
-        self.timeout = timeout
-        self.timeout_func = func
-
+        self.timeouts.append([timeout, func])
+        
     def update(self):
-        if self.timeout_func:
-            self.timeout -= bacon.timestep
-            if self.timeout <= 0:
-                f = self.timeout_func
-                self.timeout_func = None
-                f()
+        if self.timeouts:
+            for timeout in self.timeouts:
+                timeout[0] -= bacon.timestep
+            for timeout in [timeout for timeout in self.timeouts if timeout[0] <= 0]:
+                timeout[1]()
+                self.timeouts.remove(timeout)
 
     def draw(self):
 
@@ -313,7 +310,7 @@ class World(object):
         self.continue_script()
 
     def on_key_pressed(self, key):
-        if self.timeout_func:
+        if self.timeouts:
             return
 
         if self.dialog_text:
@@ -577,6 +574,9 @@ class Effect(object):
             character.votes = int(character.max_votes * self.value)
             game.world.set_dead(character, False)
             game.world.add_floater(character, 'Revived!')
+        elif self.function == 'call_friends':
+            character_id, level = self.attribute.split(':')
+            game.world.ai_summon(character_id, int(level), self.value)
 
     def unapply(self, character):
         if self.function == 'reduce':
@@ -616,6 +616,7 @@ class Character(object):
         self.xp = level_row.xp
         self.ai = ai
         self.dead = False
+        self.summoning_sickness = True
         self.data = row = random.choice(game_data.characters[id])
         if ai:
             self.votes = self.max_votes = self.calc_stat(row.votes_base, row.votes_lvl)
@@ -830,15 +831,15 @@ class CombatWorld(World):
         for i, ally in enumerate(game.allies):
             self.fill_slot(self.player_slots[i], ally)
         
-        item_attacks = list(encounter.item_attacks)
+        self.ai_item_attacks = list(encounter.item_attacks)
         if encounter.monster1:
-            self.fill_slot(self.monster_slots[0], Character(encounter.monster1, encounter.monster1_lvl, item_attacks))
+            self.fill_slot(self.monster_slots[0], Character(encounter.monster1, encounter.monster1_lvl, self.ai_item_attacks))
         if encounter.monster2:
-            self.fill_slot(self.monster_slots[1], Character(encounter.monster2, encounter.monster2_lvl, item_attacks))
+            self.fill_slot(self.monster_slots[1], Character(encounter.monster2, encounter.monster2_lvl, self.ai_item_attacks))
         if encounter.monster3:
-            self.fill_slot(self.monster_slots[2], Character(encounter.monster3, encounter.monster3_lvl, item_attacks))
+            self.fill_slot(self.monster_slots[2], Character(encounter.monster3, encounter.monster3_lvl, self.ai_item_attacks))
         if encounter.monster4:
-            self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl, item_attacks))
+            self.fill_slot(self.monster_slots[3], Character(encounter.monster4, encounter.monster4_lvl, self.ai_item_attacks))
 
         self.slots = self.player_slots + self.monster_slots
 
@@ -849,6 +850,8 @@ class CombatWorld(World):
             
     def restart(self):
         del self.sprites[:]
+        for slot in self.slots:
+            slot.character = None
         self.pop_all_menus()
         for ally in game.allies:
             ally.dead = False
@@ -874,10 +877,12 @@ class CombatWorld(World):
         return None
 
     def begin_round(self):
+        for character in self.characters:
+            character.summoning_sickness = False
         self.characters.sort(key=lambda c:c.speed, reverse=True)
         self.current_character_index = 0
         while self.current_character_index < len(self.characters) and self.current_character.dead:
-                self.current_character_index += 1
+            self.current_character_index += 1
         self.begin_turn()
 
     def get_script_sprite(self, param):
@@ -955,7 +960,8 @@ class CombatWorld(World):
         else:
             # Next character's turn
             self.current_character_index += 1
-            while self.current_character_index < len(self.characters) and self.current_character.dead:
+            while self.current_character_index < len(self.characters) and \
+                (self.current_character.dead or self.current_character.summoning_sickness):
                 self.current_character_index += 1
             self.begin_turn()
 
@@ -1018,6 +1024,27 @@ class CombatWorld(World):
         targets = [slot.character for slot in slots[slot_index:slot_index + target_count]]
 
         self.action_attack(attack, targets)
+
+    def ai_summon(self, character_id, level, count):
+        did_destroy = False
+        for slot in self.monster_slots:
+            if slot.character and slot.character.dead:
+                self.sprites.remove(slot.sprite)
+                slot.character = None
+                did_destroy = True
+        
+        if did_destroy:
+            self.after(0.5, partial(self.ai_summon2, character_id, level, count))
+        else:
+            self.ai_summon2(character_id, level, count)
+
+    def ai_summon2(self, character_id, level, count):
+        for i, slot in enumerate(self.monster_slots):
+            if not slot.character:
+                self.fill_slot(slot, Character(character_id, level, self.ai_item_attacks))
+                count -= 1
+                if count == 0:
+                    return
 
     def action_attack(self, attack, targets):
         self.pop_all_menus()
