@@ -72,6 +72,7 @@ class UI(object):
         self.stat_border_disabled = self.get_border_tiles(3)
         self.stat_border_active = self.get_border_tiles(6)
         self.white_border = self.get_border_tiles(9)
+        self.speech_point = self.get_tile_2x(6)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -80,6 +81,12 @@ class UI(object):
         ts = self.ts
         x = i % 16
         y = i / 16
+        return self.image.get_region(x * ts, y * ts, (x + 1) * ts, (y + 1) * ts)
+
+    def get_tile_2x(self, i):
+        ts = self.ts * 2
+        x = i % 8
+        y = i / 8
         return self.image.get_region(x * ts, y * ts, (x + 1) * ts, (y + 1) * ts)
 
     def align_rect(self, rect):
@@ -125,19 +132,25 @@ class UI(object):
 
         bacon.pop_transform()
 
+    def draw_image(self, image, x, y):
+        bacon.draw_image(image, x, y, x + image.width * ui_scale, y + image.height * ui_scale)
+
     def draw_speech_box(self, text, speaker_x, speaker_y):
         width = min(self.font.measure_string(text), ui_width / 2)
-        x1 = max(0, min(speaker_x - 16, ui_width - width))
+        x1 = max(0, min(speaker_x, ui_width - width - 16))
         x2 = x1 + width
-        y2 = speaker_y
+        y2 = speaker_y - 28
 
         style = bacon.Style(self.font)
         run = bacon.GlyphRun(style, text)
         glyph_layout = bacon.GlyphLayout([run], x1, y2, width, None, bacon.Alignment.left, bacon.VerticalAlignment.bottom)
+        if glyph_layout.content_width < 48:
+            glyph_layout = bacon.GlyphLayout([run], x1, y2, 48, None, bacon.Alignment.center, bacon.VerticalAlignment.bottom)
         y1 = y2 - glyph_layout.content_height - 4 # HACK workaround
-        x2 = x1 + glyph_layout.content_width
+        x2 = x1 + max(glyph_layout.content_width, 48)
 
         self.draw_box(Rect(x1, y1, x2, y2))
+        self.draw_image(self.speech_point, speaker_x + 16, y2)
 
         bacon.set_color(0, 0, 0, 1)
         bacon.draw_glyph_layout(glyph_layout)
