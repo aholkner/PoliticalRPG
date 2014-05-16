@@ -1093,6 +1093,7 @@ class CombatWorld(World):
 
         # Attack targets
         critical_fail = True
+        total_damage = 0
         for target in targets:
             # Immunity
             if attack in target.data.immunities:
@@ -1155,11 +1156,13 @@ class CombatWorld(World):
                 if not effect.apply_to_source:
                     target.add_active_effect(ActiveEffect(effect, rounds))
 
-            # Award spin for damage dealt unless this was a spin action
-            if not source.ai and not attack.spin_cost:
-                self.award_spin(source, max(0, damage))
-
             debug.println('%s attacks %s with %s for %d' % (source.id, target.id, attack.name, damage))
+
+            if damage > 0:
+                total_damage += damage
+
+        # Award spin for total damage
+        self.award_spin(source, max(0, total_damage), attack.spin_cost > 0)
 
         # Critical fail effect
         if critical_fail and critical_fail_effect:
@@ -1192,9 +1195,12 @@ class CombatWorld(World):
         character.dead = dead
         self.get_slot(character).sprite.effect_dead = dead
 
-    def award_spin(self, target, damage):
-        target.spin += 1 # TODO AMANDA
-        target.spin = min(target.spin, target.max_spin)
+    def award_spin(self, target, damage, is_spin_action):
+        bonus = (damage + max(target.cunning, 0)) / (target.level * 5)
+        if is_spin_action:
+            bonus /= 2
+        debug.println('Awarded %d spin' % bonus)
+        target.spin = min(target.spin + bonus, target.max_spin)
         
     def add_floater(self, character, text, offset=0):
         slot = self.get_slot(character)
