@@ -431,9 +431,9 @@ class World(object):
             self.dialog_sprite = sprite
             self.dialog_text = text
             if sprite:
-                print '%s says %s' % (sprite.name, text)
+                debug.println('%s says %s' % (sprite.name, text))
             else:
-                print 'message: %s' % text
+                debug.println('message: %s' % text)
             return True
         else:
             return False
@@ -2156,6 +2156,7 @@ class LevelUpWorld(World):
 
 class Debug(object):
     def __init__(self):
+        self.enabled = False
         self.font = font_tiny
         self.show_slot_stats = -1
         self.massive_damage = False
@@ -2164,6 +2165,9 @@ class Debug(object):
         self.disable_collision = False
 
     def on_key_pressed(self, key):
+        if not self.enabled:
+            return
+
         if key == bacon.Keys.k or key == bacon.Keys.j:
             self.show_slot_stats += 1 if key == bacon.Keys.k else -1
             self.println('show_slot_stats = %d' % self.show_slot_stats)
@@ -2198,23 +2202,24 @@ class Debug(object):
                 game.world.apply_damage(game.world.current_character, 10)
 
     def println(self, msg):
-        print msg
-        #self.message = msg
-        #self.message_timeout = 1.0
+        if self.enabled:
+            print msg
 
     def draw(self):
-        self.message_timeout -= bacon.timestep
-        if self.message and self.message_timeout > 0:
-            self.draw_string(self.message, 0, ui_height)
+        if self.enabled:
+            self.message_timeout -= bacon.timestep
+            if self.message and self.message_timeout > 0:
+                self.draw_string(self.message, 0, ui_height)
 
     def draw_string(self, text, x, y):
-        bacon.push_color()
-        w = self.font.measure_string(text)
-        bacon.set_color(0, 0, 0, 1)
-        bacon.fill_rect(x, y + self.font.ascent, x + w, y + self.font.descent)
-        bacon.set_color(1, 1, 1, 1)
-        bacon.draw_string(self.font, text, x, y)
-        bacon.pop_color()
+        if self.enabled:
+            bacon.push_color()
+            w = self.font.measure_string(text)
+            bacon.set_color(0, 0, 0, 1)
+            bacon.fill_rect(x, y + self.font.ascent, x + w, y + self.font.descent)
+            bacon.set_color(1, 1, 1, 1)
+            bacon.draw_string(self.font, text, x, y)
+            bacon.pop_color()
         
 debug = Debug()
 
@@ -2518,8 +2523,11 @@ def ai_is_summon_attack(attack):
 def main():
     parser = optparse.OptionParser()
     parser.add_option('--import-ods')
+    parser.add_option('--debug', action='store_true')
     options, args = parser.parse_args()
     
+    debug.enabled = options.debug
+
     global game_data
     if options.import_ods:
         import odsimport
