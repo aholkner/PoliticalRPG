@@ -218,7 +218,7 @@
  </layer>
  <layer name="Props" width="28" height="28">
   <data encoding="base64" compression="zlib">
-   eJxjYBh8YOJAO2AQgKESBmVAXI4mVgGlO3HwiTFjsABcbqbEnElUMpMSQG03VBBWQhFoIlNfA5n62snU1wHENVjEK4G4Go++fiR2CYl21gFxPZpYIwn6S0m0jxjQBcTdSLiHArMKgbgIiIuRxGhdPtIiTLAB9PKFWuUNvcBgKMtGAWlgJp3tW0hn+1aSqW+wp+XB2CYEAMQSF+E=
+   eJxjYBh8YOJAO2AQgKESBmVAXI4mVgGlO3HwiTFjsABcbqbEnElUMpMSQG03VBBWQhFoIlNfA5n62snU1wHENVjEK4G4Go++fiR2CYl21gFxPZpYIwn6S0m0jxjQBcTdSLiHArMKgbgIiIuRxGhdPtIiTLAB9PKFWuUNvcBgKMtoBWrpbB8onRcTVEU5mA2l6ZXGF9PJHhhYjUWMmPKckrS8BIiXIvH7cSmkACCXeWuAeC0N7CAVAADvlh11
   </data>
  </layer>
  <layer name="Sprites" width="28" height="28">
