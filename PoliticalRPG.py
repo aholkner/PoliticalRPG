@@ -904,7 +904,6 @@ class MapWorld(World):
                 self.rooms_layer = layer
                 
     def update(self):
-        self.update_camera()
         if self.move_timeout > 0:
             self.move_timeout -= bacon.timestep
             if self.move_timeout <= 0:
@@ -914,6 +913,7 @@ class MapWorld(World):
                         dx += v[0]
                         dy += v[1]
                 self.move(dx, dy)
+        self.update_camera()
         
     def update_camera(self):
         ts = self.tile_size
