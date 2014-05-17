@@ -1759,7 +1759,7 @@ class CombatWorld(World):
 
             # Apply damage
             damage = int(damage)
-            if tried_damage or damage:
+            if tried_damage:
                 self.apply_damage(target, damage)
 
             # Apply target effects
