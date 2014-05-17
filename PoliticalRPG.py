@@ -84,6 +84,8 @@ class UI(object):
         self.floater_border_green = self.get_border_tiles(99)
         self.floater_border_grey = self.get_border_tiles(102)
         self.attack_border = self.get_border_tiles(105)
+        self.info_border = self.get_border_tiles(108)
+        self.info_arrow = self.get_tile_2x(15)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -167,6 +169,24 @@ class UI(object):
         bacon.draw_glyph_layout(glyph_layout)
         bacon.set_color(1, 1, 1, 1)
 
+    def draw_info_box(self, text, speaker_x, speaker_y):
+        width = min(self.font.measure_string(text), 250, ui_width - speaker_x - 16)
+        x1 = speaker_x
+        x2 = x1 + width
+        y1 = speaker_y
+
+        style = bacon.Style(self.font)
+        run = bacon.GlyphRun(style, text)
+        glyph_layout = bacon.GlyphLayout([run], x1, y1, width, None, bacon.Alignment.left, bacon.VerticalAlignment.top)
+        if y1 + glyph_layout.content_height > ui_height - 100:
+            glyph_layout.y = y1 = ui_height - 100 - glyph_layout.content_height
+        y2 = y1 + glyph_layout.content_height
+        x2 = x1 + glyph_layout.content_width
+
+        self.draw_box(Rect(x1, y1, x2, y2), self.info_border)
+        self.draw_image(self.info_arrow, x1 - 32, speaker_y)
+        bacon.draw_glyph_layout(glyph_layout)
+
     def draw_message_box(self, text):
         width = min(self.font.measure_string(text), ui_width / 3)
         cx = ui_width / 2
@@ -223,6 +243,7 @@ class Menu(object):
     x = ui_width / 2
     y = ui_height / 2
     min_width = 200
+    enable_info = True
 
     def __init__(self, world):
         self.world = world
@@ -320,6 +341,7 @@ class Menu(object):
             ui.draw_image(ui.menu_up_image, (x1 + x2) / 2 - 16, y)
             y += 32
 
+        info_y = y2
         for i, item in enumerate(self.items):
             if i < self.scroll_offset:
                 continue
@@ -327,14 +349,15 @@ class Menu(object):
                 break
 
             if not item.enabled:
-                m = 0.7
+                m = 0.5
             else:
                 m = 1
 
             if i == self.selected_index:
                 bacon.set_color(m, m, m, 1)
+                info_y = y
             else:
-                bacon.set_color(m * 52.0 / 255, m * 108.0 / 255, m * 149.0 / 255, 1)
+                bacon.set_color(m * 164.0 / 255, m * 186.0 / 255, m * 201.0 / 255, 1)
             bacon.draw_string(ui.font, item.name, x, y, align = align, vertical_align = bacon.VerticalAlignment.top)
             y += ui.font.height
 
@@ -343,14 +366,11 @@ class Menu(object):
             ui.draw_image(ui.menu_down_image, (x1 + x2) / 2 - 16, y)
             y += 32
 
-        self.draw_status(self.selected_item.description)
+        self.draw_status(self.selected_item.description, x2, info_y)
 
-    def draw_status(self, msg):
-        if self.world.menu_stack[-1] is self:
-            bacon.set_color(0, 0, 0, 1)
-            bacon.fill_rect(0, ui_height - debug.font.height * 2, ui_width, ui_height)
-            bacon.set_color(1, 1, 1, 1)
-            bacon.draw_string(debug.font, msg, 0, ui_height - debug.font.height * 2, ui_width, debug.font.height * 2, bacon.Alignment.left, bacon.VerticalAlignment.top) 
+    def draw_status(self, msg, x, y):
+        if self.enable_info and self.world.menu_stack[-1] is self:
+            ui.draw_info_box(msg, x + 20, y - 4)
 
 class World(object):
     active_script = None
@@ -1058,10 +1078,10 @@ class CombatMenuMain(CombatMenu):
         super(CombatMenuMain, self).__init__(world)
         character = self.world.current_character
 
-        self.items.append(MenuItem('Offense>', 'Launch a political attack', self.on_offense))
+        self.items.append(MenuItem('Offense >', 'Launch a political attack', self.on_offense))
         self.items.append(MenuItem('Defense', game_data.attacks['DEFENSE'].description, self.on_defense))
-        self.items.append(MenuItem('Spin>', 'Run spin to get control of the situation', self.on_spin, enabled=bool(character.spin_attacks)))
-        self.items.append(MenuItem('Items>', 'Use an item from your briefcase', self.on_items, enabled=bool(character.item_attacks)))
+        self.items.append(MenuItem('Spin >', 'Run spin to get control of the situation', self.on_spin, enabled=bool(character.spin_attacks)))
+        self.items.append(MenuItem('Items >', 'Use an item from your briefcase', self.on_items, enabled=bool(character.item_attacks)))
         self.can_dismiss = False
 
     def on_offense(self):
@@ -1118,6 +1138,7 @@ class CombatTargetMenu(CombatMenu):
         self.target_count = target_count
         self.func = func
         self.can_dismiss = True
+        self.enable_info = False
         self.items = [MenuItem('< Choose Target >', 'Choose target')]
 
         if target_type == 'AllEnemy':
