@@ -667,7 +667,7 @@ class World(object):
             if param in game.quest_flags:
                 return False # satisfied, move to next line immediately
             else:
-                self.do_dialog(sprite if action == 'RequireItem' else self.player_sprite, dialog)
+                self.do_dialog(sprite if action == 'RequireFlag' else self.player_sprite, dialog)
                 sprite.script_index -= 1
                 self.active_script = None
         elif action == 'SetFlag':

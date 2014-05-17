@@ -1,41 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE map SYSTEM "http://mapeditor.org/dtd/1.0/map.dtd">
-<map version="1.0" orientation="orthogonal" width="20" height="16" tilewidth="8" tileheight="8">
+<map version="1.0" orientation="orthogonal" width="32" height="32" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="65" source="sprites.tsx"/>
- <layer name="Tiles" width="20" height="16">
+ <layer name="Tiles" width="32" height="32">
   <data encoding="base64" compression="zlib">
-   eJxjZGBgYMKCmYGYlwgsjoY5gZgLC+amgXksg8A8RqQw48IRlrgwMwnuIwZzU9k8rkFuHjb/CgKxEBRzIbGJwcIkuI8W6Zma5nENcvPI9S9y/KLHHTnmAQB1KRC5
+   eJztlEELgCAMRld2adKhOvT//2k7CA1RWCAq7HvwwNvDOSQCAICPRVwLBvEw+GT+ZRe5YJygvzno6/dnKu9CzdCgX7u/xTi4z877LeZ/ileS1dni3aA/8/8zss/O+73mr/c/3+0efQCAD16AnhC5
   </data>
  </layer>
- <layer name="Sprites" width="20" height="16">
+ <layer name="Sprites" width="32" height="32">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJxjYBgFgw1kDrQDRsEoGCEAAGxbAGo=
+   eJztzgENAAAIA6DXtX8BY9w5SEACAHdMOwAA8NQC69UAag==
   </data>
  </layer>
- <objectgroup name="NPCs" width="20" height="16">
-  <object gid="96" x="200" y="96"/>
-  <object gid="96" x="-64" y="128"/>
-  <object gid="96" x="256" y="0"/>
-  <object name="Journalist3" gid="73" x="8" y="104"/>
-  <object name="Journalist4" gid="73" x="24" y="104"/>
-  <object name="Journalist5" gid="73" x="16" y="120"/>
-  <object name="WarVet1" gid="83" x="8" y="24"/>
-  <object name="WarVet2" gid="83" x="40" y="16"/>
-  <object name="Teacher1" gid="82" x="56" y="48"/>
-  <object name="Teacher2" gid="82" x="80" y="48"/>
-  <object name="Kawalski" gid="88" x="56" y="72"/>
-  <object name="Cabinet2" gid="84" x="112" y="24"/>
-  <object name="Cabinet1" gid="84" x="96" y="16"/>
-  <object name="Cabinet3" gid="84" x="120" y="16"/>
-  <object name="JointChief1" gid="85" x="88" y="96"/>
-  <object name="JointChief2" gid="85" x="96" y="112"/>
-  <object name="JointChief3" gid="85" x="112" y="96"/>
-  <object name="N.O.T.B.A.D" gid="89" x="144" y="64"/>
-  <object name="PA2" gid="75" x="24" y="56"/>
+ <objectgroup name="NPCs" width="32" height="32">
+  <object gid="96" x="240" y="160"/>
+  <object name="Journalist3" gid="73" x="48" y="168"/>
+  <object name="Journalist4" gid="73" x="64" y="168"/>
+  <object name="Journalist5" gid="73" x="56" y="184"/>
+  <object name="WarVet1" gid="83" x="48" y="88"/>
+  <object name="WarVet2" gid="83" x="80" y="80"/>
+  <object name="Teacher1" gid="82" x="96" y="112"/>
+  <object name="Teacher2" gid="82" x="120" y="112"/>
+  <object name="Kawalski" gid="88" x="96" y="136"/>
+  <object name="Cabinet2" gid="84" x="152" y="88"/>
+  <object name="Cabinet1" gid="84" x="136" y="80"/>
+  <object name="Cabinet3" gid="84" x="160" y="80"/>
+  <object name="JointChief1" gid="85" x="128" y="160"/>
+  <object name="JointChief2" gid="85" x="136" y="176"/>
+  <object name="JointChief3" gid="85" x="152" y="160"/>
+  <object name="N.O.T.B.A.D" gid="89" x="184" y="128"/>
+  <object name="PA2" gid="75" x="64" y="120"/>
  </objectgroup>
- <objectgroup name="Rooms" width="20" height="16"/>
+ <objectgroup name="Rooms" width="32" height="32"/>
 </map>
