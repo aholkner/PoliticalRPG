@@ -43,7 +43,7 @@ def weighted_choice(seq, weight_key):
 def map_to_ui(x, y):
     return (x * map_scale, y * map_scale)
 
-def open_res(path, mode = 'rb'):
+def open_res(path, mode='rb'):
     return open(bacon.get_resource_path(path), mode)
 
 class Sprite(object):
@@ -1157,7 +1157,7 @@ class CombatTargetMenu(CombatMenu):
 
     @property
     def selected_slots(self):
-        return self.slots[self.selected_index:self.selected_index+self.target_count]
+        return self.slots[self.selected_index:self.selected_index + self.target_count]
 
     def on_key_pressed(self, key):
         if key == bacon.Keys.left:
@@ -1627,15 +1627,19 @@ class CombatWorld(World):
         i = -1
         for slot in self.slots:
             if slot.character:
-                x = slot.x * self.tile_size * map_scale
-                y = slot.y * self.tile_size * map_scale
-                if slot.character is self.current_character:
-                    ui.draw_combat_selection_box(slot.character.data.name, x + 12, y + 56)
-                    
-                bacon.set_color(0, 0, 0, 1)
-                bacon.draw_string(debug.font, slot.character.get_effects_abbrv(), x + 4 * map_scale, y + 8 * map_scale, vertical_align=bacon.VerticalAlignment.top, align=bacon.Alignment.center) 
-                bacon.set_color(1, 1, 1, 1)
+                x = slot.x * self.tile_size * map_scale + 12
+                y = slot.y * self.tile_size * map_scale + 56
 
+                aes = slot.character.active_effects
+                aes = [ae for ae in aes if ae.effect.abbrv]
+                if aes:
+                    ae = aes[int(game.time / 2) % len(aes)]
+                    ui.draw_text_box(ae.effect.abbrv, x + 4, y + 4, ui.floater_border_grey)
+                    y += 24
+
+                if slot.character is self.current_character:
+                    ui.draw_combat_selection_box(slot.character.data.name, x, y)
+                    
                 i += 1
                 if i == debug.show_slot_stats:
                     c = slot.character
@@ -1658,7 +1662,7 @@ class CombatWorld(World):
                         debug.draw_string('+%s for %d rounds' % (e.effect.id, e.rounds), x, y)
                     for ia in c.item_attacks:
                         y += dy
-                        debug.draw_string('%s (x%d)' %  (ia.attack.id, ia.quantity), x, y)
+                        debug.draw_string('%s (x%d)' % (ia.attack.id, ia.quantity), x, y)
 
         self.draw_menu()
         self.draw_hud()
@@ -1906,6 +1910,7 @@ class Game(bacon.Game):
         self.quest_vars = {}
         self.money = 0
         self.map_worlds = {}
+        self.time = 0
 
         self.world = None
         self.world_stack = []
@@ -1928,6 +1933,8 @@ class Game(bacon.Game):
         del self.world_stack[:]
 
     def on_tick(self):
+        self.time += bacon.timestep
+
         bacon.clear(0, 0, 0, 1)
         self.world.update()
         self.world.draw()
@@ -2015,25 +2022,20 @@ def main():
         level_db = odsimport.import_ods(os.path.join(options.import_ods, 'Levels.ods'))
         game_data = GameData()
         
-        game_data.quest_items = parse_table(quest_db['Items'], dict(
-            id = 'ID',
+        game_data.quest_items = parse_table(quest_db['Items'], dict(id = 'ID',
             name = 'Name',
-            description = 'Description',
-        ), index_unique=True)
+            description = 'Description',), index_unique=True)
 
-        game_data.effects = parse_table(combat_db['Effects'], dict(
-            id = 'ID',
+        game_data.effects = parse_table(combat_db['Effects'], dict(id = 'ID',
             abbrv = 'Abbrev',
             apply_to_source = 'Apply To Source',
             function = 'Function',
             rounds_min = 'Number Rounds Base',
             rounds_max = 'Number Rounds Max',
             attribute = 'Attribute Effected',
-            value = 'Value',
-        ), index_unique=True, cls=Effect)
+            value = 'Value',), index_unique=True, cls=Effect)
 
-        game_data.attacks = parse_table(combat_db['Attacks'], dict(
-            id = 'ID',
+        game_data.attacks = parse_table(combat_db['Attacks'], dict(id = 'ID',
             name = 'Attack Name',
             description = 'Description',
             spin_cost = 'Spin Cost',
@@ -2046,8 +2048,7 @@ def main():
             crit_base_damage = 'Crit Base Damage',
             crit_chance_min = 'Chance To Crit Base (%)',
             crit_chance_max = 'Chance To Crit Max (%)',
-            weight = 'AI Weight',
-        ), index_unique=True)
+            weight = 'AI Weight',), index_unique=True)
 
         for attack in game_data.attacks.values():
             attack.target_count = int(attack.target_count)
@@ -2055,17 +2056,14 @@ def main():
             attack.spin_cost = attack.spin_cost if attack.spin_cost else 0
             attack.weight = attack.weight if attack.weight else 1
 
-        game_data.standard_attacks = parse_table(combat_db['StandardAttacks'], dict(
-            group = 'AttackGroup',
-            attack = 'Attack',
-        ), index_multi=True)
+        game_data.standard_attacks = parse_table(combat_db['StandardAttacks'], dict(group = 'AttackGroup',
+            attack = 'Attack',), index_multi=True)
 
         for attacks in game_data.standard_attacks.values():
             for i, row in enumerate(attacks):
                 attacks[i] = game_data.attacks[row.attack]
 
-        game_data.characters = parse_table(combat_db['Characters'], dict(
-            id = 'ID',
+        game_data.characters = parse_table(combat_db['Characters'], dict(id = 'ID',
             name = 'Name',
             votes_base = 'Votes',
             votes_lvl = 'Votes Lvl',
@@ -2084,8 +2082,7 @@ def main():
             attack_group = 'AttackGroup',
             immunities = 'Immunities',
             resistance = 'Resistance',
-            weaknesses = 'Weaknesses',
-        ), index_multi=True)
+            weaknesses = 'Weaknesses',), index_multi=True)
 
         # Parse characters
         for characters in game_data.characters.values():
@@ -2097,8 +2094,7 @@ def main():
                 character.spin_attacks = [attack for attack in attacks if attack.spin_cost]
                 character.standard_attacks = [attack for attack in attacks if not attack.spin_cost]
                 
-        game_data.encounters = parse_table(combat_db['Encounters'], dict(
-            id = 'ID',
+        game_data.encounters = parse_table(combat_db['Encounters'], dict(id = 'ID',
             name = 'Name',
             monster1 = 'Monster 1',
             monster1_lvl = 'Monster 1 Lvl',
@@ -2111,8 +2107,7 @@ def main():
             item_attacks = 'Attack Items',
             bribe_cost = 'Bribe Cost',
             xp = 'XP',
-            item_attack_drops = 'Attack Drops',
-        ), index_unique=True)
+            item_attack_drops = 'Attack Drops',), index_unique=True)
 
         for encounter in game_data.encounters.values():
             encounter.item_attacks = [ItemAttack(attack, 1) for attack in convert_idlist_to_objlist(encounter.item_attacks, game_data.attacks)]
@@ -2121,26 +2116,20 @@ def main():
             for attack in attack_drops:
                 add_attack_to_itemattack_list(encounter.item_attack_drops, attack)
 
-        game_data.script = parse_table(quest_db['Script'], dict(
-            trigger = 'Trigger',
+        game_data.script = parse_table(quest_db['Script'], dict(trigger = 'Trigger',
             action = 'Action',
             param = 'Param',
-            dialog = 'Dialog',
-        ), index_multi=True)
+            dialog = 'Dialog',), index_multi=True)
 
-        game_data.levels = parse_table(level_db['Levels'], dict(
-            level = 'Level',
+        game_data.levels = parse_table(level_db['Levels'], dict(level = 'Level',
             xp = 'XP',
             votes = 'Votes',
             spin = 'Spin',
-            skill_points = 'Skill Points',
-        ))
+            skill_points = 'Skill Points',))
 
-        game_data.shops = parse_table(quest_db['Shops'], dict(
-            shop_id = 'ID',
+        game_data.shops = parse_table(quest_db['Shops'], dict(shop_id = 'ID',
             item_attack = 'Attack Item',
-            price = 'Price',
-        ), index_multi=True)
+            price = 'Price',), index_multi=True)
         for shop in game_data.shops.values():
             for ware in shop:
                 ware.item_attack = game_data.attacks[ware.item_attack]
