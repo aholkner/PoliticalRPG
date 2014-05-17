@@ -1523,6 +1523,7 @@ class CombatWorld(World):
         critical_fail = True
         total_damage = 0
         for target in targets:
+            floater_offset = 1
             # Immunity
             if attack in target.data.immunities:
                 self.add_floater(target, 'Immune', ui.floater_border_grey)
@@ -1541,7 +1542,8 @@ class CombatWorld(World):
 
             # Damage
             if crit_success:
-                self.add_floater(target, 'Critical Hit!', ui.floater_border_grey, 1)
+                self.add_floater(target, 'Critical Hit!', ui.floater_border_grey, floater_offset)
+                floater_offset += 1
                 debug.println('Critical hit')
                 damage = base_stat + (attack.crit_base_damage + modifiers)
             else:
@@ -1557,17 +1559,20 @@ class CombatWorld(World):
 
                 # Resistance and weakness
                 if attack in target.data.resistance:
-                    self.add_floater(target, 'Resist', ui.floater_border_grey, 1)
+                    self.add_floater(target, 'Resist', ui.floater_border_grey, floater_offset)
+                    floater_offset += 1
                     debug.println('%s is resistant to %s' % (target.id, attack.name))
                     damage -= damage * 0.3
                 elif attack in target.data.weaknesses:
-                    self.add_floater(target, 'Weak', 1)
+                    self.add_floater(target, 'Weak', floater_offset)
+                    floater_offset += 1
                     debug.println('%s is weak to %s' % (target.id, attack.name))
                     damage += damage * 0.3
 
                 # Global resistance (defense)
                 if target.resistance:
-                    self.add_floater(target, 'Defends', ui.floater_border_grey, 1)
+                    self.add_floater(target, 'Defends', ui.floater_border_grey, floater_offset)
+                    floater_offset += 1
                     debug.println('%s defends' % target.id)
                 damage -= damage * min(1, target.resistance)
                 
@@ -1638,7 +1643,7 @@ class CombatWorld(World):
         
     def add_floater(self, character, text, border, offset=0):
         slot = self.get_slot(character)
-        self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale + 16, slot.y * self.tile_size * map_scale - offset * 32 - 16, border))
+        self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale + 16, slot.y * self.tile_size * map_scale - offset * 28 - 16, border))
 
     def draw(self):
         self.draw_world()
