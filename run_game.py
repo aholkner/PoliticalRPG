@@ -98,6 +98,8 @@ class UI(object):
         self.attack_border = self.get_border_tiles(105)
         self.info_border = self.get_border_tiles(108)
         self.info_arrow = self.get_tile_2x(15)
+        self.health_background_image = self.get_tile(58)
+        self.health_image = self.get_tile(59)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -1382,7 +1384,7 @@ class CombatTargetMenu(CombatMenu):
             slot = self.slots[self.selected_index + i]
             x = slot.x * self.world.tile_size * map_scale
             y = slot.y * self.world.tile_size * map_scale
-            ui.draw_image(ui.combat_target_arrow, x + 4, y - 24)
+            ui.draw_image(ui.combat_target_arrow, x + 4, y - 32)
         super(CombatTargetMenu, self).draw()
         
 class GameOverMenu(Menu):
@@ -1867,23 +1869,18 @@ class CombatWorld(World):
     def draw(self):
         self.draw_world()
 
-        for floater in self.floaters[:]:
-            floater.timeout -= bacon.timestep
-            if floater.timeout < 0.5:
-                floater.y -= bacon.timestep * 80
-            if floater.timeout < 0:
-                self.floaters.remove(floater)
-            else:
-                ui.draw_text_box(floater.text, floater.x, int(floater.y), floater.border)
-                
-        if self.active_attack:
-            ui.draw_text_box(self.active_attack.name, ui_width / 2, 64, ui.attack_border)
-
         i = -1
         for slot in self.slots:
             if slot.character:
-                x = slot.x * self.tile_size * map_scale + 12
-                y = slot.y * self.tile_size * map_scale + 56
+                x = slot.x * self.tile_size * map_scale
+                y = slot.y * self.tile_size * map_scale
+
+                bar_width = int(clamp(slot.character.votes * 32 / slot.character.max_votes, 0, 32))
+                bacon.draw_image(ui.health_background_image, x, y - 12, x + 32, y - 8)
+                bacon.draw_image(ui.health_image, x, y - 12, x + bar_width, y - 8)
+
+                x += 12
+                y += 56
 
                 aes = slot.character.active_effects
                 aes = [ae for ae in aes if ae.effect.abbrv]
@@ -1928,7 +1925,19 @@ class CombatWorld(World):
                     for ia in c.item_attacks:
                         y += dy
                         debug.draw_string('%s (x%d)' % (ia.attack.id, ia.quantity), x, y)
+                         
+        if self.active_attack:
+            ui.draw_text_box(self.active_attack.name, ui_width / 2, 64, ui.attack_border)
 
+        for floater in self.floaters[:]:
+            floater.timeout -= bacon.timestep
+            if floater.timeout < 0.5:
+                floater.y -= bacon.timestep * 80
+            if floater.timeout < 0:
+                self.floaters.remove(floater)
+            else:
+                ui.draw_text_box(floater.text, floater.x, int(floater.y), floater.border)
+               
         self.draw_menu()
         self.draw_hud()
         self.draw_stats()
