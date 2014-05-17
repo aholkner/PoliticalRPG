@@ -1402,6 +1402,8 @@ class CombatWorld(World):
     def reset(self):
         for character in self.characters:
             character.remove_all_active_effects()
+            character.dead = False
+            character.votes = character.max_votes / 2
 
     def lose(self):
         self.push_menu(GameOverMenu(self))
