@@ -83,6 +83,7 @@ class UI(object):
         self.floater_border_red = self.get_border_tiles(96)
         self.floater_border_green = self.get_border_tiles(99)
         self.floater_border_grey = self.get_border_tiles(102)
+        self.attack_border = self.get_border_tiles(105)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -1590,9 +1591,6 @@ class CombatWorld(World):
     def draw(self):
         self.draw_world()
 
-        if self.active_attack:
-            bacon.draw_string(debug.font, self.active_attack.name, ui_width / 2, 40, None, None, bacon.Alignment.center)
-
         for floater in self.floaters[:]:
             floater.timeout -= bacon.timestep
             if floater.timeout < 0.5:
@@ -1601,6 +1599,9 @@ class CombatWorld(World):
                 self.floaters.remove(floater)
             else:
                 ui.draw_text_box(floater.text, floater.x, int(floater.y), floater.border)
+                
+        if self.active_attack:
+            ui.draw_text_box(self.active_attack.name, ui_width / 2, 160, ui.attack_border)
 
         i = -1
         for slot in self.slots:
