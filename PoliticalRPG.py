@@ -1629,6 +1629,10 @@ class CombatWorld(World):
         else:
             assert False
         
+        # Health attacks (negative damage) need negative base_stat
+        if attack.base_damage_min < 0:
+            base_stat = -base_stat
+
         # Consume spin
         if attack.spin_cost:
             source.spin = max(0, source.spin - attack.spin_cost)
@@ -2120,6 +2124,12 @@ class Debug(object):
         elif key == bacon.Keys.f5:
             self.disable_collision = not self.disable_collision
             self.println('disable_collision = %s' % self.disable_collision)
+        elif key == bacon.Keys.f6:
+            for ally in game.allies:
+                for attack in game_data.attacks.values():
+                    if attack not in ally.standard_attacks:
+                        ally.standard_attacks.append(attack)
+            self.println('unlock all attacks')
         elif key == bacon.Keys.numpad_add:
             if isinstance(game.world, CombatWorld):
                 game.world.apply_damage(game.world.current_character, -10)
