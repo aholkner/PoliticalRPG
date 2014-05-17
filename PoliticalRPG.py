@@ -1029,6 +1029,37 @@ class TitleWorld(World):
         self.draw_world()
         self.draw_menu()
 
+class EndWorld(World):
+    def __init__(self, map):
+        super(EndWorld, self).__init__(map)
+        game.play_music('res/wwing2.ogg')
+
+    def draw(self):
+        self.draw_world()
+
+        x = 16
+        self.y = 16 - ui.font.ascent
+        def out(text):
+            bacon.draw_string(ui.font, text, x, self.y); 
+            self.y += ui.font.height
+
+        out('Goodnight, Mr President')
+        out('')
+        out('A game for PyWeek #18 by Amanda Schofield and Alex Holkner')
+        
+        self.y = ui_height - 11 * ui.font.height
+        out('04b-03.ttf')
+        out('Yuji Oshimoto')
+        out('http://dsg4.com/04/extra/bitmap/')
+        out('')
+        out('The West Wing Theme Song')
+        out('Nick Maynard')
+        out('http://nickmaynard.tumblr.com/post/28877574787/attention-all-fans-of-the-west-wing-and-chiptune')
+        out('')
+        out('Bacon Game Engine')
+        out('https://github.com/aholkner/bacon')
+
+
 class Effect(object):
     id = None
     apply_to_source = False
@@ -2200,8 +2231,7 @@ class Savegame(object):
             
 class Game(bacon.Game):
     def __init__(self):
-        music = bacon.Sound('res/wwing.ogg', stream=True)
-        music.play()
+        self.music = None
 
         self.player = Character('Player', 1, [], False)
         self.allies = [self.player]
@@ -2253,6 +2283,8 @@ class Game(bacon.Game):
     def goto_map(self, map_id):
         if map_id == 'title':
             world = TitleWorld(map_id)
+        elif map_id == 'end':
+            world = EndWorld(map_id)
         elif map_id in self.map_worlds:
             world = self.map_worlds[map_id]
         else:
@@ -2261,6 +2293,13 @@ class Game(bacon.Game):
         self.world = world
         self.world.run_script(None, map_id)
         del self.world_stack[:]
+
+    def play_music(self, file):
+        sound = bacon.Sound(file, stream=True)
+        if self.music:
+            self.music.stop()
+        self.music = bacon.Voice(sound)
+        self.music.play()
 
     def on_tick(self):
         self.time += bacon.timestep
@@ -2483,6 +2522,7 @@ def start_game(args):
             game.world.run_script(None, arg) 
     else:
         game.world.run_script(None, 'START')
+    game.play_music('res/wwing.ogg')
 
     bacon.run(game)
 
