@@ -244,6 +244,7 @@ class Menu(object):
     y = ui_height / 2
     min_width = 200
     enable_info = True
+    enable_border = True
 
     def __init__(self, world):
         self.world = world
@@ -330,7 +331,8 @@ class Menu(object):
         elif align == bacon.Alignment.center:
             x = (self.x1 + self.x2) / 2
 
-        ui.draw_box(Rect(x1, y1, x2, y2), ui.menu_border)
+        if self.enable_border:
+            ui.draw_box(Rect(x1, y1, x2, y2), ui.menu_border)
 
         y = y1
         if self.title:
@@ -348,16 +350,10 @@ class Menu(object):
             if i - self.scroll_offset >= self.max_items:
                 break
 
-            if not item.enabled:
-                m = 0.5
-            else:
-                m = 1
-
             if i == self.selected_index:
-                bacon.set_color(m, m, m, 1)
                 info_y = y
-            else:
-                bacon.set_color(m * 164.0 / 255, m * 186.0 / 255, m * 201.0 / 255, 1)
+
+            self.activate_menu_item_color(i == self.selected_index, item.enabled)
             bacon.draw_string(ui.font, item.name, x, y, align = align, vertical_align = bacon.VerticalAlignment.top)
             y += ui.font.height
 
@@ -369,8 +365,19 @@ class Menu(object):
         self.draw_status(self.selected_item.description, x2, info_y)
 
     def draw_status(self, msg, x, y):
-        if self.enable_info and self.world.menu_stack[-1] is self:
+        if self.enable_info and self.world.menu_stack[-1] is self and game.world is self.world:
             ui.draw_info_box(msg, x + 20, y - 4)
+
+    def activate_menu_item_color(self, selected, enabled):
+        if not enabled:
+            m = 0.5
+        else:
+            m = 1
+
+        if selected:
+            bacon.set_color(m, m, m, 1)
+        else:
+            bacon.set_color(m * 164.0 / 255, m * 186.0 / 255, m * 201.0 / 255, 1)
 
 class World(object):
     active_script = None
@@ -1758,6 +1765,7 @@ class AssignSkillPointsMenu(Menu):
     def __init__(self, world):
         super(AssignSkillPointsMenu, self).__init__(world)
         self.can_dismiss = False
+        self.enable_border = False
         self.cunning_item = MenuItem('Cunning', 'Effectiveness of arguments')
         self.wit_item = MenuItem('Wit', 'Effectiveness of quips')
         self.charisma_item = MenuItem('Charisma', 'Defense against opponent\'s attacks')
@@ -1820,6 +1828,20 @@ class AssignSkillPointsMenu(Menu):
         self.world.character.speed += self.speed_item.skill_points_added
         self.world.dismiss()
 
+    def activate_menu_item_color(self, selected, enabled):
+        if enabled:
+            if selected:
+                m = 1
+            else:
+                m = 0
+            bacon.set_color(m * 202.0 / 255, m * 72.0 / 255, m * 79.0 / 255, 1)
+        else:
+            if selected:
+                m = 0.5
+            else:
+                m = 0.7
+            bacon.set_color(m, m, m, 1)
+
 class LevelUpWorld(World):
     def __init__(self, character, combat_world, add_xp):
         map = tiled.parse('res/ui_levelup.tmx')
@@ -1837,6 +1859,33 @@ class LevelUpWorld(World):
         self.character.max_votes = level_row.votes
         self.skill_points = level_row.skill_points
         self.push_menu(AssignSkillPointsMenu(self))
+        self.layout()
+        
+    def layout(self):
+        menu = self.menu_stack[-1]
+        menu_height = menu.y2 - menu.y1
+
+        width = ui_width / 2
+        height = ui.font.height * 9 + menu_height
+        
+        cx = ui_width / 2
+        cy = ui_height / 2
+        x1 = cx - width / 2
+        y1 = cy - height / 2
+        x2 = cx + width / 2
+        y2 = cy + height / 2
+        
+        menu.y1 = y1 + ui.font.height * 9
+        menu.y2 = menu.y1 + menu_height
+
+        self.width = width
+        self.height = height
+        self.cx = cx
+        self.cy = cy
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
 
     def dismiss(self):
         game.pop_world()
@@ -1844,18 +1893,41 @@ class LevelUpWorld(World):
 
     def draw(self):
         self.combat_world.draw()
-        super(LevelUpWorld, self).draw()
-        cx = ui_width / 2
-        y = 128
-        font = debug.font
-        bacon.draw_string(font, 'LEVEL UP!', cx, y, align = bacon.Alignment.center)
-        bacon.draw_string(font, self.character.id, cx, y + 24, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'XP: %d' % self.character.xp, cx, y + 24 * 2, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'Level: %d' % self.character.level, cx, y + 24 * 3, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'Votes: %d' % self.character.votes, cx, y + 24 * 4, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'Spin: %d' % self.character.spin, cx, y + 24 * 5, align = bacon.Alignment.center)
-        bacon.draw_string(font, 'Skill points to assign: %d' % self.skill_points, cx, y + 24 * 6, align = bacon.Alignment.center)
-        
+        width = self.width
+        height = self.height
+        cx = self.cx
+        cy = self.cy
+        x1 = self.x1
+        y1 = self.y1
+        x2 = self.x2
+        y2 = self.y2
+        character = self.character
+
+        # Background
+        ui.draw_box(Rect(x1, y1, x2, y2), ui.white_border)
+
+        y = y1
+
+        # Title
+        ui.draw_box(Rect(x1, y1, x2, y1 + ui.font.height), ui.floater_border_red)
+        bacon.draw_string(ui.font, 'LEVEL UP %s!' % character.data.name, cx, y, align = bacon.Alignment.center, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height + 16
+
+        # XP
+        bacon.set_color(0, 0, 0, 1)
+        bacon.draw_string(ui.font, 'XP: %d' % character.xp, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height
+        bacon.draw_string(ui.font, 'Level: %d' % character.level, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height
+        bacon.draw_string(ui.font, 'Max Votes: %d' % character.max_votes, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height
+        bacon.draw_string(ui.font, 'Max Spin: %d' % character.max_spin, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height * 2
+        bacon.draw_string(ui.font, 'Skill Points to Assign: %d' % self.skill_points, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height
+        bacon.set_color(1, 1, 1, 1)
+
+        self.draw_menu()
 
 class Debug(object):
     def __init__(self):
