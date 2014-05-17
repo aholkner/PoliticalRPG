@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>9f5c1604-be2c-487e-9797-d854dffce39e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>PoliticalRPG.py</StartupFile>
+    <StartupFile>run_game.py</StartupFile>
     <SearchPath>..\bacon\;.</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -32,7 +32,7 @@
   <ItemGroup>
     <Compile Include="common.py" />
     <Compile Include="odsimport.py" />
-    <Compile Include="PoliticalRPG.py" />
+    <Compile Include="run_game.py" />
     <Compile Include="tiled.py" />
     <Compile Include="tilemap.py" />
   </ItemGroup>
