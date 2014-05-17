@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="20" height="24" tilewidth="8" tileheight="8">
- <tileset firstgid="1" source="tiles.tsx"/>
- <tileset firstgid="65" source="sprites.tsx"/>
- <tileset firstgid="113" source="tiles_act3.tsx"/>
+ <tileset firstgid="1" source="sprites.tsx"/>
+ <tileset firstgid="49" source="tiles_basement.tsx"/>
  <layer name="Tiles" width="20" height="24">
   <data encoding="base64" compression="zlib">
-   eJztkksKwCAMBT13b2B/INaC/Z21EQyE0KqYLrpwMYuIzgsmTinlGtV0EQ30QgbiM8J+AhYYgYn4UvmGvecE30JyeB6nxGczd5ov7TuAk4A7pNl5wANbgv0lo6SXHLiHmOFjPVf66B4ioV4rfU9zkfhwLnwel/Afv5pH8/3DdwPlv/gW
+   eJzt0rkKgDAQRdH5JVdwBdfC3t5SsND/r3zFBEMkLknsLA6pcpmEKYio+FnxwHcg4F4JkwMZz9bDAAufOivMGqKXwAipdOpsD+ZLbhp/77pXQSSJ+W4I9UsNnXe6514LHR07+pa8N8LIbzDtqf9l0xP/qP5fY9hT58wtO0LJPdN3ft376r2ueq7ns+3tx5h7Ew==
   </data>
  </layer>
  <layer name="Sprites" width="20" height="24">
@@ -13,18 +12,18 @@
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJxjYBgFo2AUjIJRMFRA5kA7YBRQDQAAxCwAag==
+   eJxjYBgFo2AUjIJRMFSA5kA7YBRQDQAAUSwAKg==
   </data>
  </layer>
  <objectgroup name="NPCs" width="20" height="24">
-  <object name="JointChief1" gid="85" x="40" y="64"/>
-  <object name="JointChief2" gid="85" x="56" y="64"/>
-  <object name="JointChief3" gid="85" x="24" y="64"/>
-  <object name="N.O.T.B.A.D" gid="89" x="144" y="96"/>
-  <object name="PA3" gid="75" x="48" y="128"/>
-  <object name="StairsToWhiteHouse" gid="95" x="40" y="160"/>
-  <object name="Marketing5" gid="92" x="24" y="136"/>
-  <object name="DoorToNotbad" gid="90" x="24" y="56"/>
+  <object name="JointChief1" gid="21" x="40" y="64"/>
+  <object name="JointChief2" gid="21" x="56" y="64"/>
+  <object name="JointChief3" gid="21" x="24" y="64"/>
+  <object name="N.O.T.B.A.D" gid="25" x="120" y="80"/>
+  <object name="PA3" gid="11" x="56" y="128"/>
+  <object name="StairsToWhiteHouse" gid="31" x="40" y="160"/>
+  <object name="Marketing5" gid="28" x="24" y="128"/>
+  <object name="DoorToNotbad" gid="26" x="24" y="56"/>
  </objectgroup>
- <objectgroup name="Rooms" width="20" height="24"/>
+ <objectgroup name="Rooms" width="20" height="24" visible="0"/>
 </map>
