@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="24" height="24" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <tileset firstgid="65" source="sprites.tsx"/>
+ <tileset firstgid="113" name="tiles_act2p2" tilewidth="8" tileheight="8">
+  <image source="tiles_act2p2.png" width="64" height="64"/>
+  <terraintypes>
+   <terrain name="Exterior" tile="-1"/>
+   <terrain name="Interior" tile="-1"/>
+  </terraintypes>
+  <tile id="24" terrain="1,1,1,0"/>
+  <tile id="25" terrain="1,1,0,0"/>
+  <tile id="26" terrain="1,1,0,1"/>
+  <tile id="27" terrain="0,0,0,1"/>
+  <tile id="28" terrain="0,0,1,1"/>
+  <tile id="29" terrain="0,0,1,0"/>
+  <tile id="32" terrain="1,0,1,0"/>
+  <tile id="33" terrain="0,0,0,0"/>
+  <tile id="34" terrain="0,1,0,1"/>
+  <tile id="35" terrain="0,1,0,1"/>
+  <tile id="36" terrain="1,1,1,1"/>
+  <tile id="37" terrain="1,0,1,0"/>
+  <tile id="40" terrain="1,0,1,1"/>
+  <tile id="41" terrain="0,0,1,1"/>
+  <tile id="42" terrain="0,1,1,1"/>
+  <tile id="43" terrain="0,1,0,0"/>
+  <tile id="44" terrain="1,1,0,0"/>
+  <tile id="45" terrain="1,0,0,0"/>
+ </tileset>
+ <layer name="Tiles" width="24" height="24">
+  <properties>
+   <property name="sprite" value="1"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJztkssKgCAQReebaxntCqlWGW7sZytQcKHjtRooUDgbH2euo4qIVKVyk16YphDtGE9awK8BtsR8J+A3AYjfgH4T4c38En7vSfkH984cJf2P1eD6i/Sey8/5c7WR/4nkRNZy+TkswP7A/3dmgCXYP4FnPEiG6339WAXu+GX/ARlyOPk=
+  </data>
+ </layer>
+ <layer name="Sprites" width="24" height="24">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUjIJRMAqGN8gcaAeMgkEHAOM0AGo=
+  </data>
+ </layer>
+ <objectgroup name="NPCs" width="24" height="24">
+  <object name="StairsToL1" gid="91" x="80" y="168"/>
+  <object name="StairsToBasement" gid="93" x="88" y="168"/>
+  <object name="Religious1" gid="69" x="112" y="112"/>
+  <object name="Religious2" gid="69" x="96" y="128"/>
+  <object name="Religious3" gid="69" x="128" y="128"/>
+  <object name="Religious4" gid="69" x="112" y="152"/>
+  <object name="TVPersonality" gid="78" x="56" y="104"/>
+  <object name="TVDebate" gid="71" x="120" y="48"/>
+ </objectgroup>
+</map>

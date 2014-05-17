@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="24" height="24" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <tileset firstgid="65" source="sprites.tsx"/>
+ <tileset firstgid="113" name="tiles_act2p2" tilewidth="8" tileheight="8">
+  <image source="tiles_act2p2.png" width="64" height="64"/>
+  <terraintypes>
+   <terrain name="Exterior" tile="-1"/>
+   <terrain name="Interior" tile="-1"/>
+  </terraintypes>
+  <tile id="24" terrain="1,1,1,0"/>
+  <tile id="25" terrain="1,1,0,0"/>
+  <tile id="26" terrain="1,1,0,1"/>
+  <tile id="27" terrain="0,0,0,1"/>
+  <tile id="28" terrain="0,0,1,1"/>
+  <tile id="29" terrain="0,0,1,0"/>
+  <tile id="32" terrain="1,0,1,0"/>
+  <tile id="33" terrain="0,0,0,0"/>
+  <tile id="34" terrain="0,1,0,1"/>
+  <tile id="35" terrain="0,1,0,1"/>
+  <tile id="36" terrain="1,1,1,1"/>
+  <tile id="37" terrain="1,0,1,0"/>
+  <tile id="40" terrain="1,0,1,1"/>
+  <tile id="41" terrain="0,0,1,1"/>
+  <tile id="42" terrain="0,1,1,1"/>
+  <tile id="43" terrain="0,1,0,0"/>
+  <tile id="44" terrain="1,1,0,0"/>
+  <tile id="45" terrain="1,0,0,0"/>
+ </tileset>
+ <layer name="Tiles" width="24" height="24">
+  <properties>
+   <property name="sprite" value="1"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJybysDAMJUAnozEnkiEemTcRSQmVT26Plq5f6ibPxr+o+E/mMNnNPyHd/jPIgLPRlI/k0g9MExtv9IbE5PGupHUdxKph9T0CQO0Sj+D1XwALLBHJg==
+  </data>
+ </layer>
+ <layer name="Sprites" width="24" height="24">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUjIJRMAqGN8gcaAeMgkEHAOM0AGo=
+  </data>
+ </layer>
+ <objectgroup name="NPCs" width="24" height="24">
+  <object name="Politician4" gid="66" x="120" y="64"/>
+  <object name="Politician3" gid="66" x="144" y="128"/>
+  <object name="Politician5" gid="66" x="128" y="96"/>
+  <object name="Politician6" gid="66" x="56" y="136"/>
+  <object name="Politician7" gid="66" x="64" y="64"/>
+  <object name="PA" gid="75" x="88" y="128"/>
+  <object name="StairsToL2" gid="91" x="80" y="168"/>
+  <object name="StairsToGround" gid="93" x="88" y="168"/>
+ </objectgroup>
+</map>

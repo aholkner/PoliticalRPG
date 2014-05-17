@@ -412,7 +412,7 @@ class World(object):
                 sprite.properties = obj.properties
 
         for layer in self.map.layers[:]:
-            if 'sprite' in layer.properties:
+            if layer.name == 'Sprites':
                 self.map.layers.remove(layer)
                 for i, image in enumerate(layer.images):
                     if image:
