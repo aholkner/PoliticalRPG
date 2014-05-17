@@ -1544,17 +1544,32 @@ class CombatWorld(World):
     def ai(self):
         source = self.current_character
 
-        # Look for a character to revive
-        # TODO
-
         # List of all possible attacks
         attacks = list(source.standard_attacks)
 
         # Add spin attacks we can afford
         attacks += [a for a in source.spin_attacks if a.spin_cost <= source.spin]
 
-        # Add item attacks (TODO only if applicable)
+        # Add item attacks
         attacks += [ia.attack for ia in source.item_attacks if ia.attack.spin_cost <= source.spin]
+
+        # Filter health gain attacks
+        health_targets = [slot.character for slot in self.monster_slots if slot.character and not slot.character.dead and slot.character.votes < slot.character.max_votes]
+        if health_targets:
+            health_gain_max = max(character.max_votes - character.votes for character in health_targets)
+        else:
+            health_gain_max = 0
+        attacks = [attack for attack in attacks if attack.health_benefit <= health_gain_max]
+
+        # Filter revive attacks
+        revive_targets = [slot.character for slot in self.monster_slots if slot.character and slot.character.dead]
+        if not revive_targets:
+            attacks = [attack for attack in attacks if not attack.is_revive]
+
+        # Filter summon attacks
+        can_summon = len([slot for slot in self.monster_slots if not slot.character or slot.character.dead]) > 0
+        if not can_summon:
+            attacks = [attack for attack in attacks if not attack.is_summon]
 
         # Random choice of attack
         attack = weighted_choice(attacks, lambda a: a.weight)
@@ -1574,11 +1589,32 @@ class CombatWorld(World):
         else:
             assert False, 'Unsupported target type'
 
-        # Choose target(s)
+        # Calculate target slots
         slots.sort(key=lambda slot: slot.x)
         target_count = min(attack.target_count, len(slots))
         max_slot_index = len(slots) - target_count + 1
-        slot_index = random.randrange(0, max_slot_index)
+        slot_index = -1
+
+        # Choose slot to revive
+        if attack.is_revive:
+            for i, slot in enumerate(slots):
+                if slot.character.dead:
+                    slot_index = i
+                    break
+
+        # Choose slot for health benefit
+        if slot_index == -1 and attack.health_benefit > 0:
+            best_health = 0
+            for i, slot in enumerate(slots):
+                health = slot.character.max_votes - slot.character.votes
+                if health > best_health:
+                    best_health = health
+                    slot_index = i
+
+        # Choose slot randomly
+        if slot_index == -1:
+            slot_index = random.randrange(0, max_slot_index)
+
         targets = [slot.character for slot in slots[slot_index:slot_index + target_count]]
 
         self.action_attack(attack, targets)
@@ -2203,6 +2239,8 @@ class SavegameAlly(object):
         self.level = character.level
         self.xp = character.xp
         self.votes = character.votes
+        self.max_votes = character.max_votes
+        self.max_spin = character.max_spin
         self.spin = character.spin
         self.cunning = character.cunning
         self.charisma = character.charisma
@@ -2218,6 +2256,8 @@ class SavegameAlly(object):
         character.level = self.level
         character.xp = self.xp
         character.votes = self.votes
+        character.max_votes = self.max_votes
+        character.max_spin = self.max_spin
         character.spin = self.spin
         character.cunning = self.cunning
         character.charisma = self.charisma
@@ -2416,6 +2456,30 @@ def convert_idlist_to_objlist(value, index):
             result.append(index[id])
     return result
 
+def ai_get_health_benefit(attack):
+    # Get min health benefit
+    if attack.target_type != 'AllFriendly' and attack.target_type != 'None':
+        return 0
+
+    h = max(0, -attack.base_damage_max)
+    for effect in attack.effects:
+        if effect.attribute == 'votes' and effect.function == 'add_permanent':
+            h += effect.value
+
+    return h
+
+def ai_is_revive_attack(attack):
+    for effect in attack.effects:
+        if effect.function == 'revive':
+            return True
+    return False
+
+def ai_is_summon_attack(attack):
+    for effect in attack.effects:
+        if effect.function == 'call_friends':
+            return True
+    return False
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('--import-ods')
@@ -2462,6 +2526,9 @@ def main():
             attack.effects = convert_idlist_to_objlist(attack.effects, game_data.effects)
             attack.spin_cost = attack.spin_cost if attack.spin_cost else 0
             attack.weight = attack.weight if attack.weight else 1
+            attack.health_benefit = ai_get_health_benefit(attack)
+            attack.is_revive = ai_is_revive_attack(attack)
+            attack.is_summon = ai_is_summon_attack(attack)
 
         game_data.standard_attacks = parse_table(combat_db['StandardAttacks'], dict(group = 'AttackGroup',
             attack = 'Attack',), index_multi=True)
