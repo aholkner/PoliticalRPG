@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="28" height="28" tilewidth="8" tileheight="8">
+<map version="1.0" orientation="orthogonal" width="28" height="31" tilewidth="8" tileheight="8">
  <tileset firstgid="1" name="tiles_act1" tilewidth="8" tileheight="8">
   <image source="tiles_act1.png" width="64" height="64"/>
   <terraintypes>
@@ -211,25 +211,25 @@
  </tileset>
  <tileset firstgid="65" source="sprites.tsx"/>
  <tileset firstgid="113" source="props.tsx"/>
- <layer name="Tiles" width="28" height="28">
+ <layer name="Tiles" width="28" height="31">
   <data encoding="base64" compression="zlib">
-   eJztlekKwjAMgOtkeM4TEbydCuIFiijevv9TmUIGIUyzjm2K+uOj6/nRNGsdpZTz5ytIAQ3AAnZIB9tonfdbOKZL2nVbWvCVgDxjhKXL6rR/gwxZX1HwXSL2XWP2nQx9C2CGHLBcC/U58R3JfM1S8OXI3DDw/RUE3xZoBaD9xBdFvni45HsV0BcmX7yccJV/jnyST4pnDtfl9AAbOCNjIAM0CVlgQsbo8fWQ+/OLS5n5KsLav+irkvhT/M4hCp8Jr3zeu0YJ8j6F9ZmcS5w+6X808fWBAbJPwMeJO553YIrcEthf0uf3zvzU90YNsQn63ngAY/Y9AA==
+   eJztlYkKwjAMQOtkeM4TEbydCuIFiije/v9XmUIGocxlLduU6eCx9Xw0zVpHCOH8SQUZoAVYwAHpYR0tq+0W9umTelmXZXwVoKgwwberlGn7DhkrbWXGd4vYd4/Zd9H0rYAFcsL3likvie9MxkvWjK9Axpqgrq/E+PZAJwTdN74o8sXDJd+bkD6TfPFywhX+OfJNPi6eBZxXZQDYwBWZAjmgTcgDM9JH9m8ars8vLlXFV2Pm/kVfncSf4rcPUfh0CPJ59xolzP1k6tPZlzh93P+o4xsCI+SYgE8l7ng+gTnySGB9Se/fJ/NTnhsNxCZw57epL4i0Py8u5D6P
   </data>
  </layer>
- <layer name="Props" width="28" height="28">
+ <layer name="Props" width="28" height="31">
   <data encoding="base64" compression="zlib">
-   eJxjYBh8YOJAO2AQgKESBmVAXI4mVgGlO3HwiTFjsABcbqbEnElUMpMSQG03VBBWQhFoIlNfA5n62snU1wHENVjEK4G4Go++fiR2CYl21gFxPZpYIwn6S0m0jxjQBcTdSLiHArMKgbgIiIuRxGhdPtIiTLAB9PKFWuUNvcBgKMtoBWrpbB8onRcTVEU5mA2l6ZXGF9PJHhhYjUWMmPKckrS8BIiXIvH7cSmkACCXeWuAeC0N7CAVAADvlh11
+   eJxjYBh8YOJAO2AQgKESBmVAXI4mVgGlO3HwiTFjsABcbqbEnElUMpMSQG03VBBWQhFoIlNfA5n62snU1wHENVjEK4G4Go++fiR2CYl21gFxPZpYIwn6S0m0jxjQBcTdSLiHArMKgbgIiIuRxGhdPtIiTLAB9PKFWuUNvcBgKMtoBWrpbB8onRcTVEU5mA2l6ZXGF9PJHhhYjUWMmPKckrS8BIiXIvH7cSmkACCXeWuAeC0N7BgFAwsAm28ddQ==
   </data>
  </layer>
- <layer name="Sprites" width="28" height="28">
+ <layer name="Sprites" width="28" height="31">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJztzgENAAAIA6DXtX8BY3xOSEACAPdNOwDwxAJHTgBq
+   eJztzjENAAAIA7DZxb8BPOwhJK2CJgDw31wHAKCw0m4Aag==
   </data>
  </layer>
- <objectgroup name="NPCs" width="28" height="28">
+ <objectgroup name="NPCs" width="28" height="31">
   <object name="Receptionist" gid="71" x="88" y="96"/>
   <object name="Mayor" gid="75" x="64" y="120"/>
   <object name="Protester1" gid="72" x="32" y="168"/>
@@ -243,7 +243,7 @@
   <object name="Constituent3" gid="74" x="112" y="64"/>
   <object name="Marketing1" gid="92" x="136" y="48"/>
  </objectgroup>
- <objectgroup name="Rooms" width="28" height="28" visible="0">
+ <objectgroup name="Rooms" width="28" height="31" visible="0">
   <object name="Mayor's Office" x="32" y="80" width="40" height="64"/>
   <object name="Receptionist's Office" x="72" y="80" width="40" height="32"/>
  </objectgroup>
