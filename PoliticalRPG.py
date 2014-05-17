@@ -178,8 +178,8 @@ class UI(object):
         style = bacon.Style(self.font)
         run = bacon.GlyphRun(style, text)
         glyph_layout = bacon.GlyphLayout([run], x1, y1, width, None, bacon.Alignment.left, bacon.VerticalAlignment.top)
-        if y1 + glyph_layout.content_height > ui_height - 100:
-            glyph_layout.y = y1 = ui_height - 100 - glyph_layout.content_height
+        if y1 + glyph_layout.content_height > ui_height - 116:
+            glyph_layout.y = y1 = ui_height - 116 - glyph_layout.content_height
         y2 = y1 + glyph_layout.content_height
         x2 = x1 + glyph_layout.content_width
 
@@ -531,7 +531,7 @@ class World(object):
         margin = 4
         padding = 4
         box_width = ui_width / 4 - margin * 2
-        box_height = ui.font.height * 4 + padding * 2
+        box_height = ui.font.height * 5 + padding * 2
         line_height = ui.font.height
 
         for i in range(4):
@@ -553,9 +553,10 @@ class World(object):
                 y += padding
                 bacon.set_color(1, 1, 1, 1)
                 bacon.draw_string(ui.font, character.data.name, x, y)
-                bacon.draw_string(ui.font, 'LVL: %d  XP: %d/%d' % (character.level, character.xp, get_level_row(character.level + 1).xp), x, y + line_height)
-                bacon.draw_string(ui.font, 'Votes: %d/%d' % (character.votes, character.max_votes), x, y + line_height * 2)
-                bacon.draw_string(ui.font, 'Spin:  %d/%d' % (character.spin, character.max_spin), x, y + line_height * 3)
+                bacon.draw_string(ui.font, 'LVL: %d' % character.level, x, y + line_height)
+                bacon.draw_string(ui.font, 'XP: %d/%d' % (character.xp, get_level_row(character.level + 1).xp), x, y + line_height * 2)
+                bacon.draw_string(ui.font, 'Votes: %d/%d' % (character.votes, character.max_votes), x, y + line_height * 3)
+                bacon.draw_string(ui.font, 'Spin:  %d/%d' % (character.spin, character.max_spin), x, y + line_height * 4)
 
     def on_dismiss_dialog(self):
         self.continue_script()
@@ -1067,7 +1068,7 @@ class CombatMenu(Menu):
             self.x = self.world.menu_stack[-1].x2
         else:
             self.x = 16
-        self.y = ui_height - 100
+        self.y = ui_height - 116
         self.align = bacon.Alignment.left
         self.vertical_align = bacon.VerticalAlignment.bottom
 
