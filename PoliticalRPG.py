@@ -1009,9 +1009,9 @@ class TitleMenu(Menu):
         self.items.append(MenuItem('New Game', '', self.on_new_game))
         self.items.append(MenuItem('Continue', '', self.on_continue, get_recent_save_filename() is not None))
         self.items.append(MenuItem('Quit', '', self.on_quit))
-        #self.enable_border = False
         self.enable_info = False
         self.can_dismiss = False
+        self.y = ui_height - 70
 
     def on_new_game(self):
         game.goto_map('act1')
@@ -1026,10 +1026,21 @@ class TitleMenu(Menu):
 class TitleWorld(World):
     def __init__(self, map):
         super(TitleWorld, self).__init__(map)
-        self.push_menu(TitleMenu(self))
+        self.background = bacon.Image('res/title.png', sample_nearest = True)
+        self.after(2, self.show_menu)
+        
+    def show_menu(self):
+        if not self.menu_stack:
+            self.push_menu(TitleMenu(self))
+            del self.timeouts[:]
+
+    def on_key_pressed(self, key):
+        super(TitleWorld, self).on_key_pressed(key)
+        self.show_menu()
 
     def draw(self):
         self.draw_world()
+        bacon.draw_image(self.background, 0, 0, ui_width, ui_height)
         self.draw_menu()
 
 class EndWorld(World):
