@@ -1,35 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="28" height="28" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="tiles.tsx"/>
- <tileset firstgid="65" name="tiles2" tilewidth="8" tileheight="8">
-  <image source="tiles2.png" width="64" height="64"/>
-  <terraintypes>
-   <terrain name="Interior" tile="-1"/>
-   <terrain name="Exterior" tile="-1"/>
-  </terraintypes>
-  <tile id="0" terrain="1,1,1,0"/>
-  <tile id="1" terrain="1,1,0,0"/>
-  <tile id="2" terrain="1,1,0,1"/>
-  <tile id="3" terrain="0,0,0,1"/>
-  <tile id="4" terrain="0,0,1,1"/>
-  <tile id="5" terrain="0,0,1,0"/>
-  <tile id="8" terrain="1,0,1,0"/>
-  <tile id="9" terrain="0,0,0,0"/>
-  <tile id="10" terrain="0,1,0,1"/>
-  <tile id="11" terrain="0,1,0,1"/>
-  <tile id="12" terrain="1,1,1,1"/>
-  <tile id="13" terrain="1,0,1,0"/>
-  <tile id="16" terrain="1,0,1,1"/>
-  <tile id="17" terrain="0,0,1,1"/>
-  <tile id="18" terrain="0,1,1,1"/>
-  <tile id="19" terrain="0,1,0,0"/>
-  <tile id="20" terrain="1,1,0,0"/>
-  <tile id="21" terrain="1,0,0,0"/>
- </tileset>
+ <tileset firstgid="65" source="tiles_act1.tsx"/>
  <tileset firstgid="129" source="sprites.tsx"/>
- <tileset firstgid="177" name="props" tilewidth="8" tileheight="8">
-  <image source="props.png" width="64" height="64"/>
- </tileset>
+ <tileset firstgid="177" source="props.tsx"/>
  <layer name="Tiles" width="28" height="28">
   <data encoding="base64" compression="zlib">
    eJztlekKwjAMgPtqToZOnScieDsVxQsUETyf3RQyCGVb1tKCqD8+up4fTbM2FEKEf76CAtAFPOCCDLGN1tV+D8eMSLtsKzK+OlBRmGMZKXXaf0JmSl+N8T0t+16OfXdN3w7YIFcsj0x9S3w3Ml+yZ3wBmWuCur8q4zsD/RwMUnw28iUmIt+HnD6TfIlzIhLJOfJJPi6eAa6rMgZ84IEsgBLQI5SBJRkjx3cM95cUl4biazJr/6KvReJPSToHGz4dsnzxu0bJ8z6Z+nTOxdQ3AaZImo/7H3V8lPBDfDbj6Xp/K2Cdgovzy8JFfmYh74024hPkvfEGZBwAzA==
