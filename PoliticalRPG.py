@@ -386,7 +386,8 @@ class World(object):
     current_character = None
     quest_name = ''
 
-    def __init__(self, map):
+    def __init__(self, map_id):
+        map = tiled.parse('res/' + map_id + '.tmx')
         self.menu_stack = []
 
         self.timeouts = []
@@ -605,6 +606,8 @@ class World(object):
     def run_script(self, sprite, trigger):
         if trigger not in game_data.script:
             return
+        if sprite is None:
+            sprite = Sprite(None, -100, -100)
         self.active_script = game_data.script[trigger]
         self.active_script_sprite = sprite
         self.continue_script()
@@ -740,6 +743,11 @@ class World(object):
                     sprite.script_index = i
                     break
             return action == 'Reset'
+        elif action == 'Save':
+            if game.save(param):
+                self.do_dialog(None, 'Game saved.')
+            else:
+                self.do_dialog(None, 'Error saving game, progress will be lost on exit')
         elif action in ('CheatXP', 'CheatCunning', 'CheatWit', 'CheatFlair', 'CheatSpeed', 'CheatCharisma'):
             if ':' in param:
                 character_id, value = param.split(':')
@@ -780,7 +788,7 @@ class MapMenu(Menu):
         self.title = 'Paused'
         self.items.append(MenuItem('Resume', 'Back to the game', self.on_resume))
         self.items.append(MenuItem('Inventory', 'Check your briefcase', self.on_inventory, enabled=enable_inventory))
-        self.items.append(MenuItem('Quit', 'Exit the game; your game is not saved', self.on_quit))
+        self.items.append(MenuItem('Quit', 'Exit the game', self.on_quit))
 
     def on_resume(self):
         self.world.pop_menu()
@@ -878,17 +886,20 @@ class MapWorld(World):
         bacon.Keys.down: (0, 1),
     }
 
-    def __init__(self, map):
-        super(MapWorld, self).__init__(map)
+    def __init__(self, map_id):
+        super(MapWorld, self).__init__(map_id)
         self.move_timeout = -1
 
         player_slot = self.player_slots[0]
-        self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
-        self.player_sprite.name = 'Player'
-        self.sprites.append(self.player_sprite)
+        if player_slot:
+            self.player_sprite = Sprite(game.player.image, player_slot.x, player_slot.y)
+            self.player_sprite.name = 'Player'
+            self.sprites.append(self.player_sprite)
+        else:
+            self.player_sprite = None
 
         self.rooms_layer = None
-        for layer in map.object_layers:
+        for layer in self.map.object_layers:
             if layer.name == 'Rooms':
                 self.rooms_layer = layer
                 
@@ -907,10 +918,13 @@ class MapWorld(World):
     def update_camera(self):
         ts = self.tile_size
 
-        self.camera_x = self.player_sprite.x * ts - map_width / 2
-        self.camera_y = self.player_sprite.y * ts - map_height / 2 + 2 * ts
-        self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - map_width)
-        self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
+        if self.player_sprite:
+            self.camera_x = self.player_sprite.x * ts - map_width / 2
+            self.camera_y = self.player_sprite.y * ts - map_height / 2 + 2 * ts
+            self.camera_x = clamp(self.camera_x, 0, self.map.tile_width * self.map.cols - map_width)
+            self.camera_y = clamp(self.camera_y, 0, self.map.tile_height * self.map.rows - map_height)
+        else:
+            self.camera_x = self.camera_y = 0
 
     def on_world_key_pressed(self, key):
         if key in self.input_movement:
@@ -983,6 +997,36 @@ class MapWorld(World):
                 return room.name
 
         return ''
+
+    
+class TitleMenu(Menu):
+    def __init__(self, world):
+        super(TitleMenu, self).__init__(world)
+        self.items.append(MenuItem('New Game', '', self.on_new_game))
+        self.items.append(MenuItem('Continue', '', self.on_continue, get_recent_save_filename() is not None))
+        self.items.append(MenuItem('Quit', '', self.on_quit))
+        #self.enable_border = False
+        self.enable_info = False
+        self.can_dismiss = False
+
+    def on_new_game(self):
+        game.goto_map('act1')
+
+    def on_continue(self):
+        if not game.load():
+            self.world.do_dialog(None, 'Failed to load save game.')
+
+    def on_quit(self):
+        bacon.quit()
+
+class TitleWorld(World):
+    def __init__(self, map):
+        super(TitleWorld, self).__init__(map)
+        self.push_menu(TitleMenu(self))
+
+    def draw(self):
+        self.draw_world()
+        self.draw_menu()
 
 class Effect(object):
     id = None
@@ -1265,7 +1309,7 @@ class GameOverMenu(Menu):
         self.title = 'You are defeated'
         self.can_dismiss = False
         self.items.append(MenuItem('Restart this encounter', 'You failed this time, but next time the dice rolls may be in your favour', self.on_restart_encounter))
-        self.items.append(MenuItem('Quit game', 'Exit the game; your game is not saved', self.on_quit))
+        self.items.append(MenuItem('Quit game', 'Exit the game', self.on_quit))
 
     def on_restart_encounter(self):
         self.world.restart()
@@ -2089,6 +2133,67 @@ def get_level_for_xp(xp):
         if xp < level.xp:
             return int(level.level - 1)
 
+def get_save_dir():
+    return 'savegames'
+
+def get_recent_save_filename():
+    try:
+        dir = get_save_dir()
+        files = [file for file in os.listdir(dir) if os.path.isfile(os.path.join(dir, file))]
+        files.sort()
+        return files[-1]
+    except:
+        pass
+
+def get_next_save_filename():
+    recent = get_recent_save_filename()
+    if not recent:
+        return '001'
+    return '%03d' % (int(recent) + 1)
+
+class SavegameAlly(object):
+    def __init__(self, character):
+        self.id = character.id
+        self.level = character.level
+        self.xp = character.xp
+        self.votes = character.votes
+        self.spin = character.spin
+        self.cunning = character.cunning
+        self.charisma = character.charisma
+        self.wit = character.wit
+        self.flair = character.flair
+        self.speed = character.speed
+
+    def restore(self, character):
+        character.id = self.id
+        character.level = self.level
+        character.xp = self.xp
+        character.votes = self.votes
+        character.spin = self.spin
+        character.cunning = self.cunning
+        character.charisma = self.charisma
+        character.wit = self.wit
+        character.flair = self.flair
+        character.speed = self.speed
+
+class Savegame(object):
+    def __init__(self, game, trigger):
+        self.trigger = trigger
+        self.money = game.money
+        self.allies = []
+        for ally in game.allies:
+            self.allies.append(SavegameAlly(ally))
+
+    def restore(self, game):
+        game.money = self.money
+        for ally in self.allies:
+            if ally.id == 'Player':
+                character = game.player
+            else:
+                character = Character(ally.id, ally.level, game.player.item_attacks, False)
+            ally.restore(character)
+        game.world.run_script(None, self.trigger)
+            
 class Game(bacon.Game):
     def __init__(self):
         music = bacon.Sound('res/wwing.ogg', stream=True)
@@ -2106,6 +2211,33 @@ class Game(bacon.Game):
         self.world = None
         self.world_stack = []
 
+    def save(self, trigger):
+        savegame = Savegame(self, trigger)
+        save_dir = get_save_dir()
+        path = os.path.join(save_dir, get_next_save_filename())
+        try:
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            pickle.dump(savegame, open(path, 'w'))
+            print 'Saved game to "%s"' % path
+            return True
+        except:
+            logging.error('Error saving game to "%s"' % path)
+            return False
+
+    def load(self):
+        # Assume no state has been set yet, no need to reset
+        try:
+            save_dir = get_save_dir()
+            path = os.path.join(save_dir, get_recent_save_filename())
+            savegame = pickle.load(open(path, 'r'))
+        except:
+            logging.error('Failed to load savegame "%s"' % path)
+            return False
+
+        savegame.restore(self)
+        return True
+
     def push_world(self, world):
         self.world_stack.append(self.world)
         self.world = world
@@ -2115,10 +2247,12 @@ class Game(bacon.Game):
         self.world = self.world_stack.pop()
 
     def goto_map(self, map_id):
-        if map_id in self.map_worlds:
+        if map_id == 'title':
+            world = TitleWorld(map_id)
+        elif map_id in self.map_worlds:
             world = self.map_worlds[map_id]
         else:
-            world = MapWorld(tiled.parse('res/' + map_id + '.tmx'))
+            world = MapWorld(map_id)
         self.map_worlds[map_id] = world
         self.world = world
         del self.world_stack[:]
@@ -2332,13 +2466,18 @@ def main():
 
     global game_sprites
     game_sprites = load_sprites('res/sprites.tsx')
+    start_game(args)
 
+def start_game(args):
     global game
     game = Game()
 
-    game.goto_map('act1')
-    for arg in args:
-        game.world.run_script(game.world.player_sprite, arg) 
+    game.goto_map('title')
+    if args:
+        for arg in args:
+            game.world.run_script(None, arg) 
+    else:
+        game.world.run_script(None, 'START')
 
     bacon.run(game)
 
