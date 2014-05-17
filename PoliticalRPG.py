@@ -1561,7 +1561,7 @@ class CombatWorld(World):
                     debug.println('%s is resistant to %s' % (target.id, attack.name))
                     damage -= damage * 0.3
                 elif attack in target.data.weaknesses:
-                    self.add_floater(target, 'Weak', 1)
+                    self.add_floater(target, 'Weak', ui.floater_border_grey, 1)
                     debug.println('%s is weak to %s' % (target.id, attack.name))
                     damage += damage * 0.3
 
