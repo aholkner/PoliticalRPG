@@ -476,7 +476,8 @@ class World(object):
                 timeout[0] -= bacon.timestep
             for timeout in [timeout for timeout in self.timeouts if timeout[0] <= 0]:
                 timeout[1]()
-                self.timeouts.remove(timeout)
+                if timeout in self.timeouts:
+                    self.timeouts.remove(timeout)
 
     def draw_world(self):
         ts = self.tile_size
@@ -502,7 +503,9 @@ class World(object):
                 bacon.draw_image(sprite.image, sprite.x * ts, sprite.y * ts)
 
         bacon.pop_transform()
+        self.draw_dialog()
 
+    def draw_dialog(self):
         if self.dialog_text:
             width = min(ui_width / 2, debug.font.measure_string(self.dialog_text))
             if self.dialog_sprite:
@@ -1039,7 +1042,6 @@ class TitleWorld(World):
         self.show_menu()
 
     def draw(self):
-        self.draw_world()
         bacon.draw_image(self.background, 0, 0, ui_width, ui_height)
         self.draw_menu()
 
@@ -1047,9 +1049,11 @@ class EndWorld(World):
     def __init__(self, map):
         super(EndWorld, self).__init__(map)
         game.play_music('res/wwing2.ogg')
+        self.background = bacon.Image('res/end.png', sample_nearest = True)
 
     def draw(self):
-        self.draw_world()
+        bacon.draw_image(self.background, 0, 0, ui_width, ui_height)
+        bacon.set_color(0, 0, 0, 1)
 
         x = 16
         self.y = 16 - ui.font.ascent
@@ -1062,7 +1066,7 @@ class EndWorld(World):
         out('A game for PyWeek #18 by Amanda Schofield and Alex Holkner')
         
         self.y = ui_height - 11 * ui.font.height
-        out('04b-03.ttf')
+        out('04B-03.ttf')
         out('Yuji Oshimoto')
         out('http://dsg4.com/04/extra/bitmap/')
         out('')
@@ -1073,6 +1077,8 @@ class EndWorld(World):
         out('Bacon Game Engine')
         out('https://github.com/aholkner/bacon')
 
+        bacon.set_color(1, 1, 1, 1)
+        self.draw_dialog()
 
 class Effect(object):
     id = None

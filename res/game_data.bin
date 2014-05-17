@@ -10820,12 +10820,12 @@ g3
 NtRp3430
 (dp3431
 g13
-S'GiveItem'
+S'GotoMap'
 p3432
 sg15
 g3428
 sg16
-S'PEN'
+S'end'
 p3433
 sg18
 S'Receptionist sighs and hands over the pen.'
