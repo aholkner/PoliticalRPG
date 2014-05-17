@@ -5,7 +5,7 @@
  <tileset firstgid="113" source="tiles_act3.tsx"/>
  <layer name="Tiles" width="32" height="32">
   <data encoding="base64" compression="zlib">
-   eJztk00PgjAMhvejQXEqXx48G0/iwQAH/qY1GUlDtlDGoEh6eLJlhz5vty5VSn2AB6AtPB3nFFw1ey7AidmfMvrPG/Bz3j+3n/L+LVAZNNpTqAP4f/03noSaf06/3nH/eP5fyj5D7xn+sf+B+3fh66befwGUFmKzHmb4O1TLxg24jlB4ZoiI9SlMzRDSPTXDEm6cIXbkiMxbL+Ue5jgCd0OykheTIX++slv84he/+MX///4vAiANbA==
+   eJztksEOgjAMhvfQICKKIAfPxJN6IMLBEA+8oiWZSWO22I1B1fTwZcsO/f52zZVSDVADGwMnyzsFW80XWyBl9ueM/uwL/Jzz5/ZT/r8DLpoe3SncAvjH/ltPQu0/p3/44/7x/p+VeYeuE/wPh/5t+Lqp8y+Bg4FYn6sJ/juqZaICdh8oPTNExPoUXDOEdLtmmMONM8SWHJH+67nc7zkS4KhZL+TF7JG/WNgtfvGLX/zi/33/E6kqDgE=
   </data>
  </layer>
  <layer name="Sprites" width="32" height="32">

@@ -4,7 +4,7 @@
  <tileset firstgid="49" source="tiles_basement.tsx"/>
  <layer name="Tiles" width="20" height="24">
   <data encoding="base64" compression="zlib">
-   eJzt0rkKgDAQRdH5JVdwBdfC3t5SsND/r3zFBEMkLknsLA6pcpmEKYio+FnxwHcg4F4JkwMZz9bDAAufOivMGqKXwAipdOpsD+ZLbhp/77pXQSSJ+W4I9UsNnXe6514LHR07+pa8N8LIbzDtqf9l0xP/qP5fY9hT58wtO0LJPdN3ft376r2ueq7ns+3tx5h7Ew==
+   eJzt0r0KgzAUhuFzS1orqFXQqEP37B0LCnr/U7/hBEMk1vy4OTxkystJODUR1bcgCaQRPLjXwCeCimcb4Q0TnzYLfC1m7hUgodROm/XEfMWfxt077rXw1OR8N4POkaD9To/c62GgbUdd6XujSH6Db8/8r5Ce+kfz/4Rnz5zzFdhRGu75vvPq3lXvjdWLPV9o7wcHx3sf
   </data>
  </layer>
  <layer name="Sprites" width="20" height="24">
