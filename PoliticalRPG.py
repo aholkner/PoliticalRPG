@@ -507,6 +507,13 @@ class World(object):
 
     def draw_dialog(self):
         if self.dialog_text:
+            ts = self.tile_size
+            
+            viewport = Rect(self.camera_x, 
+                            self.camera_y, 
+                            self.camera_x + map_width,
+                            self.camera_y + map_height)
+
             width = min(ui_width / 2, debug.font.measure_string(self.dialog_text))
             if self.dialog_sprite:
                 speaker_x = (self.dialog_sprite.x * ts - viewport.x1) * map_scale
