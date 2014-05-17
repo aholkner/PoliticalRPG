@@ -5,7 +5,10 @@ import math
 from math import ceil
 logging.getLogger('bacon').addHandler(logging.NullHandler())
 
+f = open('log', 'w')
+f.write('prebacon'); f.flush()
 import bacon
+f.write('bacon'); f.flush()
 import tiled
 import optparse
 import random
@@ -1507,7 +1510,7 @@ class CombatWorld(World):
         miss_turn = self.current_character.has_effect_function('miss_turn')
 
         # Update character effects
-        self.begin_turn_apply_effect(self.current_character.active_effects, 0, miss_turn)
+        self.begin_turn_apply_effect(self.current_character.active_effects[:], 0, miss_turn)
 
     def begin_turn_apply_effect(self, effects, effect_index, miss_turn):
         if self.current_character.dead:
@@ -1534,6 +1537,7 @@ class CombatWorld(World):
     def begin_turn_end_effects(self, miss_turn):
         if self.current_character.dead:
             self.end_turn()
+            return
 
         # Miss turn, do AI or show UI
         if miss_turn:
@@ -1837,7 +1841,7 @@ class CombatWorld(World):
 
     def apply_damage(self, target, damage):
         target.votes -= damage
-        target.votes = clamp(target.votes, 0, target.max_votes)
+        target.votes = int(clamp(target.votes, 0, target.max_votes))
 
         if damage >= 0:
             self.add_floater(target, '%d' % damage, ui.floater_border_red)

@@ -22,6 +22,7 @@ Requires
  - A DirectX 9 compatible graphics card
 
  - Python 2.7 or later
+ - Bacon 0.3.1, install from https://pypi.python.org/pypi/bacon/0.3.1
 
 Run:
 
