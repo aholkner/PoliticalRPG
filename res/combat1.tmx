@@ -178,7 +178,7 @@
  </tileset>
  <layer name="Tile Layer 1" width="20" height="16">
   <data encoding="base64" compression="zlib">
-   eJxjYmBgYBrFo3iYYEYqY85RPKwxADvPBbU=
+   eJxjYmBgYBrFwxYzUhlzjuJRPIwwAATzB1k=
   </data>
  </layer>
  <layer name="Sprites" width="20" height="16">
@@ -186,7 +186,7 @@
    <property name="sprite" value=""/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJxjYBgFo2DgQQ6UzobSWVA6E0lNLpTOg9L5ULqAhu4aBcMbAAD9cQNl
+   eJxjYBgFgxHkQOlsKJ0FpTOR1ORC6TwonQ+lC2jorlEwCoYTAAArbQNl
   </data>
  </layer>
 </map>

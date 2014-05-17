@@ -1252,8 +1252,8 @@ class CombatWorld(World):
                 ally.spin = ally.max_spin / 2
             else:
                 ally.votes = max(ally.max_votes / 2, ally.saved_votes)
+                ally.spin = 0
 
-            ally.spin = 0
         self.start()
 
     @property
@@ -1622,7 +1622,7 @@ class CombatWorld(World):
                 ui.draw_text_box(floater.text, floater.x, int(floater.y), floater.border)
                 
         if self.active_attack:
-            ui.draw_text_box(self.active_attack.name, ui_width / 2, 160, ui.attack_border)
+            ui.draw_text_box(self.active_attack.name, ui_width / 2, 64, ui.attack_border)
 
         i = -1
         for slot in self.slots:
