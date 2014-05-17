@@ -1216,6 +1216,7 @@ class GameOverMenu(Menu):
     def __init__(self, world):
         super(GameOverMenu, self).__init__(world)
         self.title = 'You are defeated'
+        self.can_dismiss = False
         self.items.append(MenuItem('Restart this encounter', 'You failed this time, but next time the dice rolls may be in your favour', self.on_restart_encounter))
         self.items.append(MenuItem('Quit game', 'Exit the game; your game is not saved', self.on_quit))
 
