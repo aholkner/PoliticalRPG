@@ -18,17 +18,17 @@
  </layer>
  <layer name="Props" width="32" height="32">
   <data encoding="base64" compression="zlib">
-   eJztzrENADAIwDDuK/x/Dx04gE5dbCl7IgAA2Di3nOrzCwC8avu1AS0=
+   eJztk80OwiAMgPtKuqgxzt+LoiZezQ6KntT3fwBLAhEbGLDNYTa+5EsIaQt0HcB/MddU8JIYal0G6BDNUCb3HpYYatbA+SNNBSuJoZqo2yceGE+h/dJ76wPtfyi+fYqN6Mk54vm8wVqbCjniO+eOmDE6gc/8MG1PMEVnjhpby76odUGvjvxcq7GC7zuvPXJPjhgfVI1dQM4CXULYv/crqsxH1ykM68IU2FHUW2/oPeI9nuhLrm3936MH6bGNS7WAaeb6NH+JRCLRJ94qghoY
   </data>
  </layer>
  <objectgroup name="NPCs" width="32" height="32">
-  <object name="Journalist3" gid="9" x="48" y="168"/>
-  <object name="Journalist4" gid="9" x="64" y="168"/>
-  <object name="Journalist5" gid="9" x="56" y="184"/>
+  <object name="Journalist3" gid="9" x="56" y="184"/>
+  <object name="Journalist4" gid="9" x="72" y="160"/>
+  <object name="Journalist5" gid="9" x="72" y="176"/>
   <object name="WarVet1" gid="19" x="48" y="56"/>
   <object name="WarVet2" gid="19" x="32" y="48"/>
-  <object name="Teacher1" gid="18" x="200" y="88"/>
-  <object name="Teacher2" gid="18" x="224" y="88"/>
+  <object name="Teacher1" gid="18" x="200" y="80"/>
+  <object name="Teacher2" gid="18" x="216" y="72"/>
   <object name="Kawalski" gid="24" x="144" y="128"/>
   <object name="Cabinet2" gid="20" x="152" y="40"/>
   <object name="Cabinet1" gid="20" x="120" y="40"/>
