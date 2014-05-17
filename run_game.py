@@ -16,6 +16,18 @@ from common import Rect, clamp
 font_tiny = bacon.Font(bacon.get_resource_path('res/tinyfont.ttf'), 12)
 font_tiny.height = font_tiny.descent - font_tiny.ascent
 
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/combat-tiles.png'))
+end_image = tiled.Tileset.get_cached_image(bacon.get_resource_path('res/end.png'))
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/props.png'))
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/sprites.png'))
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/tiles_act1.png'))
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/tiles_act2.png'))
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/tiles_act2p2.png'))
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/tiles_act3.png'))
+tiled.Tileset.get_cached_image(bacon.get_resource_path('res/tiles_basement.png'))
+title_image = tiled.Tileset.get_cached_image(bacon.get_resource_path('res/title.png'))
+ui_image = tiled.Tileset.get_cached_image(bacon.get_resource_path('res/ui.png'))
+
 bacon.window.width = 640
 bacon.window.height = 480
 bacon.window.title = 'Goodnight, Mr President'
@@ -68,7 +80,7 @@ class UI(object):
     def __init__(self):
         self.ts = 4
         self.font = font_tiny
-        self.image = bacon.Image('res/ui.png', sample_nearest=True)
+        self.image = ui_image
         self.stat_border = self.get_border_tiles(0)
         self.stat_border_disabled = self.get_border_tiles(3)
         self.stat_border_active = self.get_border_tiles(6)
@@ -1039,7 +1051,7 @@ class TitleMenu(Menu):
 class TitleWorld(World):
     def __init__(self, map):
         super(TitleWorld, self).__init__(map)
-        self.background = bacon.Image('res/title.png', sample_nearest = True)
+        self.background = title_image
         self.after(2, self.show_menu)
         
     def show_menu(self):
@@ -1059,7 +1071,7 @@ class EndWorld(World):
     def __init__(self, map):
         super(EndWorld, self).__init__(map)
         game.play_music('res/wwing2.ogg')
-        self.background = bacon.Image('res/end.png', sample_nearest = True)
+        self.background = end_image
 
     def draw(self):
         bacon.draw_image(self.background, 0, 0, ui_width, ui_height)

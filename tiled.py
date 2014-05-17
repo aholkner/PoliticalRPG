@@ -13,6 +13,17 @@ class Tileset(object):
         self.firstgid = firstgid
         self.images = images
 
+    @classmethod
+    def get_cached_image(cls, path):
+        path = os.path.abspath(path)
+        if path in cls.image_cache:
+            return cls.image_cache[path]
+        image = bacon.Image(path, sample_nearest=True)
+        cls.image_cache[path] = image
+        return image
+
+    image_cache = {}
+
 def parse_tileset_images(elem, base_dir):
     spacing = int(elem.get('spacing') or 0)
     margin = int(elem.get('margin') or 0)
@@ -22,7 +33,7 @@ def parse_tileset_images(elem, base_dir):
     for child in elem:
         if child.tag == 'image':
             filename = child.get('source')
-            image = bacon.Image(os.path.join(base_dir, filename), sample_nearest=True)
+            image = Tileset.get_cached_image(os.path.join(base_dir, filename))
     
     images = []
     for y in range(margin, image.height - margin, spacing + tile_height):
