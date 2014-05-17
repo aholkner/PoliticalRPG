@@ -693,7 +693,7 @@ class World(object):
             game.money += int(param)
             return self.do_dialog(None, dialog)
         elif action == 'RequireItem' or action == 'RequireItemMessage' or action == 'RequireItemPlayerSay':
-            if param in (item.id for item in game.quest_items):
+            if param in (item.id for item in game.quest_items) or debug.disable_require:
                 return False # satisfied, move to next line immediately
             else:
                 if action == 'RequireItemMessage':
@@ -706,7 +706,7 @@ class World(object):
                 sprite.script_index -= 1
                 self.active_script = None
         elif action == 'RequireFlag' or action == 'RequireFlagPlayerSay':
-            if param in game.quest_flags:
+            if param in game.quest_flags  or debug.disable_require:
                 return False # satisfied, move to next line immediately
             else:
                 self.do_dialog(sprite if action == 'RequireFlag' else self.player_sprite, dialog)
@@ -731,7 +731,7 @@ class World(object):
             required_value = int(required_value)
             if param in game.quest_vars:
                 value = game.quest_vars[param]
-            if value >= required_value:
+            if value >= required_value or debug.disable_require:
                 return False # satisfied
             else:
                 self.do_dialog(sprite, dialog)
@@ -1476,6 +1476,8 @@ class CombatWorld(World):
 
     def fill_slot(self, slot, character):
         slot.character = character
+        if character.id == 'Lobbyist001' and self.encounter.id == 'P-med-12':
+            slot.y = 4
         slot.sprite = Sprite(character.image, slot.x, slot.y)
         self.sprites.append(slot.sprite)
         self.characters.append(character)
@@ -2212,6 +2214,7 @@ class Debug(object):
         self.message = None
         self.message_timeout = 0
         self.disable_collision = False
+        self.disable_require = False
 
     def on_key_pressed(self, key):
         if not self.enabled:
@@ -2243,6 +2246,9 @@ class Debug(object):
                     if attack not in ally.standard_attacks:
                         ally.standard_attacks.append(attack)
             self.println('unlock all attacks')
+        elif key == bacon.Keys.f7:
+            self.disable_require = not self.disable_require
+            self.println('disable_require = %s' % self.disable_require)
         elif key == bacon.Keys.numpad_add:
             if isinstance(game.world, CombatWorld):
                 game.world.apply_damage(game.world.current_character, -10)

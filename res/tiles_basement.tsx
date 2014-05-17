@@ -177,11 +177,6 @@
    <property name="c" value="dl"/>
   </properties>
  </tile>
- <tile id="59">
-  <properties>
-   <property name="c" value=""/>
-  </properties>
- </tile>
  <tile id="60">
   <properties>
    <property name="c" value=""/>
