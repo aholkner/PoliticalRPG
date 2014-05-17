@@ -781,6 +781,12 @@ class World(object):
                 self.do_dialog(None, 'Game saved.')
             else:
                 self.do_dialog(None, 'Error saving game, progress will be lost on exit')
+        elif action == 'PlaySound':
+            try:
+                bacon.Sound(param).play()
+            except:
+                pass
+            return False
         elif action in ('CheatXP', 'CheatCunning', 'CheatWit', 'CheatFlair', 'CheatSpeed', 'CheatCharisma'):
             if ':' in param:
                 character_id, value = param.split(':')
@@ -2469,8 +2475,6 @@ class Game(bacon.Game):
 
     def play_music(self, file):
         sound = bacon.Sound(file, stream=True)
-        if self.music:
-            self.music.stop()
         self.music = bacon.Voice(sound)
         self.music.play()
 
