@@ -1491,9 +1491,9 @@ class CombatWorld(World):
             if crit_success:
                 self.add_floater(target, 'Critical Hit!', ui.floater_border_grey, 1)
                 debug.println('Critical hit')
-                damage = base_stat * (attack.crit_base_damage + modifiers)
+                damage = base_stat + (attack.crit_base_damage + modifiers)
             else:
-                damage = base_stat * (random.randrange(attack.base_damage_min, attack.base_damage_max + 1) + modifiers)
+                damage = base_stat + (random.randrange(attack.base_damage_min, attack.base_damage_max + 1) + modifiers)
         
             # Cheat damage
             if debug.massive_damage and not source.ai:
