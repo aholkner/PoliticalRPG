@@ -578,6 +578,9 @@ class World(object):
     def on_dismiss_dialog(self):
         self.continue_script()
 
+    def on_world_key_pressed(self, key):
+        pass
+
     def on_key_pressed(self, key):
         if self.timeouts:
             return
@@ -1086,6 +1089,10 @@ class EndWorld(World):
 
         bacon.set_color(1, 1, 1, 1)
         self.draw_dialog()
+
+    def on_world_key_pressed(self, key):
+        if key == bacon.Keys.escape:
+            bacon.quit()
 
 class Effect(object):
     id = None
