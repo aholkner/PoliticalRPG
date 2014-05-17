@@ -2240,6 +2240,7 @@ def get_next_save_filename():
 
 class SavegameAlly(object):
     standard_attacks = []
+    spin_attacks = []
 
     def __init__(self, character):
         self.id = character.id
@@ -2257,6 +2258,9 @@ class SavegameAlly(object):
         self.standard_attacks = []
         for attack in character.standard_attacks:
             self.standard_attacks.append(attack.id)
+        self.spin_attacks = []
+        for attack in character.spin_attacks:
+            self.spin_attacks.append(attack.id)
 
     def restore(self, character):
         character.id = self.id
@@ -2278,6 +2282,13 @@ class SavegameAlly(object):
                     has_attack = True
             if not has_attack:
                 character.standard_attacks.append(game_data.attacks[attack_id])
+        for attack_id in self.spin_attacks:
+            has_attack = False
+            for a in character.spin_attacks:
+                if a.id == attack_id:
+                    has_attack = True
+            if not has_attack:
+                character.spin_attacks.append(game_data.attacks[attack_id])
 
 class Savegame(object):
     item_attacks = []
