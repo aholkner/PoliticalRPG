@@ -631,7 +631,7 @@ class World(object):
             self.quest_name = dialog
             return False
         elif action == 'Encounter':
-            game.push_world(CombatWorld(tiled.parse('res/combat1.tmx'), param))
+            game.push_world(CombatWorld('combat1', param))
         elif action == 'Destroy':
             self.sprites.remove(sprite)
             return False
@@ -963,14 +963,15 @@ class MapWorld(World):
                 c = get_tile_collision(tile)
                 next_c = get_tile_collision(next_tile)
             
-                if dx < 0 and ('l' in c or 'r' in next_c):
-                    return
-                elif dx > 0 and ('r' in c or 'l' in next_c):
-                    return
-                elif dy < 0 and ('u' in c or 'd' in next_c):
-                    return
-                elif dy > 0 and ('d' in c or 'u' in next_c):
-                    return
+                if not debug.disable_collision:
+                    if dx < 0 and ('l' in c or 'r' in next_c):
+                        return
+                    elif dx > 0 and ('r' in c or 'l' in next_c):
+                        return
+                    elif dy < 0 and ('u' in c or 'd' in next_c):
+                        return
+                    elif dy > 0 and ('d' in c or 'u' in next_c):
+                        return
 
             self.player_sprite.x += dx
             self.player_sprite.y += dy
@@ -1803,8 +1804,7 @@ class CombatWorld(World):
 
 class WinCombatWorld(World):
     def __init__(self, combat_world):
-        map = tiled.parse('res/ui_win_combat.tmx')
-        super(WinCombatWorld, self).__init__(map)
+        super(WinCombatWorld, self).__init__('ui_win_combat')
         self.combat_world = combat_world
         self.characters = list(game.allies)
         self.queued_dialogs = []
@@ -1975,8 +1975,7 @@ class AssignSkillPointsMenu(Menu):
 
 class LevelUpWorld(World):
     def __init__(self, character, combat_world, add_xp):
-        map = tiled.parse('res/ui_levelup.tmx')
-        super(LevelUpWorld, self).__init__(map)
+        super(LevelUpWorld, self).__init__('ui_levelup')
         self.add_xp = add_xp
         self.character = character
         self.combat_world = combat_world
@@ -2067,6 +2066,7 @@ class Debug(object):
         self.massive_damage = False
         self.message = None
         self.message_timeout = 0
+        self.disable_collision = False
 
     def on_key_pressed(self, key):
         if key == bacon.Keys.k or key == bacon.Keys.j:
@@ -2086,6 +2086,9 @@ class Debug(object):
             for ally in game.allies:
                 ally.spin = ally.max_spin
             self.println('cheat restore spin')
+        elif key == bacon.Keys.f5:
+            self.disable_collision = not self.disable_collision
+            self.println('disable_collision = %s' % self.disable_collision)
         elif key == bacon.Keys.numpad_add:
             if isinstance(game.world, CombatWorld):
                 game.world.apply_damage(game.world.current_character, -10)
@@ -2191,6 +2194,7 @@ class Savegame(object):
                 character = game.player
             else:
                 character = Character(ally.id, ally.level, game.player.item_attacks, False)
+                game.allies.append(character)
             ally.restore(character)
         game.world.run_script(None, self.trigger)
             
@@ -2255,6 +2259,7 @@ class Game(bacon.Game):
             world = MapWorld(map_id)
         self.map_worlds[map_id] = world
         self.world = world
+        self.world.run_script(None, map_id)
         del self.world_stack[:]
 
     def on_tick(self):
