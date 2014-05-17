@@ -80,6 +80,9 @@ class UI(object):
         self.menu_down_image = self.get_tile_2x(20)
         self.combat_selected_arrow = self.get_tile_2x(7)
         self.combat_target_arrow = self.get_tile_2x(14)
+        self.floater_border_red = self.get_border_tiles(96)
+        self.floater_border_green = self.get_border_tiles(99)
+        self.floater_border_grey = self.get_border_tiles(102)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -181,6 +184,15 @@ class UI(object):
         bacon.set_color(0, 0, 0, 1)
         bacon.draw_glyph_layout(glyph_layout)
         bacon.set_color(1, 1, 1, 1)
+
+    def draw_text_box(self, text, x, y, border_tiles):
+        width = self.font.measure_string(text) + 8
+        x1 = x - width / 2
+        y1 = y - self.font.height
+        x2 = x + width / 2
+        y2 = y
+        self.draw_box(Rect(x1, y1, x2, y2), border_tiles)
+        bacon.draw_string(self.font, text, x1 + 4, y1, vertical_align = bacon.VerticalAlignment.top)
 
     def draw_combat_selection_box(self, text, x, y):
         width = self.font.measure_string(text) + 8
@@ -911,7 +923,7 @@ class Effect(object):
         elif self.function == 'revive':
             character.votes = int(character.max_votes * self.value)
             game.world.set_dead(character, False)
-            game.world.add_floater(character, 'Revived!')
+            game.world.add_floater(character, 'Revived!', ui.floater_border_grey)
         elif self.function == 'call_friends':
             character_id, level = self.attribute.split(':')
             game.world.ai_summon(character_id, int(level), self.value)
@@ -924,7 +936,7 @@ class Effect(object):
 
     def update(self, character):
         if self.function == 'drain':
-            game.world.add_floater(character, self.id, 1) 
+            game.world.add_floater(character, self.id, ui.floater_border_grey, 1) 
             self._add_value(character, -self.value)
 
 class ActiveEffect(object):
@@ -945,6 +957,8 @@ def add_attack_to_itemattack_list(item_attacks, attack):
     item_attacks.append(ItemAttack(attack, 1))
        
 class Character(object):
+    accumulated_spin_damage = 0
+
     def __init__(self, id, level, item_attacks, ai=True):
         level = int(level)
         self.id = id
@@ -1156,10 +1170,11 @@ class GameOverMenu(Menu):
         bacon.quit()
 
 class Floater(object):
-    def __init__(self, text, x, y):
+    def __init__(self, text, x, y, border):
         self.text = text
         self.x = x
         self.y = y
+        self.border = border
         self.timeout = 1.0
 
 class CombatWorld(World):
@@ -1181,6 +1196,7 @@ class CombatWorld(World):
 
         self.characters = []
         for i, ally in enumerate(game.allies):
+            ally.accumulated_spin_damage = 0
             self.fill_slot(self.player_slots[i], ally)
         
         self.ai_item_attacks = list(encounter.item_attacks)
@@ -1456,7 +1472,7 @@ class CombatWorld(World):
         for target in targets:
             # Immunity
             if attack in target.data.immunities:
-                self.add_floater(target, 'Immune')
+                self.add_floater(target, 'Immune', ui.floater_border_grey)
                 debug.println('%s is immune to %s' % (target.id, attack.name))
                 continue
 
@@ -1464,13 +1480,15 @@ class CombatWorld(World):
             modifiers = 0
             if attack.crit_chance_max:
                 crit_chance = random.randrange(attack.crit_chance_min, attack.crit_chance_max + 1)
-                crit_success = random.randrange(0, 100) <= crit_chance
+                crit_success = random.randrange(0, 100) <= crit_chance + source.flair
+                debug.println('crit_chance = %s, crit_success = %s, flair = %s' % (crit_chance, crit_success, source.flair))
             else:
                 crit_success = False
+                debug.println('no crit chance calculated')
 
             # Damage
             if crit_success:
-                self.add_floater(target, 'Critical Hit!', 1)
+                self.add_floater(target, 'Critical Hit!', ui.floater_border_grey, 1)
                 debug.println('Critical hit')
                 damage = base_stat * (attack.crit_base_damage + modifiers)
             else:
@@ -1486,7 +1504,7 @@ class CombatWorld(World):
 
                 # Resistance and weakness
                 if attack in target.data.resistance:
-                    self.add_floater(target, 'Resist', 1)
+                    self.add_floater(target, 'Resist', ui.floater_border_grey, 1)
                     debug.println('%s is resistant to %s' % (target.id, attack.name))
                     damage -= damage * 0.3
                 elif attack in target.data.weaknesses:
@@ -1496,7 +1514,7 @@ class CombatWorld(World):
 
                 # Global resistance (defense)
                 if target.resistance:
-                    self.add_floater(target, 'Defends', 1)
+                    self.add_floater(target, 'Defends', ui.floater_border_grey, 1)
                     debug.println('%s defends' % target.id)
                 damage -= damage * min(1, target.resistance)
                 
@@ -1529,7 +1547,7 @@ class CombatWorld(World):
             rounds = random.randrange(effect.rounds_min, critical_fail_effect.rounds_max + 1)
             if effect.apply_to_source:
                 source.add_active_effect(ActiveEffect(critical_fail_effect, rounds))
-                self.add_floater(source, 'Critical fail')
+                self.add_floater(source, 'Critical fail', ui.floater_border_grey)
 
         if self.floaters:
             self.after(2, self.end_turn)
@@ -1541,10 +1559,9 @@ class CombatWorld(World):
         target.votes = clamp(target.votes, 0, target.max_votes)
 
         if damage >= 0:
-            self.add_floater(target, '%d' % damage)
+            self.add_floater(target, '%d' % damage, ui.floater_border_red)
         elif damage < 0:
-            self.add_floater(target, '+%d' % -damage)
-            pass
+            self.add_floater(target, '%d' % -damage, ui.floater_border_green)
             
         if target.votes == 0:
             target.votes = 0
@@ -1555,15 +1572,20 @@ class CombatWorld(World):
         self.get_slot(character).sprite.effect_dead = dead
 
     def award_spin(self, target, damage, is_spin_action):
-        bonus = (damage + max(target.cunning, 0)) / (target.level * 5)
+        bonus = (damage + target.accumulated_spin_damage + max(target.wit, 0)) / (target.level * 5)
+        if bonus <= 0:
+            target.accumulated_spin_damage += damage
+        else:
+            target.accumulated_spin_damage = 0
+
         if is_spin_action:
             bonus /= 2
-        debug.println('Awarded %d spin' % bonus)
+        debug.println('Awarded %d spin; %d left over damage for next time' % (bonus, target.accumulated_spin_damage))
         target.spin = min(target.spin + bonus, target.max_spin)
         
-    def add_floater(self, character, text, offset=0):
+    def add_floater(self, character, text, border, offset=0):
         slot = self.get_slot(character)
-        self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale, (slot.y - offset) * self.tile_size * map_scale))
+        self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale + 16, slot.y * self.tile_size * map_scale - offset * 32 - 16, border))
 
     def draw(self):
         self.draw_world()
@@ -1578,7 +1600,7 @@ class CombatWorld(World):
             if floater.timeout < 0:
                 self.floaters.remove(floater)
             else:
-                debug.draw_string(floater.text, floater.x, int(floater.y))
+                ui.draw_text_box(floater.text, floater.x, int(floater.y), floater.border)
 
         i = -1
         for slot in self.slots:
@@ -1802,6 +1824,10 @@ class Debug(object):
         elif key == bacon.Keys.f3:
             game.money += 1000
             self.println('cheat money')
+        elif key == bacon.Keys.f4:
+            for ally in game.allies:
+                ally.spin = ally.max_spin
+            self.println('cheat restore spin')
         elif key == bacon.Keys.numpad_add:
             if isinstance(game.world, CombatWorld):
                 game.world.apply_damage(game.world.current_character, -10)
