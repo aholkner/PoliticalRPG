@@ -362,7 +362,8 @@ class Menu(object):
             ui.draw_image(ui.menu_down_image, (x1 + x2) / 2 - 16, y)
             y += 32
 
-        self.draw_status(self.selected_item.description, x2, info_y)
+        if self.enable_info:
+            self.draw_status(self.selected_item.description, x2, info_y)
 
     def draw_status(self, msg, x, y):
         if self.enable_info and self.world.menu_stack[-1] is self and game.world is self.world:
@@ -662,11 +663,11 @@ class World(object):
                 self.do_dialog(sprite if action == 'RequireItem' else None, dialog)
                 sprite.script_index -= 1
                 self.active_script = None
-        elif action == 'RequireFlag':
+        elif action == 'RequireFlag' or action == 'RequireFlagPlayerSay':
             if param in game.quest_flags:
                 return False # satisfied, move to next line immediately
             else:
-                self.do_dialog(sprite, dialog)
+                self.do_dialog(sprite if action == 'RequireItem' else self.player_sprite, dialog)
                 sprite.script_index -= 1
                 self.active_script = None
         elif action == 'SetFlag':
@@ -733,6 +734,31 @@ class World(object):
                     sprite.script_index = i
                     break
             return action == 'Reset'
+        elif action in ('CheatXP', 'CheatCunning', 'CheatWit', 'CheatFlair', 'CheatSpeed', 'CheatCharisma'):
+            if ':' in param:
+                character_id, value = param.split(':')
+                character = game.get_ally(character_id)
+                value = int(value)
+            else:
+                character = game.player
+                value = int(param)
+            if action == 'CheatXP':
+                character.xp = int(value)
+                character.level = get_level_for_xp(game.player.xp)
+                level_row = get_level_row(character.level)
+                character.max_spin = level_row.spin
+                character.max_votes = level_row.votes
+            elif action == 'CheatCunning':
+              character.cunning = value
+            elif action == 'CheatWit':
+              character.wit = value
+            elif action == 'CheatFlair':
+              character.flair = value
+            elif action == 'CheatSpeed':
+              character.speed = value
+            elif action == 'CheatCharisma':
+                character.charism = value
+            return False
         else:
             raise Exception('Unsupported script action "%s"' % action)
 

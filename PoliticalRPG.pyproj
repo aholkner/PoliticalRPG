@@ -17,6 +17,8 @@
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments>CheatAct2P2</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <InterpreterArguments>
+    </InterpreterArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

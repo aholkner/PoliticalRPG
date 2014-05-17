@@ -50,4 +50,7 @@
   <object name="StairsToL2" gid="91" x="80" y="168"/>
   <object name="StairsToGround" gid="93" x="88" y="168"/>
  </objectgroup>
+ <objectgroup name="Rooms" width="24" height="24">
+  <object name="First Floor" x="0" y="0" width="192" height="192"/>
+ </objectgroup>
 </map>

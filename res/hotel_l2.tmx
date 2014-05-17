@@ -47,4 +47,7 @@
   <object name="Lobbyist3" gid="67" x="64" y="136"/>
   <object name="Lobbyist4" gid="67" x="64" y="96"/>
  </objectgroup>
+ <objectgroup name="Rooms" width="24" height="24">
+  <object name="2nd Floor" x="0" y="0" width="192" height="192"/>
+ </objectgroup>
 </map>

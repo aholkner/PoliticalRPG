@@ -50,4 +50,7 @@
   <object name="TVPersonality" gid="78" x="56" y="104"/>
   <object name="TVDebate" gid="71" x="120" y="48"/>
  </objectgroup>
+ <objectgroup name="Rooms" width="24" height="24">
+  <object name="Ground Floor" x="0" y="0" width="192" height="192"/>
+ </objectgroup>
 </map>
