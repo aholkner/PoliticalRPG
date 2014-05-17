@@ -526,10 +526,7 @@ class World(object):
         return self.quest_name
 
     def draw_hud(self):
-        bacon.set_color(0, 0, 0, 1)
-        bacon.fill_rect(0, 0, ui_width, debug.font.height)
-        bacon.set_color(1, 1, 1, 1)
-
+        ui.draw_box(Rect(0, 0, ui_width, ui.font.height), ui.stat_border)
         bacon.draw_string(debug.font, self.get_quest_name(), 0, 0, align=bacon.Alignment.left, vertical_align=bacon.VerticalAlignment.top)
         bacon.draw_string(debug.font, self.get_room_name(), ui_width / 2, 0, align=bacon.Alignment.center, vertical_align=bacon.VerticalAlignment.top)
         bacon.draw_string(debug.font, '$%d' % game.money, ui_width, 0, align=bacon.Alignment.right, vertical_align=bacon.VerticalAlignment.top)
