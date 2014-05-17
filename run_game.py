@@ -1880,6 +1880,16 @@ class CombatWorld(World):
                     ui.draw_text_box(ae.effect.abbrv, x + 4, y + 4, ui.floater_border_grey)
                     y += 24
 
+        for slot in self.slots:
+            if slot.character:
+                x = slot.x * self.tile_size * map_scale + 12
+                y = slot.y * self.tile_size * map_scale + 56
+
+                aes = slot.character.active_effects
+                aes = [ae for ae in aes if ae.effect.abbrv]
+                if aes:
+                    y += 24
+
                 if slot.character is self.current_character:
                     ui.draw_combat_selection_box(slot.character.data.name, x, y)
                     

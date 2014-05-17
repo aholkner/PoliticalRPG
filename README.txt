@@ -9,7 +9,7 @@ Design and story by Amanda Schofield.
 Code and art by Alex Holkner.
 
 Source code hosted at https://github.com/aholkner/PoliticalRPG
-Licensed under MIT
+Licensed under BSD
 
 
 How to run the game:
