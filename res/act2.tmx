@@ -36,6 +36,7 @@
   <object name="Hick2" gid="68" x="16" y="200"/>
   <object name="Journalist2" gid="73" x="48" y="192"/>
   <object name="SouthWingDoor" gid="90" x="56" y="136"/>
+  <object name="Marketing2" gid="92" x="120" y="152"/>
  </objectgroup>
  <objectgroup name="Rooms" width="20" height="32"/>
 </map>

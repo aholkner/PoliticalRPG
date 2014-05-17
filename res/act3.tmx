@@ -2,9 +2,10 @@
 <map version="1.0" orientation="orthogonal" width="32" height="32" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="65" source="sprites.tsx"/>
+ <tileset firstgid="113" source="tiles_act3.tsx"/>
  <layer name="Tiles" width="32" height="32">
   <data encoding="base64" compression="zlib">
-   eJztlEELgCAMRld2adKhOvT//2k7CA1RWCAq7HvwwNvDOSQCAICPRVwLBvEw+GT+ZRe5YJygvzno6/dnKu9CzdCgX7u/xTi4z877LeZ/ileS1dni3aA/8/8zss/O+73mr/c/3+0efQCAD16AnhC5
+   eJztk00PgyAMhvnR6jacbOjBs/HkLib7pesBkmahseIHG+nhCYRDn7cFjFJqBgZABxiJcw5UTc8duCX2m4T++gf8Keef2s+9/5dDoz2HvfzvSHLw64z7x+9/UvQ7ivUv/Q/cP0Wsmzt/C7QBSrdWG/wFqhWiA5oFbGSGglmfw9oMe7rXZjjCjTOURA5/10e5v3NcgN5xPcmLeSD/82S3+MUvfvGL///9H40YDRg=
   </data>
  </layer>
  <layer name="Sprites" width="32" height="32">
@@ -12,27 +13,28 @@
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJztzgENAAAIA6DXtX8BY9w5SEACAHdMOwAA8NQC69UAag==
+   eJztzjENAAAIA7DZxb8BHOwi4WkVNAEAAJr5DgAcWAfKAGo=
   </data>
  </layer>
  <objectgroup name="NPCs" width="32" height="32">
-  <object gid="96" x="240" y="160"/>
   <object name="Journalist3" gid="73" x="48" y="168"/>
   <object name="Journalist4" gid="73" x="64" y="168"/>
   <object name="Journalist5" gid="73" x="56" y="184"/>
-  <object name="WarVet1" gid="83" x="48" y="88"/>
-  <object name="WarVet2" gid="83" x="80" y="80"/>
-  <object name="Teacher1" gid="82" x="96" y="112"/>
-  <object name="Teacher2" gid="82" x="120" y="112"/>
-  <object name="Kawalski" gid="88" x="96" y="136"/>
-  <object name="Cabinet2" gid="84" x="152" y="88"/>
-  <object name="Cabinet1" gid="84" x="136" y="80"/>
-  <object name="Cabinet3" gid="84" x="160" y="80"/>
-  <object name="JointChief1" gid="85" x="128" y="160"/>
-  <object name="JointChief2" gid="85" x="136" y="176"/>
-  <object name="JointChief3" gid="85" x="152" y="160"/>
-  <object name="N.O.T.B.A.D" gid="89" x="184" y="128"/>
-  <object name="PA2" gid="75" x="64" y="120"/>
+  <object name="WarVet1" gid="83" x="48" y="56"/>
+  <object name="WarVet2" gid="83" x="32" y="48"/>
+  <object name="Teacher1" gid="82" x="200" y="88"/>
+  <object name="Teacher2" gid="82" x="224" y="88"/>
+  <object name="Kawalski" gid="88" x="144" y="128"/>
+  <object name="Cabinet2" gid="84" x="152" y="40"/>
+  <object name="Cabinet1" gid="84" x="120" y="40"/>
+  <object name="Cabinet3" gid="84" x="136" y="40"/>
+  <object name="PA2" gid="75" x="104" y="168"/>
+  <object name="StairsToWhiteHouseBasement" gid="94" x="8" y="8"/>
+  <object name="DoorToWhiteHouseBasement" gid="96" x="56" y="104"/>
+  <object name="DoorToCabinetRoom" gid="97" x="88" y="56"/>
+  <object name="DoorToWarVetRoom" gid="98" x="64" y="80"/>
+  <object name="DoorToTeacherRoom" gid="99" x="184" y="96"/>
+  <object name="Marketing4" gid="92" x="160" y="72"/>
  </objectgroup>
  <objectgroup name="Rooms" width="32" height="32"/>
 </map>

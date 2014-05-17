@@ -49,6 +49,7 @@
   <object name="PA" gid="75" x="88" y="128"/>
   <object name="StairsToL2" gid="91" x="80" y="168"/>
   <object name="StairsToGround" gid="93" x="88" y="168"/>
+  <object name="Marketing3" gid="92" x="64" y="104"/>
  </objectgroup>
  <objectgroup name="Rooms" width="24" height="24">
   <object name="First Floor" x="0" y="0" width="192" height="192"/>

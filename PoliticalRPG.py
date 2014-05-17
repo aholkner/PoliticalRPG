@@ -656,11 +656,17 @@ class World(object):
         elif action == 'GiveMoney':
             game.money += int(param)
             return self.do_dialog(None, dialog)
-        elif action == 'RequireItem' or action == 'RequireItemMessage':
+        elif action == 'RequireItem' or action == 'RequireItemMessage' or action == 'RequireItemPlayerSay':
             if param in (item.id for item in game.quest_items):
                 return False # satisfied, move to next line immediately
             else:
-                self.do_dialog(sprite if action == 'RequireItem' else None, dialog)
+                if action == 'RequireItemMessage':
+                    dialog_sprite = None
+                elif action == 'RequireItemPlayerSay':
+                    dialog_sprite = self.player_sprite
+                else:
+                    dialog_sprite = sprite
+                self.do_dialog(dialog_sprite, dialog)
                 sprite.script_index -= 1
                 self.active_script = None
         elif action == 'RequireFlag' or action == 'RequireFlagPlayerSay':
@@ -852,6 +858,17 @@ class ShopMenu(Menu):
         self.world.pop_menu()
         self.world.on_dismiss_dialog()
 
+        
+def get_tile_collision(tile):
+    if not hasattr(tile, 'properties'):
+        return ''
+    if 'c' not in tile.properties:
+        return ''
+    c = tile.properties['c']
+    if not c:
+        c = 'udlr'
+    return c
+
 class MapWorld(World):
      
     input_movement = {
@@ -907,10 +924,40 @@ class MapWorld(World):
 
     def move(self, dx, dy):
         self.move_timeout = 0.2
+        if dx and dy:
+            self.move(dx, 0)
+            self.move(0, dy)
+
         other = self.get_sprite_at(self.player_sprite.x + dx, self.player_sprite.y + dy)
         if other:
             self.on_collide(other)
         else:
+            x = self.player_sprite.x
+            y = self.player_sprite.y
+            if x + dx < 0 or x + dx >= self.map.cols or \
+                y + dy < 0 or y + dy >= self.map.rows:
+                return
+
+            tile_index = self.map.get_tile_index(x * self.tile_size, 
+                                                 y * self.tile_size)
+            next_tile_index = self.map.get_tile_index((x + dx) * self.tile_size, 
+                                                      (y + dy) * self.tile_size)
+            for layer in self.map.layers:
+                tile = layer.images[tile_index]
+                next_tile = layer.images[next_tile_index]
+
+                c = get_tile_collision(tile)
+                next_c = get_tile_collision(next_tile)
+            
+                if dx < 0 and ('l' in c or 'r' in next_c):
+                    return
+                elif dx > 0 and ('r' in c or 'l' in next_c):
+                    return
+                elif dy < 0 and ('u' in c or 'd' in next_c):
+                    return
+                elif dy > 0 and ('d' in c or 'u' in next_c):
+                    return
+
             self.player_sprite.x += dx
             self.player_sprite.y += dy
         
@@ -1058,7 +1105,7 @@ class Character(object):
                 return
         
     def calc_stat(self, base, exp):
-        return int(base * pow(exp, self.level - 1))
+        return base + (self.level - 1) * exp
     
     def add_active_effect(self, active_effect):
         for ae in self.active_effects:
@@ -1406,8 +1453,9 @@ class CombatWorld(World):
     def reset(self):
         for character in self.characters:
             character.remove_all_active_effects()
-            character.dead = False
-            character.votes = character.max_votes / 2
+            if character.dead:
+                character.dead = False
+                character.votes = character.max_votes / 2
 
     def lose(self):
         self.push_menu(GameOverMenu(self))
@@ -1570,7 +1618,7 @@ class CombatWorld(World):
                     debug.println('%s is resistant to %s' % (target.id, attack.name))
                     damage -= damage * 0.3
                 elif attack in target.data.weaknesses:
-                    self.add_floater(target, 'Weak', ui.floater_border_grey, floater_offset)
+                    self.add_floater(target, 'Weakness', ui.floater_border_grey, floater_offset)
                     floater_offset += 1
                     debug.println('%s is weak to %s' % (target.id, attack.name))
                     damage += damage * 0.3
@@ -1603,7 +1651,8 @@ class CombatWorld(World):
                 total_damage += damage
 
         # Award spin for total damage
-        self.award_spin(source, max(0, total_damage), attack.spin_cost > 0)
+        if attack.spin_cost == 0:
+            self.award_spin(source, max(0, total_damage))
 
         # Critical fail effect
         if critical_fail and critical_fail_effect:
@@ -1635,15 +1684,13 @@ class CombatWorld(World):
         character.dead = dead
         self.get_slot(character).sprite.effect_dead = dead
 
-    def award_spin(self, target, damage, is_spin_action):
+    def award_spin(self, target, damage):
         bonus = (damage + target.accumulated_spin_damage + max(target.wit, 0)) / 5
         if bonus <= 0:
             target.accumulated_spin_damage += damage
         else:
             target.accumulated_spin_damage = 0
 
-        if is_spin_action:
-            bonus /= 2
         debug.println('Awarded %d spin; %d left over damage for next time' % (bonus, target.accumulated_spin_damage))
         target.spin = min(target.spin + bonus, target.max_spin)
         

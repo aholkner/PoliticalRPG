@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="20" height="24" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <tileset firstgid="65" source="sprites.tsx"/>
+ <tileset firstgid="113" source="tiles_act3.tsx"/>
+ <layer name="Tiles" width="20" height="24">
+  <data encoding="base64" compression="zlib">
+   eJztkksKwCAMBT13b2B/INaC/Z21EQyE0KqYLrpwMYuIzgsmTinlGtV0EQ30QgbiM8J+AhYYgYn4UvmGvecE30JyeB6nxGczd5ov7TuAk4A7pNl5wANbgv0lo6SXHLiHmOFjPVf66B4ioV4rfU9zkfhwLnwel/Afv5pH8/3DdwPlv/gW
+  </data>
+ </layer>
+ <layer name="Sprites" width="20" height="24">
+  <properties>
+   <property name="sprite" value="1"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUjIJRMFRA5kA7YBRQDQAAxCwAag==
+  </data>
+ </layer>
+ <objectgroup name="NPCs" width="20" height="24">
+  <object name="JointChief1" gid="85" x="40" y="64"/>
+  <object name="JointChief2" gid="85" x="56" y="64"/>
+  <object name="JointChief3" gid="85" x="24" y="64"/>
+  <object name="N.O.T.B.A.D" gid="89" x="144" y="96"/>
+  <object name="PA3" gid="75" x="48" y="128"/>
+  <object name="StairsToWhiteHouse" gid="95" x="40" y="160"/>
+  <object name="Marketing5" gid="92" x="24" y="136"/>
+  <object name="DoorToNotbad" gid="90" x="24" y="56"/>
+ </objectgroup>
+ <objectgroup name="Rooms" width="20" height="24"/>
+</map>

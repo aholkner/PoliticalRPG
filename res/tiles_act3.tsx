@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset name="tiles_act1" tilewidth="8" tileheight="8">
- <image source="tiles_act1.png" width="64" height="64"/>
+<tileset name="tiles_act3" tilewidth="8" tileheight="8">
+ <image source="tiles_act3.png" width="64" height="64"/>
  <terraintypes>
   <terrain name="Interior" tile="-1"/>
   <terrain name="Exterior" tile="-1"/>
