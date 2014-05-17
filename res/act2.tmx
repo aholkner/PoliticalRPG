@@ -11,7 +11,7 @@
  </layer>
  <layer name="Tile Layer 3" width="20" height="32">
   <data encoding="base64" compression="zlib">
-   eJztlMsOgkAMRfvLPvAJ+EA04sq4UlwZP9RLlGRSC9MGCS5YnGQmmTlp0+ZGRBT1/A0DMPQwMvjmYOFhafDtFb7Q4PO5uvZN2N8jyBg7kApIs+LzOAv1XcCjAl57rOjX4ruDm0DpKs55jY/vUlzzVkPbvqcwz8zptzifOpxH033h/Wp8Y7AFU3D4MAMBSDy+K33vTlnDyvGtmceSLxafJg9+7QsNPp4vTX2WvNf4NvTehcCB3xODz0Lva9/3AsLjRA8=
+   eJzt1MkOgjAUheG+sgMOFXDAIerKuFJcGR/Uk1gSci30niDBBYsvhAT+tOlNE2NM0vsbAxgGjIjeHGzAgujtFb2Y6IVaXfcm4t8jnIQt7Dx8ZyXP4+JZ3xWeFeTaU8V+md4D7hWse+Y1PTlLac23Gm33Xp7zLFj3PHd4Hk3nRe5X0xvDBqZwcGYQQRbo3cz33BRrWJZ6K9Fh7hemp7kPft2LiZ68X5r2mPte01ubzyxEJfI9I3qMvtd+7w3MckQ/
   </data>
  </layer>
  <layer name="Props" width="20" height="32">
@@ -35,6 +35,7 @@
   <object name="Hick1" gid="68" x="32" y="184"/>
   <object name="Hick2" gid="68" x="16" y="200"/>
   <object name="Journalist2" gid="73" x="48" y="192"/>
+  <object name="SouthWingDoor" gid="90" x="56" y="136"/>
  </objectgroup>
  <objectgroup name="Rooms" width="20" height="32"/>
 </map>

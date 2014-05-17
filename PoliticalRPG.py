@@ -655,11 +655,11 @@ class World(object):
         elif action == 'GiveMoney':
             game.money += int(param)
             return self.do_dialog(None, dialog)
-        elif action == 'RequireItem':
+        elif action == 'RequireItem' or action == 'RequireItemMessage':
             if param in (item.id for item in game.quest_items):
                 return False # satisfied, move to next line immediately
             else:
-                self.do_dialog(sprite, dialog)
+                self.do_dialog(sprite if action == 'RequireItem' else None, dialog)
                 sprite.script_index -= 1
                 self.active_script = None
         elif action == 'RequireFlag':
