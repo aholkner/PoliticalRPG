@@ -1726,6 +1726,7 @@ class WinCombatWorld(World):
         
         # Generate XP per character
         per_character_xp = encounter.xp / len(self.characters)
+        game.money += encounter.money
         for character in self.characters:
             if get_level_for_xp(character.xp + per_character_xp) != character.level:
                 self.queued_dialogs.append(LevelUpWorld(character, self.combat_world, per_character_xp))
@@ -1738,8 +1739,10 @@ class WinCombatWorld(World):
 
         width = ui_width / 2
         height = ui.font.height * 3
+        if encounter.money:
+            height  += ui.font.height
         if encounter.item_attack_drops:
-           height += ui.font.height * (len(encounter.item_attack_drops) + 2)
+            height += ui.font.height * (len(encounter.item_attack_drops) + 2)
         
         cx = ui_width / 2
         cy = ui_height / 2
@@ -1761,6 +1764,9 @@ class WinCombatWorld(World):
         # XP
         bacon.set_color(0, 0, 0, 1)
         bacon.draw_string(ui.font, 'XP Reward: %d' % encounter.xp, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+        if encounter.money:
+            y += ui.font.height
+            bacon.draw_string(ui.font, 'Kickback: $%d' % encounter.money, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
         y += ui.font.height * 2
 
         if encounter.item_attack_drops:
@@ -2245,6 +2251,7 @@ def main():
             item_attacks = 'Attack Items',
             bribe_cost = 'Bribe Cost',
             xp = 'XP',
+            money = 'Money',
             item_attack_drops = 'Attack Drops',), index_unique=True)
 
         for encounter in game_data.encounters.values():
