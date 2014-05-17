@@ -1277,7 +1277,11 @@ class CombatOffenseMenu(CombatMenu):
             if attack.target_type == 'DeadFriendly' and not [slot for slot in self.world.player_slots if slot.character and slot.character.dead]:
                 enabled = False
 
-            self.items.append(MenuItem(name, attack.description, partial(self.select, attack), enabled=enabled))
+            description = attack.description
+            if attack.spin_cost:
+                description += ' (Uses %d spin).' % attack.spin_cost
+
+            self.items.append(MenuItem(name, description, partial(self.select, attack), enabled=enabled))
 
     def select(self, attack):
         if attack.target_type == 'None':
