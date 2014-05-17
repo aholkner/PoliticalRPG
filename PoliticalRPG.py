@@ -1636,7 +1636,7 @@ class CombatWorld(World):
         self.get_slot(character).sprite.effect_dead = dead
 
     def award_spin(self, target, damage, is_spin_action):
-        bonus = (damage + target.accumulated_spin_damage + max(target.wit, 0)) / (target.level * 5)
+        bonus = (damage + target.accumulated_spin_damage + max(target.wit, 0)) / 5
         if bonus <= 0:
             target.accumulated_spin_damage += damage
         else:
