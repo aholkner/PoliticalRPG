@@ -232,7 +232,7 @@
  </layer>
  <objectgroup name="NPCs" width="28" height="28">
   <object name="Receptionist" gid="135" x="88" y="96"/>
-  <object name="Mayor" gid="139" x="48" y="136"/>
+  <object name="Mayor" gid="139" x="64" y="120"/>
   <object name="Protester1" gid="136" x="32" y="168"/>
   <object name="Head Protester" gid="136" x="40" y="184"/>
   <object name="Protester2" gid="136" x="48" y="168"/>
