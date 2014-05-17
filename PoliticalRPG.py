@@ -1694,19 +1694,47 @@ class WinCombatWorld(World):
     def draw(self):
         encounter = self.combat_world.encounter
         self.combat_world.draw()
-        cx = ui_width / 2
-        y = 128
-        font = debug.font
-        bacon.draw_string(font, 'XP: +%d' % encounter.xp, cx, y, align = bacon.Alignment.center)
+
+        width = ui_width / 2
+        height = ui.font.height * 3
+        if encounter.item_attack_drops:
+           height += ui.font.height * (len(encounter.item_attack_drops) + 2)
         
-        y = 256
-        for ia in encounter.item_attack_drops:
-            if ia.quantity == 1:
-                name = ia.attack.name
-            else:
-                name = '%s (x%d)' % (ia.attack.name, ia.quantity)
-            bacon.draw_string(font, name, cx, y, align = bacon.Alignment.center)
-            y += font.height
+        cx = ui_width / 2
+        cy = ui_height / 2
+        x1 = cx - width / 2
+        y1 = cy - height / 2
+        x2 = cx + width / 2
+        y2 = cy + height / 2
+
+        # Background
+        ui.draw_box(Rect(x1, y1, x2, y2), ui.white_border)
+
+        y = y1
+
+        # Title
+        ui.draw_box(Rect(x1, y1, x2, y1 + ui.font.height), ui.floater_border_red)
+        bacon.draw_string(ui.font, 'Victory!', cx, y, align = bacon.Alignment.center, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height + 16
+
+        # XP
+        bacon.set_color(0, 0, 0, 1)
+        bacon.draw_string(ui.font, 'XP Reward: %d' % encounter.xp, x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+        y += ui.font.height * 2
+
+        if encounter.item_attack_drops:
+            bacon.draw_string(ui.font, 'Loot:', x1, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+            y += ui.font.height
+
+            for ia in encounter.item_attack_drops:
+                if ia.quantity == 1:
+                    name = ia.attack.name
+                else:
+                    name = '%s (x%d)' % (ia.attack.name, ia.quantity)
+                bacon.draw_string(ui.font, name, x1 + 32, y, align = bacon.Alignment.left, vertical_align = bacon.VerticalAlignment.top)
+                y += ui.font.height
+
+        bacon.set_color(1, 1, 1, 1)
 
     def on_world_key_pressed(self, key):
         self.next()
