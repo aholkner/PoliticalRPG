@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="24" height="24" tilewidth="8" tileheight="8">
- <tileset firstgid="1" source="tiles.tsx"/>
- <tileset firstgid="65" source="sprites.tsx"/>
- <tileset firstgid="113" source="tiles_act2p2.tsx"/>
+ <tileset firstgid="1" source="sprites.tsx"/>
+ <tileset firstgid="49" source="tiles_act2p2.tsx"/>
+ <tileset firstgid="113" source="props.tsx"/>
  <layer name="Tiles" width="24" height="24">
   <data encoding="base64" compression="zlib">
-   eJybxcDAMIsAXgPEi6B4FRHqkfFUIvBkJPMnEqmHFExP81eTqJeYMBwNf/x45Wj4j4b/CA7/oR6/s5HMn0li/C4a4riLCNyNpL6TSD0wTGz6gQFapc/Baj4A1+RSNg==
+   eJyLYmBgiCKAc4A4CYqziFCPjEOJwMFI5gcSqYcUTGvzM5HMzyZRLzFhOBr+o+E/Gv6j4T9c4zcayfxIEuM3aYhjLyKwN5J6TyL1wDCx6QcGaJU+B6v5AB0jw70=
+  </data>
+ </layer>
+ <layer name="Props" width="24" height="24">
+  <data encoding="base64" compression="zlib">
+   eJxjYKA96ATiJUC8lAIzYPo7ccivAeK1FJhPqf7BDEbDf2ABtvAvwaO+EoiroewyIC5nID38S/GY30iE/uEEsIU/LFxxAXT54Z7+kdMcLfRjS3OkAEr0d+Jgj4JRAABwTCJ6
   </data>
  </layer>
  <layer name="Sprites" width="24" height="24">
   <data encoding="base64" compression="zlib">
-   eJxjYBgFo2AUjIJRMAqGN8gcaAeMgkEHAOM0AGo=
+   eJxjYBgFo2AUjIJRMAqGN9AcaAeMgkEHAF40ACo=
   </data>
  </layer>
  <objectgroup name="NPCs" width="24" height="24">
-  <object name="StairsToL3" gid="91" x="80" y="168"/>
-  <object name="StairsToL1" gid="93" x="88" y="168"/>
-  <object name="Lobbyist2" gid="67" x="104" y="136"/>
-  <object name="Lobbyist3" gid="67" x="64" y="136"/>
-  <object name="Lobbyist4" gid="67" x="64" y="96"/>
+  <object name="StairsToL3" gid="27" x="80" y="168"/>
+  <object name="StairsToL1" gid="29" x="88" y="168"/>
+  <object name="Lobbyist2" gid="3" x="104" y="136"/>
+  <object name="Lobbyist3" gid="3" x="64" y="136"/>
+  <object name="Lobbyist4" gid="3" x="64" y="96"/>
  </objectgroup>
  <objectgroup name="Rooms" width="24" height="24">
   <object name="2nd Floor" x="0" y="0" width="192" height="192"/>

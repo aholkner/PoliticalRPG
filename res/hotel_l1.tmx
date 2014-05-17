@@ -3,12 +3,18 @@
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="65" source="sprites.tsx"/>
  <tileset firstgid="113" source="tiles_act2p2.tsx"/>
+ <tileset firstgid="177" source="props.tsx"/>
  <layer name="Tiles" width="24" height="24">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
    eJybxcDAMIsAXgPEi6B4FRHqkfFUIvBkJPMnEqmHFExr81cimb+aRL3EhOFo+I+G/2j4j4b/cI3f2UjmzyQxfhcNcdxFBO5GUt9JpB4YJjb9wACt0udgNR8AghtSTA==
+  </data>
+ </layer>
+ <layer name="Props" width="24" height="24">
+  <data encoding="base64" compression="zlib">
+   eJxjYKA9uALEV3HInSRSDB+4A8R3SdSDDxwF4mNUNA8dnAXiczQ0Hx3gC/8tRIrhA/jCfyuRYjBwkQEz/C+S6B5CYKDC/xKUDwtfXOmc0vDHF77EyA/n9L8TiHcB8W4oH1tYY4uXnUh60AF6+B9EYhMKa2x6LuFURRrAlY6oFb+4/Ebv+B1ocBKNvQ+I9w+QW0YBaQAAPlIxNA==
   </data>
  </layer>
  <layer name="Sprites" width="24" height="24">

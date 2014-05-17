@@ -1,30 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="24" height="24" tilewidth="8" tileheight="8">
- <tileset firstgid="1" source="tiles.tsx"/>
- <tileset firstgid="65" source="sprites.tsx"/>
- <tileset firstgid="113" source="tiles_act2p2.tsx"/>
+ <tileset firstgid="1" source="sprites.tsx"/>
+ <tileset firstgid="49" source="tiles_act2p2.tsx"/>
+ <tileset firstgid="113" source="props.tsx"/>
  <layer name="Tiles" width="24" height="24">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJxrZ2BgaB/Fo5hMPIPGeBkReAkSuxyIK6DsYiCuJYAnEYEn4xBfRwPzpyJhYsyfSqT5U7FgarqfFubDzMFlfgsD4bRBSvhjswNf+BIT9vjcj898QnYTkz6JcScxcoTcjw/PIgLPpsD8oY67iMDdSOo7idQDw8S4ARS/MDCRBn4czOYDAAHiP68=
+   eJxzZ2BgcB/Fo5hMHEFjnEYETkFimwOxBZRtDMS2BHAQETgYh3geDcwPRcLEmB9KpPmhWDA13U8L82Hm4DLfhYFw2iAl/LHZgS98iQl7fO7HZz4hu5FxJhFuoESOkPvx4SgicDQF5g917EUE9kZS70mkHhgmxg2g+IWBQBr4cTCbDwDkA7E2
+  </data>
+ </layer>
+ <layer name="Props" width="24" height="24">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFo2AUIINOKF0GxOVoYuhqhgpoQOM3Udn8Diqbhw4aaGw+rd0/3AFyXqE2aEBit5Ool5h8ihz3/SSaTyyoA+J6Gpk9CsgHAITICaw=
   </data>
  </layer>
  <layer name="Sprites" width="24" height="24">
   <data encoding="base64" compression="zlib">
-   eJxjYBgFo2AUjIJRMAqGN8gcaAeMgkEHAOM0AGo=
+   eJxjYBgFo2AUjIJRMAqGN9AcaAeMgkEHAF40ACo=
   </data>
  </layer>
  <objectgroup name="NPCs" width="24" height="24">
-  <object name="StairsToL1" gid="91" x="80" y="168"/>
-  <object name="StairsToBasement" gid="93" x="88" y="168"/>
-  <object name="Religious1" gid="69" x="112" y="112"/>
-  <object name="Religious2" gid="69" x="96" y="128"/>
-  <object name="Religious3" gid="69" x="128" y="128"/>
-  <object name="Religious4" gid="69" x="112" y="152"/>
-  <object name="TVPersonality" gid="78" x="56" y="104"/>
-  <object name="TVDebate" gid="71" x="120" y="48"/>
+  <object name="StairsToL1" gid="27" x="80" y="168"/>
+  <object name="StairsToBasement" gid="29" x="88" y="168"/>
+  <object name="Religious1" gid="5" x="112" y="112"/>
+  <object name="Religious2" gid="5" x="96" y="128"/>
+  <object name="Religious3" gid="5" x="128" y="128"/>
+  <object name="Religious4" gid="5" x="112" y="152"/>
+  <object name="TVPersonality" gid="14" x="56" y="104"/>
+  <object name="TVDebate" gid="7" x="120" y="48"/>
  </objectgroup>
  <objectgroup name="Rooms" width="24" height="24">
   <object name="Ground Floor" x="0" y="0" width="192" height="192"/>
