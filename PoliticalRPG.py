@@ -383,6 +383,7 @@ class Menu(object):
 class World(object):
     active_script = None
     active_script_sprite = None
+    map_script_sprite = None
     current_character = None
     quest_name = ''
 
@@ -607,7 +608,9 @@ class World(object):
         if trigger not in game_data.script:
             return
         if sprite is None:
-            sprite = Sprite(None, -100, -100)
+            sprite = self.map_script_sprite
+        if sprite is None:
+            sprite = self.map_script_sprite = Sprite(None, -100, -100)
         self.active_script = game_data.script[trigger]
         self.active_script_sprite = sprite
         self.continue_script()
