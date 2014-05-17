@@ -1109,6 +1109,9 @@ class CombatMenuMain(CombatMenu):
         super(CombatMenuMain, self).__init__(world)
         character = self.world.current_character
 
+        #workaround for unknown bug
+        world.pop_all_menus()
+
         self.items.append(MenuItem('Offense >', 'Launch a political attack', self.on_offense))
         self.items.append(MenuItem('Defense', game_data.attacks['DEFENSE'].description, self.on_defense))
         self.items.append(MenuItem('Spin >', 'Run spin to get control of the situation', self.on_spin, enabled=bool(character.spin_attacks)))
@@ -1213,6 +1216,7 @@ class GameOverMenu(Menu):
     def __init__(self, world):
         super(GameOverMenu, self).__init__(world)
         self.title = 'You are defeated'
+        self.can_dismiss = False
         self.items.append(MenuItem('Restart this encounter', 'You failed this time, but next time the dice rolls may be in your favour', self.on_restart_encounter))
         self.items.append(MenuItem('Quit game', 'Exit the game; your game is not saved', self.on_quit))
 
@@ -1402,6 +1406,8 @@ class CombatWorld(World):
     def reset(self):
         for character in self.characters:
             character.remove_all_active_effects()
+            character.dead = False
+            character.votes = character.max_votes / 2
 
     def lose(self):
         self.push_menu(GameOverMenu(self))
@@ -1523,6 +1529,7 @@ class CombatWorld(World):
         critical_fail = True
         total_damage = 0
         for target in targets:
+            floater_offset = 1
             # Immunity
             if attack in target.data.immunities:
                 self.add_floater(target, 'Immune', ui.floater_border_grey)
@@ -1541,7 +1548,8 @@ class CombatWorld(World):
 
             # Damage
             if crit_success:
-                self.add_floater(target, 'Critical Hit!', ui.floater_border_grey, 1)
+                self.add_floater(target, 'Critical Hit!', ui.floater_border_grey, floater_offset)
+                floater_offset += 1
                 debug.println('Critical hit')
                 damage = base_stat + (attack.crit_base_damage + modifiers)
             else:
@@ -1557,17 +1565,20 @@ class CombatWorld(World):
 
                 # Resistance and weakness
                 if attack in target.data.resistance:
-                    self.add_floater(target, 'Resist', ui.floater_border_grey, 1)
+                    self.add_floater(target, 'Resist', ui.floater_border_grey, floater_offset)
+                    floater_offset += 1
                     debug.println('%s is resistant to %s' % (target.id, attack.name))
                     damage -= damage * 0.3
                 elif attack in target.data.weaknesses:
-                    self.add_floater(target, 'Weak', ui.floater_border_grey, 1)
+                    self.add_floater(target, 'Weak', ui.floater_border_grey, floater_offset)
+                    floater_offset += 1
                     debug.println('%s is weak to %s' % (target.id, attack.name))
                     damage += damage * 0.3
 
                 # Global resistance (defense)
                 if target.resistance:
-                    self.add_floater(target, 'Defends', ui.floater_border_grey, 1)
+                    self.add_floater(target, 'Defends', ui.floater_border_grey, floater_offset)
+                    floater_offset += 1
                     debug.println('%s defends' % target.id)
                 damage -= damage * min(1, target.resistance)
                 
@@ -1638,7 +1649,7 @@ class CombatWorld(World):
         
     def add_floater(self, character, text, border, offset=0):
         slot = self.get_slot(character)
-        self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale + 16, slot.y * self.tile_size * map_scale - offset * 32 - 16, border))
+        self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale + 16, slot.y * self.tile_size * map_scale - offset * 28 - 16, border))
 
     def draw(self):
         self.draw_world()
@@ -1789,7 +1800,7 @@ class AssignSkillPointsMenu(Menu):
         super(AssignSkillPointsMenu, self).__init__(world)
         self.can_dismiss = False
         self.enable_border = False
-        self.cunning_item = MenuItem('Cunning', 'Effectiveness of arguments')
+        self.cunning_item = MenuItem('Cunning', 'Effectiveness of offense')
         self.wit_item = MenuItem('Wit', 'Effectiveness of quips')
         self.charisma_item = MenuItem('Charisma', 'Defense against opponent\'s attacks')
         self.flair_item = MenuItem('Flair', 'Chance of critical attack')
@@ -2027,6 +2038,9 @@ def get_level_for_xp(xp):
 
 class Game(bacon.Game):
     def __init__(self):
+        music = bacon.Sound('res/wwing.ogg', stream=True)
+        music.play()
+
         self.player = Character('Player', 1, [], False)
         self.allies = [self.player]
         self.quest_items = []
