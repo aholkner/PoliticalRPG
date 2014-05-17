@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="16" height="16" tilewidth="8" tileheight="8">
+<map version="1.0" orientation="orthogonal" width="24" height="16" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="sprites.tsx"/>
  <tileset firstgid="49" source="tiles_basement.tsx"/>
- <layer name="Tiles" width="16" height="16">
+ <layer name="Tiles" width="24" height="16">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJyzZWBgsB3FFGFDIDYiEhtj0W8JxElEYutR/VTX7wjEpkjYDIhDgdgETRyEnbHoR8d2DBBgQ4TagdYPANwFRCg=
+   eJyzZWBgsB3FIwobArERkdiYDPMtgTiJSGw9av6o+WjYEYhNkbAZEIcCsQmaOAg7k2E+OrZjgAAbKpg11MwHADs1Yqg=
   </data>
  </layer>
- <layer name="Sprites" width="16" height="16">
+ <layer name="Sprites" width="24" height="16">
   <data encoding="base64" compression="zlib">
-   eJxjYBgFo2BwAs2BdsAIAAA9BAAq
+   eJxjYBgFo2AUjASgOdAOGAWDDgAAWzQAKg==
   </data>
  </layer>
- <objectgroup name="NPCs" width="16" height="16">
-  <object name="StairsToGround" gid="27" x="48" y="104"/>
-  <object name="DeepThroat" gid="13" x="24" y="72"/>
+ <objectgroup name="NPCs" width="24" height="16">
+  <object name="StairsToGround" gid="27" x="80" y="104"/>
+  <object name="DeepThroat" gid="13" x="56" y="72"/>
  </objectgroup>
- <objectgroup name="Rooms" width="16" height="16">
-  <object name="Basement" x="-32" y="-64" width="192" height="192"/>
+ <objectgroup name="Rooms" width="24" height="16">
+  <object name="Basement" x="0" y="-64" width="192" height="192"/>
  </objectgroup>
 </map>
