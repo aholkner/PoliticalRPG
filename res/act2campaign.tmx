@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE map SYSTEM "http://mapeditor.org/dtd/1.0/map.dtd">
+<map version="1.0" orientation="orthogonal" width="20" height="16" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <tileset firstgid="65" source="sprites.tsx"/>
+ <layer name="Tiles" width="20" height="16">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYMKBmbGIMRJQzwnEXDgwNxYxQuoH2jxBIBZCwlxIbGG08ODCEh5Dzb+UmEcqHgr+RY5/5LiHxT+t3Yee35DTGDH5TQgNU+o+XjRMb/PQ8yN6fIigYULqAcTQDME=
+  </data>
+ </layer>
+ <layer name="Sprites" width="20" height="16">
+  <properties>
+   <property name="sprite" value="1"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFgw1kDrQDRsEoGCEAAGxbAGo=
+  </data>
+ </layer>
+ <objectgroup name="NPCs" width="20" height="16">
+  <object gid="96" x="200" y="96"/>
+  <object gid="96" x="-64" y="128"/>
+  <object gid="96" x="256" y="0"/>
+  <object name="Politician4" gid="66" x="48" y="24"/>
+  <object name="Politician3" gid="66" x="24" y="16"/>
+  <object name="Politician5" gid="66" x="8" y="24"/>
+  <object name="Politician6" gid="66" x="32" y="120"/>
+  <object name="Politician7" gid="66" x="16" y="104"/>
+  <object name="DeepThroat" gid="77" x="128" y="16"/>
+  <object name="TVPersonality" gid="78" x="128" y="112"/>
+  <object name="Religious4" gid="69" x="128" y="80"/>
+  <object name="Religious3" gid="69" x="144" y="56"/>
+  <object name="Religious1" gid="69" x="128" y="48"/>
+  <object name="Religious2" gid="69" x="112" y="56"/>
+  <object name="Lobbyist2" gid="67" x="8" y="80"/>
+  <object name="Lobbyist3" gid="67" x="40" y="80"/>
+  <object name="Lobbyist4" gid="67" x="48" y="48"/>
+  <object name="TVDebate" gid="71" x="64" y="40"/>
+  <object name="PA" gid="75" x="24" y="64"/>
+  <object name="PA" gid="75" x="24" y="64"/>
+ </objectgroup>
+</map>

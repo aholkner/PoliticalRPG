@@ -78,6 +78,8 @@ class UI(object):
         self.speech_point = self.get_tile_2x(6)
         self.menu_up_image = self.get_tile_2x(19)
         self.menu_down_image = self.get_tile_2x(20)
+        self.combat_selected_arrow = self.get_tile_2x(7)
+        self.combat_target_arrow = self.get_tile_2x(14)
 
     def get_border_tiles(self, index):
         return [self.get_tile(index + i) for i in [0, 1, 2, 16, 17, 18, 32, 33, 34]]
@@ -179,6 +181,16 @@ class UI(object):
         bacon.set_color(0, 0, 0, 1)
         bacon.draw_glyph_layout(glyph_layout)
         bacon.set_color(1, 1, 1, 1)
+
+    def draw_combat_selection_box(self, text, x, y):
+        width = self.font.measure_string(text) + 8
+        x1 = x - width / 2
+        y1 = y - self.font.height / 2
+        x2 = x1 + width
+        y2 = y + self.font.height
+        self.draw_box(Rect(x1, y1, x2, y2), self.stat_border_active)
+        self.draw_image(self.combat_selected_arrow, x - 8, y1 - 16)
+        bacon.draw_string(self.font, text, x1 + 4, y1 + 4, vertical_align=bacon.VerticalAlignment.top)
 
 ui = UI()
 
@@ -1088,8 +1100,7 @@ class CombatTargetMenu(CombatMenu):
         self.target_count = target_count
         self.func = func
         self.can_dismiss = True
-        self.width = 0
-        self.height = 0
+        self.items = [MenuItem('< Choose Target >', 'Choose target')]
 
         if target_type == 'AllEnemy':
             self.slots = [slot for slot in self.world.monster_slots if slot.character and not slot.character.dead]
@@ -1109,9 +1120,6 @@ class CombatTargetMenu(CombatMenu):
     def selected_slots(self):
         return self.slots[self.selected_index:self.selected_index+self.target_count]
 
-    def layout(self):
-        pass
-
     def on_key_pressed(self, key):
         if key == bacon.Keys.left:
             self.selected_index = (self.selected_index - 1) % (len(self.slots) - self.target_count + 1)
@@ -1126,8 +1134,10 @@ class CombatTargetMenu(CombatMenu):
     def draw(self):
         for i in range(self.target_count):
             slot = self.slots[self.selected_index + i]
-            debug.draw_string('>', slot.x * self.world.tile_size * map_scale, slot.y * self.world.tile_size * map_scale + 16)
-        self.draw_status('Choose target')
+            x = slot.x * self.world.tile_size * map_scale
+            y = slot.y * self.world.tile_size * map_scale
+            ui.draw_image(ui.combat_target_arrow, x + 4, y - 24)
+        super(CombatTargetMenu, self).draw()
         
 class GameOverMenu(Menu):
     def __init__(self, world):
@@ -1572,13 +1582,9 @@ class CombatWorld(World):
             if slot.character:
                 x = slot.x * self.tile_size * map_scale
                 y = slot.y * self.tile_size * map_scale
-                if slot.character is self.current_character:    
-                    debug.draw_string('^', x, y)
-
-                    bacon.set_color(0, 0, 0, 1)
-                    bacon.draw_string(debug.font, slot.character.data.name, x + 4 * map_scale, y + 16 * map_scale, vertical_align=bacon.VerticalAlignment.top, align=bacon.Alignment.center) 
-                    bacon.set_color(1, 1, 1, 1)
-
+                if slot.character is self.current_character:
+                    ui.draw_combat_selection_box(slot.character.data.name, x + 12, y + 56)
+                    
                 bacon.set_color(0, 0, 0, 1)
                 bacon.draw_string(debug.font, slot.character.get_effects_abbrv(), x + 4 * map_scale, y + 8 * map_scale, vertical_align=bacon.VerticalAlignment.top, align=bacon.Alignment.center) 
                 bacon.set_color(1, 1, 1, 1)

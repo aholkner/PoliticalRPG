@@ -20,15 +20,22 @@
   <object gid="96" x="200" y="96"/>
   <object gid="96" x="-64" y="128"/>
   <object gid="96" x="256" y="0"/>
-  <object name="Governor" gid="76" x="32" y="16"/>
-  <object name="Politician2" gid="66" x="8" y="16"/>
-  <object name="Politician1" gid="66" x="24" y="32"/>
-  <object name="Theo" gid="87" x="32" y="56"/>
-  <object name="Hick1" gid="68" x="8" y="96"/>
-  <object name="Hick2" gid="68" x="16" y="112"/>
-  <object name="Journalist2" gid="73" x="40" y="96"/>
+  <object name="Journalist3" gid="73" x="8" y="104"/>
+  <object name="Journalist4" gid="73" x="24" y="104"/>
+  <object name="Journalist5" gid="73" x="16" y="120"/>
+  <object name="WarVet1" gid="83" x="8" y="24"/>
+  <object name="WarVet2" gid="83" x="40" y="16"/>
+  <object name="Teacher1" gid="82" x="56" y="48"/>
+  <object name="Teacher2" gid="82" x="80" y="48"/>
+  <object name="Kawalski" gid="88" x="56" y="72"/>
+  <object name="Cabinet2" gid="84" x="112" y="24"/>
+  <object name="Cabinet1" gid="84" x="96" y="16"/>
+  <object name="Cabinet3" gid="84" x="120" y="16"/>
+  <object name="JointChief1" gid="85" x="88" y="96"/>
+  <object name="JointChief2" gid="85" x="96" y="112"/>
+  <object name="JointChief3" gid="85" x="112" y="96"/>
+  <object name="N.O.T.B.A.D" gid="89" x="144" y="64"/>
+  <object name="PA2" gid="75" x="24" y="56"/>
  </objectgroup>
- <objectgroup name="Rooms" width="20" height="16">
-  <object name="Governor's Office" x="0" y="0" width="56" height="32"/>
- </objectgroup>
+ <objectgroup name="Rooms" width="20" height="16"/>
 </map>
