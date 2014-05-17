@@ -2,37 +2,13 @@
 <map version="1.0" orientation="orthogonal" width="24" height="24" tilewidth="8" tileheight="8">
  <tileset firstgid="1" source="tiles.tsx"/>
  <tileset firstgid="65" source="sprites.tsx"/>
- <tileset firstgid="113" name="tiles_act2p2" tilewidth="8" tileheight="8">
-  <image source="tiles_act2p2.png" width="64" height="64"/>
-  <terraintypes>
-   <terrain name="Exterior" tile="-1"/>
-   <terrain name="Interior" tile="-1"/>
-  </terraintypes>
-  <tile id="24" terrain="1,1,1,0"/>
-  <tile id="25" terrain="1,1,0,0"/>
-  <tile id="26" terrain="1,1,0,1"/>
-  <tile id="27" terrain="0,0,0,1"/>
-  <tile id="28" terrain="0,0,1,1"/>
-  <tile id="29" terrain="0,0,1,0"/>
-  <tile id="32" terrain="1,0,1,0"/>
-  <tile id="33" terrain="0,0,0,0"/>
-  <tile id="34" terrain="0,1,0,1"/>
-  <tile id="35" terrain="0,1,0,1"/>
-  <tile id="36" terrain="1,1,1,1"/>
-  <tile id="37" terrain="1,0,1,0"/>
-  <tile id="40" terrain="1,0,1,1"/>
-  <tile id="41" terrain="0,0,1,1"/>
-  <tile id="42" terrain="0,1,1,1"/>
-  <tile id="43" terrain="0,1,0,0"/>
-  <tile id="44" terrain="1,1,0,0"/>
-  <tile id="45" terrain="1,0,0,0"/>
- </tileset>
+ <tileset firstgid="113" source="tiles_act2p2.tsx"/>
  <layer name="Tiles" width="24" height="24">
   <properties>
    <property name="sprite" value="1"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJztkkEKgCAQRefMtYx2hVSrDDd22RIMXOj4rQYKFN5Gh+d3RkVEqlK5SS9MU4j2jCct4NcAW2K/E/CbAMRvQL+J8GZ+Cf/lSfkHP2eOkv7H7uD6i/Sey8/5c3cj/xPJiZzl8nNYgP2B/+/MAIuvncD6ECSDm69bq9Abv+w/AA0dOq0=
+   eJztkkEKgCAQRefMtYx2hVSrDDd22RIMXOj4rQYKFN5GhzffUUVEqlK5SS9MU4j2jCct4NcAW2K/E/CbAMRvQL+J8GZ+Cf/lSfkH/84cJfOP9eDmi8yey8/5c72R/4nkRM647DkswP6wx5+ZARZfO4H1IUgG93/cWoXu+GX/ARLVOq8=
   </data>
  </layer>
  <layer name="Sprites" width="24" height="24">
