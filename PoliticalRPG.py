@@ -1109,6 +1109,9 @@ class CombatMenuMain(CombatMenu):
         super(CombatMenuMain, self).__init__(world)
         character = self.world.current_character
 
+        #workaround for unknown bug
+        world.pop_all_menus()
+
         self.items.append(MenuItem('Offense >', 'Launch a political attack', self.on_offense))
         self.items.append(MenuItem('Defense', game_data.attacks['DEFENSE'].description, self.on_defense))
         self.items.append(MenuItem('Spin >', 'Run spin to get control of the situation', self.on_spin, enabled=bool(character.spin_attacks)))
@@ -1796,7 +1799,7 @@ class AssignSkillPointsMenu(Menu):
         super(AssignSkillPointsMenu, self).__init__(world)
         self.can_dismiss = False
         self.enable_border = False
-        self.cunning_item = MenuItem('Cunning', 'Effectiveness of arguments')
+        self.cunning_item = MenuItem('Cunning', 'Effectiveness of offense')
         self.wit_item = MenuItem('Wit', 'Effectiveness of quips')
         self.charisma_item = MenuItem('Charisma', 'Defense against opponent\'s attacks')
         self.flair_item = MenuItem('Flair', 'Chance of critical attack')
