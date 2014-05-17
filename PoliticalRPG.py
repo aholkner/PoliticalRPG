@@ -435,8 +435,7 @@ class World(object):
                 timeout[1]()
                 self.timeouts.remove(timeout)
 
-    def draw(self):
-
+    def draw_world(self):
         ts = self.tile_size
 
         viewport = Rect(self.camera_x, 
@@ -470,11 +469,15 @@ class World(object):
             else:
                 ui.draw_message_box(self.dialog_text)
 
-        for menu in self.menu_stack:
-            menu.draw()
-
+    def draw(self):
+        self.draw_world()
+        self.draw_menu()
         self.draw_hud()
         self.draw_stats()
+
+    def draw_menu(self):
+        for menu in self.menu_stack:
+            menu.draw()
 
     def get_room_name(self):
         return ''
@@ -597,23 +600,23 @@ class World(object):
             amount = int(param)
             for ally in game.allies:
                 ally.votes = min(ally.votes + amount, ally.max_votes)
-            return self.do_dialog(sprite, dialog)
+            return self.do_dialog(None, dialog)
         elif action == 'GiveSpin':
             amount = int(param)
             for ally in game.allies:
                 ally.spin = min(ally.spin + amount, ally.max_spin)
-            return self.do_dialog(sprite, dialog)
+            return self.do_dialog(None, dialog)
         elif action == 'RestoreVotes':
             for ally in game.allies:
                 ally.votes = ally.max_votes
-            return self.do_dialog(sprite, dialog)
+            return self.do_dialog(None, dialog)
         elif action == 'RestoreSpin':
             for ally in game.allies:
                 ally.spin = ally.max_spin
-            return self.do_dialog(sprite, dialog)
+            return self.do_dialog(None, dialog)
         elif action == 'GiveMoney':
             game.money += int(param)
-            return self.do_dialog(sprite, dialog)
+            return self.do_dialog(None, dialog)
         elif action == 'RequireItem':
             if param in (item.id for item in game.quest_items):
                 return False # satisfied, move to next line immediately
@@ -1563,7 +1566,7 @@ class CombatWorld(World):
         self.floaters.append(Floater(text, slot.x * self.tile_size * map_scale, (slot.y - offset) * self.tile_size * map_scale))
 
     def draw(self):
-        super(CombatWorld, self).draw()
+        self.draw_world()
 
         if self.active_attack:
             bacon.draw_string(debug.font, self.active_attack.name, ui_width / 2, 40, None, None, bacon.Alignment.center)
@@ -1612,6 +1615,10 @@ class CombatWorld(World):
                     for ia in c.item_attacks:
                         y += dy
                         debug.draw_string('%s (x%d)' %  (ia.attack.id, ia.quantity), x, y)
+
+        self.draw_menu()
+        self.draw_hud()
+        self.draw_stats()
 
 class WinCombatWorld(World):
     def __init__(self, combat_world):
