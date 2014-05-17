@@ -2186,6 +2186,8 @@ def get_next_save_filename():
     return '%03d' % (int(recent) + 1)
 
 class SavegameAlly(object):
+    standard_attacks = []
+
     def __init__(self, character):
         self.id = character.id
         self.level = character.level
@@ -2197,6 +2199,9 @@ class SavegameAlly(object):
         self.wit = character.wit
         self.flair = character.flair
         self.speed = character.speed
+        self.standard_attacks = []
+        for attack in character.standard_attacks:
+            self.standard_attacks.append(attack.id)
 
     def restore(self, character):
         character.id = self.id
@@ -2209,17 +2214,40 @@ class SavegameAlly(object):
         character.wit = self.wit
         character.flair = self.flair
         character.speed = self.speed
+        for attack_id in self.standard_attacks:
+            has_attack = False
+            for a in character.standard_attacks:
+                if a.id == attack_id:
+                    has_attack = True
+            if not has_attack:
+                character.standard_attacks.append(game_data.attacks[attack_id])
 
 class Savegame(object):
+    item_attacks = []
+    quest_items = []
+
     def __init__(self, game, trigger):
         self.trigger = trigger
         self.money = game.money
+        self.item_attacks = []
+        for ia in game.player.item_attacks:
+            for i in range(ia.quantity):
+                self.item_attacks.append(ia.attack.id)
+
+        self.quest_items = []
+        for item in game.quest_items:
+            self.quest_items.append(item.id)
+
         self.allies = []
         for ally in game.allies:
             self.allies.append(SavegameAlly(ally))
 
     def restore(self, game):
         game.money = self.money
+        for item_attack in self.item_attacks:
+            game.player.add_item_attack(game_data.attacks[item_attack])
+        for item_id in self.quest_items:
+            game.quest_items.append(game_data.quest_items[item_id])
         for ally in self.allies:
             if ally.id == 'Player':
                 character = game.player
