@@ -2027,8 +2027,8 @@ def get_level_for_xp(xp):
 
 class Game(bacon.Game):
     def __init__(self):
-        self.music = bacon.Sound('res/wwing.ogg', stream=True)
-        self.music.play()
+        music = bacon.Sound('res/wwing.ogg', stream=True)
+        music.play()
 
         self.player = Character('Player', 1, [], False)
         self.allies = [self.player]
