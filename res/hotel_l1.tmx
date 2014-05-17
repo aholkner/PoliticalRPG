@@ -4,11 +4,8 @@
  <tileset firstgid="65" source="sprites.tsx"/>
  <tileset firstgid="113" source="tiles_act2p2.tsx"/>
  <layer name="Tiles" width="24" height="24">
-  <properties>
-   <property name="sprite" value="1"/>
-  </properties>
   <data encoding="base64" compression="zlib">
-   eJybysDAMJUAnozEnkiEemTcRSQmVT26Plq5f6ibPxr+o+E/mMNnNPyHd/jPIgLPRlI/k0g9MExtv9IbE5PGupHUdxKph9T0CQO0Sj+D1XwALLBHJg==
+   eJybxcDAMIsAXgPEi6B4FRHqkfFUIvBkJPMnEqmHFExP81eTqJeYMBwNf/x45Wj4j4b/CA7/oR6/s5HMn0li/C4a4riLCNyNpL6TSD0wTGz6gQFapc/Baj4A1+RSNg==
   </data>
  </layer>
  <layer name="Sprites" width="24" height="24">
