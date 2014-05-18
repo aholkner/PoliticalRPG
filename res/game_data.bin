@@ -1,7 +1,7 @@
 ccopy_reg
 _reconstructor
 p1
-(c__main__
+(cGoodnightMrPresident
 GameData
 p2
 c__builtin__
@@ -16,7 +16,7 @@ S'StairsToWhiteHouse'
 p8
 (lp9
 g1
-(c__main__
+(cGoodnightMrPresident
 TableRow
 p10
 g3
@@ -2256,7 +2256,7 @@ sg16
 S'WARVETROOMKEY'
 p715
 sg18
-S'Received key to the East Room.'
+S'Received key to the West Room.'
 p716
 sbag1
 (g10
@@ -2273,7 +2273,7 @@ sg16
 S'WARVETS:2'
 p721
 sg18
-S'The war vets are waiting for you in the East Room.'
+S'The war vets are waiting for you in the West Room.'
 p722
 sbag1
 (g10
@@ -2354,7 +2354,7 @@ sg16
 S'TEACHERROOMKEY'
 p747
 sg18
-S'Received key to the West Room.'
+S'Received key to the East Room.'
 p748
 sbag1
 (g10
@@ -2371,7 +2371,7 @@ sg16
 S'TEACHERS:2'
 p753
 sg18
-S"You'll need to speak to the teachers in the West Room, Mr President."
+S"You'll need to speak to the teachers in the East Room, Mr President."
 p754
 sbag1
 (g10
@@ -3343,7 +3343,7 @@ p1067
 sg16
 S''
 sg18
-S"I'm sure you want to learn a thing or two about politics \xe2\x80\x93 who doesn't? - so lets get started"
+S"I'm sure you want to learn a thing or two about politics - who doesn't? - so lets get started"
 p1068
 sbag1
 (g10
@@ -9454,7 +9454,7 @@ p3007
 sg16
 S''
 sg18
-S'Yes well, I fail to see how your country spat has anything to do with Governer Badden.'
+S'Yes well, I fail to see how your county spat has anything to do with Governer Badden.'
 p3008
 sbag1
 (g10
@@ -11355,7 +11355,7 @@ sS'effects'
 p3609
 (lp3610
 g1
-(c__main__
+(cGoodnightMrPresident
 Effect
 p3611
 g3
@@ -11367,7 +11367,7 @@ S'add'
 p3615
 sS'abbrv'
 p3616
-S'(INCR CNG)'
+S'+ CNG'
 p3617
 sS'attribute'
 p3618
@@ -11493,7 +11493,7 @@ g3614
 S'miss_turn'
 p3649
 sg3616
-S'(MISS)'
+S'MISS'
 p3650
 sg3618
 S''
@@ -12107,7 +12107,7 @@ g3614
 S'miss_turn'
 p3761
 sg3616
-S'(MISS)'
+S'MISS'
 p3762
 sg3618
 S''
@@ -12301,16 +12301,16 @@ NtRp3794
 g3595
 I0
 sg3596
-F4
+F3
 sg3597
 S'Being dazzling and admirable is a great way to take heat off politics'
 p3796
 sg3599
 I1
 sg3600
-F8
+F0
 sg3601
-F5
+F0
 sg3602
 S'Wit'
 p3797
@@ -12334,7 +12334,7 @@ g3614
 S'reduce'
 p3802
 sg3616
-S'(CNG DN)'
+S'- CNG'
 p3803
 sg3618
 S'cunning'
@@ -12355,7 +12355,7 @@ I00
 sg3628
 I4
 sg3629
-F8
+F0
 sg3623
 g3793
 sg3630
@@ -12587,7 +12587,7 @@ g3614
 S'drain'
 p3850
 sg3616
-S'(DRAIN VTS)'
+S'DRAIN'
 p3851
 sg3618
 S'votes'
@@ -12984,9 +12984,9 @@ NtRp3918
 g3595
 I0
 sg3596
-F6
+F5
 sg3597
-S"You're not moving until they give in. Cause all opposition to miss their turn"
+S"You're not moving until they give in. Cause opposition to miss their turn"
 p3920
 sg3599
 I1
@@ -13745,7 +13745,7 @@ g3614
 S'miss_turn'
 p4054
 sg3616
-S'(MISS)'
+S'MISS'
 p4055
 sg3618
 S''
@@ -13859,7 +13859,7 @@ g3614
 S'add'
 p4075
 sg3616
-S'(INCR CH)'
+S'+ CH'
 p4076
 sg3618
 S'charisma'
@@ -14247,7 +14247,7 @@ g3614
 S'add'
 p4144
 sg3616
-S'(DEFEND)'
+S'DFND'
 p4145
 sg3618
 S'resistance'
@@ -15057,7 +15057,7 @@ g3614
 S'add'
 p4271
 sg3616
-S'(INCR FL)'
+S'+ FL'
 p4272
 sg3618
 S'flair'
@@ -15113,7 +15113,7 @@ sg3623
 g4277
 sS'votes_base'
 p4289
-F15
+F20
 sS'speed_lvl'
 p4290
 F0.080000000000000002
@@ -15184,7 +15184,7 @@ F1
 sg3623
 g4308
 sg4289
-F10
+F12
 sg4290
 F0.080000000000000002
 sg4291
@@ -15306,7 +15306,7 @@ F1
 sg3623
 g4330
 sg4289
-F10
+F12
 sg4290
 F0.080000000000000002
 sg4291
@@ -15367,7 +15367,7 @@ F1
 sg3623
 g4341
 sg4289
-F10
+F25
 sg4290
 F0.080000000000000002
 sg4291
@@ -15484,7 +15484,7 @@ F1
 sg3623
 g4363
 sg4289
-F12
+F18
 sg4290
 F0.080000000000000002
 sg4291
@@ -15605,7 +15605,7 @@ F2
 sg3623
 g4385
 sg4289
-F10
+F12
 sg4290
 F0.080000000000000002
 sg4291
@@ -15666,7 +15666,7 @@ F2
 sg3623
 g4396
 sg4289
-F18
+F30
 sg4290
 F0.080000000000000002
 sg4291
@@ -15846,7 +15846,7 @@ F2
 sg3623
 g4429
 sg4289
-F30
+F40
 sg4290
 F0.080000000000000002
 sg4291
@@ -15906,7 +15906,7 @@ F1
 sg3623
 g4440
 sg4289
-F18
+F25
 sg4290
 F0.080000000000000002
 sg4291
@@ -15967,7 +15967,7 @@ F1
 sg3623
 g4450
 sg4289
-F10
+F12
 sg4290
 F0.080000000000000002
 sg4291
@@ -16027,7 +16027,7 @@ F1
 sg3623
 g4461
 sg4289
-F16
+F18
 sg4290
 F0.01
 sg4291
@@ -16086,7 +16086,7 @@ F1
 sg3623
 g4472
 sg4289
-F10
+F12
 sg4290
 F0.01
 sg4291
@@ -16146,7 +16146,7 @@ F3
 sg3623
 g4483
 sg4289
-F18
+F35
 sg4290
 F0.080000000000000002
 sg4291
@@ -16264,7 +16264,7 @@ F1
 sg3623
 g4505
 sg4289
-F12
+F20
 sg4290
 F0.080000000000000002
 sg4291
@@ -16443,7 +16443,7 @@ F2
 sg3623
 g4538
 sg4289
-F18
+F30
 sg4290
 F0.080000000000000002
 sg4291
@@ -16505,7 +16505,7 @@ F1
 sg3623
 g4549
 sg4289
-F10
+F12
 sg4290
 F0.10000000000000001
 sg4291
@@ -16563,7 +16563,7 @@ F1
 sg3623
 g4560
 sg4289
-F12
+F20
 sg4290
 F0.080000000000000002
 sg4291
@@ -16690,7 +16690,7 @@ p4600
 sg3623
 g4597
 sg3630
-S'Key to the West Room'
+S'Key to the East Room'
 p4601
 sbsS'CABINETROOMKEY'
 p4602
@@ -16720,7 +16720,7 @@ p4610
 sg3623
 g4607
 sg3630
-S'Key to the East Room'
+S'Key to the West Room'
 p4611
 sbssg4291
 (dp4612
@@ -17400,7 +17400,7 @@ NtRp4788
 g4736
 (lp4790
 g1
-(c__main__
+(cGoodnightMrPresident
 ItemAttack
 p4791
 g3

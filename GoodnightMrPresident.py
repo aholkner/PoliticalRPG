@@ -2733,9 +2733,8 @@ def start_game(args):
 
     bacon.run(game)
 
-if __name__ == '__main__':
-    import traceback
-    try:
-        main()
-    except:
-        traceback.print_exc()
+import traceback
+try:
+    main()
+except:
+    traceback.print_exc()

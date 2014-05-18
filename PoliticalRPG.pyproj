@@ -15,7 +15,7 @@
     <InterpreterVersion>2.7</InterpreterVersion>
     <IsWindowsApplication>True</IsWindowsApplication>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>CheatAct2P2 --debug</CommandLineArguments>
+    <CommandLineArguments>--debug</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
     <InterpreterArguments>
     </InterpreterArguments>
@@ -30,6 +30,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="common.py" />
+    <Compile Include="GoodnightMrPresident.py" />
     <Compile Include="odsimport.py" />
     <Compile Include="run_game.py" />
     <Compile Include="tiled.py" />
