@@ -1,6 +1,6 @@
 # -*- mode: python -*-
-a = Analysis(['run_game.py'],
-             pathex=[''],
+a = Analysis(['GoodbyeMrPresident.py'],
+             pathex=['GoodbyeMrPresident'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None)
