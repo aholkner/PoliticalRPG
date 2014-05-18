@@ -1,6 +1,6 @@
 # -*- mode: python -*-
-a = Analysis(['GoodbyeMrPresident.py'],
-             pathex=['GoodbyeMrPresident'],
+a = Analysis(['GoodnightMrPresident.py'],
+             pathex=['GoodnightMrPresident'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None)
@@ -12,7 +12,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           res_tree,
-          name='GoodbyeMrPresident.exe',
+          name='GoodnightMrPresident.exe',
           icon='icon.ico',
           debug=False,
           strip=None,
@@ -25,7 +25,7 @@ coll = COLLECT(exe,
                #res_tree,
                strip=None,
                upx=True,
-               name='dist/GoodbyeMrPresident')
+               name='dist/GoodnightMrPresident')
 app = BUNDLE(coll,
-             name='GoodbyeMrPresident.app',
+             name='GoodnightMrPresident.app',
              icon=None)

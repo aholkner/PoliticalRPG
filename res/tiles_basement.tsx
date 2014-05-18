@@ -172,6 +172,11 @@
    <property name="c" value=""/>
   </properties>
  </tile>
+ <tile id="55">
+  <properties>
+   <property name="c" value="u"/>
+  </properties>
+ </tile>
  <tile id="57">
   <properties>
    <property name="c" value="dl"/>
@@ -185,6 +190,16 @@
  <tile id="61">
   <properties>
    <property name="c" value=""/>
+  </properties>
+ </tile>
+ <tile id="62">
+  <properties>
+   <property name="c" value="lu"/>
+  </properties>
+ </tile>
+ <tile id="63">
+  <properties>
+   <property name="c" value="l"/>
   </properties>
  </tile>
 </tileset>
