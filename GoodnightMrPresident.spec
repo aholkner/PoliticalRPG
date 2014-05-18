@@ -1,5 +1,5 @@
 # -*- mode: python -*-
-a = Analysis(['GoodnightMrPresident.py'],
+a = Analysis(['run_game.py'],
              pathex=['GoodnightMrPresident'],
              hiddenimports=[],
              hookspath=None,
