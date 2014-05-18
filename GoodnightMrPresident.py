@@ -7,6 +7,7 @@ import logging
 import math
 from math import ceil
 
+import appdirs
 import bacon
 import tiled
 import optparse
@@ -1076,6 +1077,7 @@ class TitleWorld(World):
     def draw(self):
         bacon.draw_image(self.background, 0, 0, ui_width, ui_height)
         self.draw_menu()
+        self.draw_dialog()
 
 class EndWorld(World):
     def __init__(self, map):
@@ -2304,7 +2306,7 @@ def get_level_for_xp(xp):
             return int(level.level - 1)
 
 def get_save_dir():
-    return 'savegames'
+    return appdirs.user_data_dir('GoodnightMrPresident')
 
 def get_recent_save_filename():
     try:

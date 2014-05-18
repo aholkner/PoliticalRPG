@@ -29,6 +29,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="appdirs.py" />
     <Compile Include="common.py" />
     <Compile Include="GoodnightMrPresident.py" />
     <Compile Include="odsimport.py" />
